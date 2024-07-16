@@ -1,0 +1,12 @@
+cx_Oracle==8.3.0
+Flask==3.0.3
+flask_restful==0.3.10
+psycopg2==2.9.9
+pydantic==2.8.2
+PyJWT==2.8.0
+pyodbc==5.1.0
+python-dotenv==1.0.1
+Requests==2.32.3
+SQLAlchemy==2.0.31
+waitress==3.0.0
+alembic~=1.13.2

@@ -1,0 +1,54 @@
+from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel, condecimal
+from sqlalchemy import Column, Integer, String, Numeric, ForeignKey, DateTime, Boolean, Float
+from sqlalchemy.orm import relationship, scoped_session, sessionmaker
+from .base import Base
+from .soft_delete import SoftDeleteQuery
+from .datetime_fortaleza_local import fortaleza_now
+
+
+class ProdutoModel(Base, SoftDeleteQuery):
+    __tablename__ = 'produto'
+    produto_id = Column('produto_id', Integer, primary_key=True)
+    titulo = Column('titulo', String(500), nullable=False)
+    preco = Column('preco', Numeric(precision=10, scale=2), nullable=False)
+    descricao = Column('descricao', String(1000))
+    imagem = Column('imagem', String(300))
+    data_cadastro = Column('data_cadastro', DateTime, nullable=False, default=fortaleza_now)
+    data_atualizacao = Column('data_atualizacao', DateTime)
+    responsavel_cadastro = Column('responsavel_cadastro', String(300))
+    detalhes_opcionais = Column('detalhes_opcionais', String(500))
+    status = Column('status', Boolean, nullable=False)
+    data_exclusao = Column('data_exclusao', DateTime)
+    produto_categoria_id = Column('produto_categoria_id', Integer, ForeignKey('produto_categoria.produto_categoria_id'),
+                                  nullable=False)
+    produto_subcategoria_id = Column('produto_subcategoria_id', Integer,
+                                     ForeignKey('produto_subcategoria.produto_subcategoria_id'), nullable=False)
+    produto_tipo_id = Column('produto_tipo_id', Integer, ForeignKey('produto_tipo.produto_tipo_id'), nullable=False)
+    empresa_id = Column('empresa_id', Integer, ForeignKey('empresa.empresa_id'), nullable=False)
+
+    produto_categoria = relationship('produto_categoria')
+    produto_subcategoria = relationship('produto_subcategoria')
+    produto_tipo = relationship('produto_tipo')
+    empresa = relationship('empresa')
+
+class ProdutoSchema(BaseModel):
+    Titulo: str
+    preco: condecimal(max_digits=10, decimal_places=2)
+    Descricao: Optional[str] = None
+    Imagem: Optional[str] = None
+    DataCadastro: datetime
+    ResponsavelCadastro: Optional[str] = None
+    DetalhesOpcionais: Optional[str] = None
+    Status: bool
+    ProdutoCategoriaId: int
+    ProdutoSubCategoriaId: int
+    ProdutoTipoId: int
+
+class ProdutoCreate(ProdutoSchema):
+    pass
+
+class Produto(ProdutoSchema):
+    ProdutoId: int
