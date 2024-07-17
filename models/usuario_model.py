@@ -1,14 +1,16 @@
 from datetime import datetime
+from typing import Optional
 
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
+from sqlalchemy import func,  Column, Integer, String, Boolean, ForeignKey, DateTime, func
 from sqlalchemy.orm import relationship
-from pydantic import BaseModel
+from pydantic import BaseModel, constr
 
 from .base import Base
 from .datetime_fortaleza_local import fortaleza_now
+from .soft_delete import SoftDeleteQuery
 
 
-class UsuarioModel(Base):
+class UsuarioModel(Base, SoftDeleteQuery):
     __tablename__ = 'usuario'
 
     usuario_id = Column('usuario_id', Integer, primary_key=True, nullable=False)
@@ -25,7 +27,7 @@ class UsuarioModel(Base):
     pais_id = Column('nacionalidade', Integer, ForeignKey('pais.pais_id'), nullable=False)
     naturalidade = Column('naturalidade', String(150), nullable=False)
     foto = Column('foto', String(300))
-    data_cadastro = Column('data_cadastro', DateTime, nullable=False, default=fortaleza_now)
+    data_cadastro = Column('data_cadastro, DateTime(timezone=False), nullable=False, default=func.current_timestamp())
     data_atualizacao = Column('data_atualizacao', DateTime)
     status = Column('status', Boolean, nullable=False)
     data_exclusao = Column('data_exclusao', DateTime)
@@ -34,24 +36,25 @@ class UsuarioModel(Base):
     pais = relationship('PaisModel', back_populates='usuarios')
 
 
-class UsuarioSchema(BaseModel):
-    Email: str
-    Nome: str
-    Logradouro: str
-    NumeroEndereco: str
-    Bairro: str
-    Cidade: str
-    UF: str
-    ProfissaoId: int
-    Telefone: str
-    Cpf: str
-    Nacionalidade: str
-    Naturalidade: str
-    Status: bool
-    Delet: bool
+class UsuarioBaseModel(BaseModel):
+    usuario_id: int
+    email: constr(max_length=200)
+    nome: constr(max_length=500)
+    logradouro: constr(max_length=300)
+    numero_endereco: constr(max_length=10)
+    bairro: constr(max_length=100)
+    cidade: constr(max_length=100)
+    uf: constr(max_length=2)
+    profissao_id: int
+    telefone: str
+    cpf: constr(max_length=14)
+    pais_id: int
+    naturalidade: constr(max_length=150)
+    foto: Optional[str]
+    data_cadastro: datetime
+    data_atualizacao: Optional[datetime]
+    status: bool
+    data_exclusao: Optional[datetime]
 
-class UsuarioCreate(UsuarioSchema):
-    pass
-
-class Usuario(UsuarioSchema):
-    UsuarioId: int
+    class Config:
+        orm_mode = True

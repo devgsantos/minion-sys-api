@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, condecimal
-from sqlalchemy import Column, Integer, String, Numeric, ForeignKey, DateTime, Boolean, Float
+from pydantic import BaseModel, condecimal, constr
+from sqlalchemy import Column, func,  Integer, String, Numeric, ForeignKey, DateTime, Boolean, Float
 from sqlalchemy.orm import relationship, scoped_session, sessionmaker
 from .base import Base
 from .soft_delete import SoftDeleteQuery
@@ -16,7 +16,7 @@ class ProdutoModel(Base, SoftDeleteQuery):
     preco = Column('preco', Numeric(precision=10, scale=2), nullable=False)
     descricao = Column('descricao', String(1000))
     imagem = Column('imagem', String(300))
-    data_cadastro = Column('data_cadastro', DateTime, nullable=False, default=fortaleza_now)
+    data_cadastro = Column('data_cadastro, DateTime(timezone=False), nullable=False, default=func.current_timestamp())
     data_atualizacao = Column('data_atualizacao', DateTime)
     responsavel_cadastro = Column('responsavel_cadastro', String(300))
     detalhes_opcionais = Column('detalhes_opcionais', String(500))
@@ -34,21 +34,22 @@ class ProdutoModel(Base, SoftDeleteQuery):
     produto_tipo = relationship('produto_tipo')
     empresa = relationship('empresa')
 
-class ProdutoSchema(BaseModel):
-    Titulo: str
+class ProdutoBaseModel(BaseModel):
+    produto_id: int
+    titulo: constr(max_length=500)
     preco: condecimal(max_digits=10, decimal_places=2)
-    Descricao: Optional[str] = None
-    Imagem: Optional[str] = None
-    DataCadastro: datetime
-    ResponsavelCadastro: Optional[str] = None
-    DetalhesOpcionais: Optional[str] = None
-    Status: bool
-    ProdutoCategoriaId: int
-    ProdutoSubCategoriaId: int
-    ProdutoTipoId: int
+    descricao: Optional[constr(max_length=1000)]
+    imagem: Optional[str]
+    data_cadastro: datetime
+    data_atualizacao: Optional[datetime]
+    responsavel_cadastro: Optional[constr(max_length=300)]
+    detalhes_opcionais: Optional[constr(max_length=500)]
+    status: bool
+    data_exclusao: Optional[datetime]
+    produto_categoria_id: int
+    produto_subcategoria_id: int
+    produto_tipo_id: int
+    empresa_id: int
 
-class ProdutoCreate(ProdutoSchema):
-    pass
-
-class Produto(ProdutoSchema):
-    ProdutoId: int
+    class Config:
+        orm_mode = True

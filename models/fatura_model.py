@@ -1,4 +1,6 @@
-from sqlalchemy import Column, Integer, ForeignKey, Boolean, TIMESTAMP, DateTime
+from typing import Optional
+
+from sqlalchemy import Column, func,  Integer, ForeignKey, Boolean, TIMESTAMP, DateTime
 from sqlalchemy.orm import relationship
 from pydantic import BaseModel
 from datetime import datetime
@@ -6,6 +8,7 @@ from datetime import datetime
 from .base import Base
 from .soft_delete import SoftDeleteQuery
 from .datetime_fortaleza_local import fortaleza_now
+from pydantic import BaseModel
 
 
 class FaturaModel(Base, SoftDeleteQuery):
@@ -14,24 +17,23 @@ class FaturaModel(Base, SoftDeleteQuery):
     fatura_id = Column('fatura_id', Integer, primary_key=True)
     orcamento_id = Column('orcamento_id', Integer, ForeignKey('orcamento.orcamento_id'), nullable=False)
     cliente_id = Column('cliente_id', Integer, ForeignKey('cliente.cliente_id'), nullable=False)
-    data_cadastro = Column('data_cadastro', DateTime, default=fortaleza_now, nullable=False)
+    data_cadastro = Column('data_cadastro, DateTime(timezone=False), default=func.current_timestamp(), nullable=False)
     status_entrega = Column('status_entrega', Integer, nullable=False)
     delet = Column('delet', Boolean, nullable=False)
-    data_exclusao = Column('data_exclusao', DateTime, nullable=True, default=None)
+    data_exclusao = Column('data_exclusao, DateTime(timezone=False), nullable=True, default=None)
 
     cliente = relationship('cliente', back_populates='faturas')
     orcamento = relationship('orcamento', back_populates='fatura')
     fatura_itens = relationship('faturaIItem', back_populates='fatura')
 
+class FaturaBaseModel(BaseModel):
+    fatura_id: int
+    orcamento_id: int
+    cliente_id: int
+    data_cadastro: datetime
+    status_entrega: int
+    delet: bool
+    data_exclusao: Optional[datetime]
 
-class FaturaBase(BaseModel):
-    OrcamentoId: int
-    ClienteId: int
-    Data: datetime
-    StatusEntrega: int
-
-class FaturaCreate(FaturaBase):
-    pass
-
-class Fatura(FaturaBase):
-    FaturaId: int
+    class Config:
+        orm_mode = True

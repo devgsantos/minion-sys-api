@@ -1,7 +1,11 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from typing import Optional
+
+from sqlalchemy import Column, DateTime,  Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 
 from .base import Base
+from pydantic import BaseModel, EmailStr, constr
+
 
 class LoginModel(Base):
     __tablename__ = 'login'
@@ -15,3 +19,16 @@ class LoginModel(Base):
 
     usuario = relationship("usuario", back_populates="logins")
     permissoes = relationship("permissao", backref="login")
+
+
+class LoginBaseModel(BaseModel):
+    login_id: int
+    email: EmailStr
+    senha: constr(max_length=200)
+    codigo_confirmacao: Optional[constr(max_length=6)]
+    token: Optional[constr(max_length=1000)]
+    ultimo_login = Column('data_exclusao, DateTime(timezone=False), nullable=True)
+    usuario_id: Optional[int]
+
+    class Config:
+        orm_mode = True

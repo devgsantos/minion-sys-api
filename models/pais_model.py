@@ -1,5 +1,7 @@
-from pydantic import BaseModel
-from sqlalchemy import Column, Integer, String
+from typing import Optional
+
+from pydantic import BaseModel, constr
+from sqlalchemy import Column, func,  Integer, String
 from .base import Base
 
 class PaisModel(Base):
@@ -10,9 +12,12 @@ class PaisModel(Base):
     sigla = Column('sigla', String(2), nullable=False)
     bandeira = Column('bandeira', String(300))
 
-class PaisesSchema(BaseModel):
-    PaisId: int
-    Nome: str
-    CodigoArea: str
-    Sigla: str
-    Bandeira: str = None
+class PaisBaseModel(BaseModel):
+    pais_id: int
+    nome: constr(max_length=300)
+    codigo_area: constr(max_length=5)
+    sigla: constr(max_length=2)
+    bandeira: Optional[str]
+
+    class Config:
+        orm_mode = True

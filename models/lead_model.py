@@ -1,12 +1,13 @@
 from datetime import datetime
 
-from pydantic import BaseModel
-from sqlalchemy import Column, Integer, ForeignKey, Boolean, String, DateTime
+from pydantic import BaseModel, EmailStr, constr
+from sqlalchemy import Column, func,  Integer, ForeignKey, Boolean, String, DateTime
 from sqlalchemy.orm import relationship
 
 from .base import Base
 from .soft_delete import SoftDeleteQuery
 from .datetime_fortaleza_local import fortaleza_now
+from typing import Optional
 
 
 class LeadModel(Base, SoftDeleteQuery):
@@ -27,33 +28,33 @@ class LeadModel(Base, SoftDeleteQuery):
     nacionalidade = Column('nacionalidade', String(100), nullable=False)
     naturalidade = Column('naturalidade', String(100), nullable=False)
     responsavel_cadastro = Column('responsavel_cadastro', String)
-    data_cadastro = Column('data_cadastro', DateTime, default=fortaleza_now, nullable=False)
-    data_atualizacao = Column('data_atualizacao', DateTime, nullable=True)
+    data_cadastro = Column('data_cadastro, DateTime(timezone=False), default=func.current_timestamp(), nullable=False)
+    data_atualizacao = Column('data_atualizacao, DateTime(timezone=False), nullable=True)
     status = Column('status', Boolean, nullable=False)
-    delet = Column('delet', Boolean, nullable=False)
-    data_exclusao = Column('data_exclusao', DateTime, nullable=True, default=None)
+    data_exclusao = Column('data_exclusao, DateTime(timezone=False), nullable=True, default=None)
 
     profissao = relationship('profissao')
 
-class LeadSchema(BaseModel):
-    Email: str
-    NomeCompleto: str
-    Logradouro: str
-    NumeroEndereco: str
-    Bairro: str
-    Cidade: str
-    UF: str
-    ProfissaoId: int
-    Telefone: str
-    Cpf: str = None
-    Cnpj: str = None
-    Nacionalidade: str
-    Naturalidade: str
-    ResponsavelCadastro: str = None
-    Status: bool
+class LeadBaseModel(BaseModel):
+    lead_id: int
+    email: EmailStr
+    nome_completo: constr(max_length=500)
+    logradouro: constr(max_length=300)
+    numero_endereco: constr(max_length=10)
+    bairro: constr(max_length=100)
+    cidade: constr(max_length=100)
+    uf: constr(max_length=2)
+    profissao_id: int
+    telefone: str
+    cpf: Optional[str]
+    cnpj: Optional[str]
+    nacionalidade: constr(max_length=100)
+    naturalidade: constr(max_length=100)
+    responsavel_cadastro: Optional[str]
+    data_cadastro: datetime
+    data_atualizacao: Optional[datetime]
+    status: bool
+    data_exclusao: Optional[datetime]
 
-class LeadCreate(LeadSchema):
-    pass
-
-class Lead(LeadSchema):
-    LeadId: int
+    class Config:
+        orm_mode = True

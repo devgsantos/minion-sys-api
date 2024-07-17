@@ -1,6 +1,8 @@
-from sqlalchemy import Column, Integer, ForeignKey
+from sqlalchemy import Column, func,  Integer, ForeignKey
 from sqlalchemy.orm import relationship
 from .base import Base
+from pydantic import BaseModel
+
 
 class LoginEmpresaModel(Base):
     __tablename__ = 'login_empresa'
@@ -11,3 +13,12 @@ class LoginEmpresaModel(Base):
 
     login = relationship('login', backref='login_empresas')
     empresa = relationship('empresa', backref='login_empresas')
+
+
+class LoginEmpresaBaseModel(BaseModel):
+    login_empresa_id: int
+    login_id: int
+    empresa_id: int
+
+    class Config:
+        orm_mode = True

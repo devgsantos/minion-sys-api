@@ -1,9 +1,9 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy import func, Column, Integer, String, Boolean, DateTime
 from sqlalchemy.orm import sessionmaker, scoped_session, relationship
 from datetime import datetime
 
 from .base import Base
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, constr
 from typing import Optional
 
 from models.soft_delete import SoftDeleteQuery
@@ -27,26 +27,32 @@ class ClienteModel(Base, SoftDeleteQuery):
     pais_id = Column('pais_id', Integer, nullable=False)
     naturalidade = Column('naturalidade', String(100), nullable=False)
     responsavel_cadastro = Column('responsavel_cadastro', String, nullable=True)
-    data_cadastro = Column('data_cadastro', DateTime, default=fortaleza_now, nullable=False)
-    data_atualizacao = Column('data_atualizacao', DateTime, nullable=True)
+    data_cadastro = Column('data_cadastro, DateTime(timezone=False), default=func.current_timestamp(), nullable=False)
+    data_atualizacao = Column('data_atualizacao, DateTime(timezone=False), nullable=True)
     status = Column('status', Integer, nullable=False)
-    data_exclusao = Column('data_exclusao', DateTime, nullable=True, default=None)
+    data_exclusao = Column('data_exclusao, DateTime(timezone=False), nullable=True, default=None)
 
     pais = relationship('pais', back_populates='clientes')
 
-class ClienteBase(BaseModel):
-    ClienteId: int
-    Email: str
-    Nome: str
-    Logradouro: str
-    NumeroEndereco: str
-    Bairro: str
-    Cidade: str
-    UF: str
-    Telefone: str
-    Cpf: Optional[str] = None
-    Cnpj: Optional[str] = None
-    Nacionalidade: str
-    Naturalidade: str
-    ResponsavelCadastro: Optional[str] = None
-    Status: bool
+class ClienteBaseModel(BaseModel):
+    cliente_id: int
+    email: EmailStr
+    nome: constr(max_length=500)
+    logradouro: constr(max_length=300)
+    numero_endereco: constr(max_length=10)
+    bairro: constr(max_length=100)
+    cidade: constr(max_length=100)
+    uf: constr(max_length=2)
+    telefone: str
+    cpf: Optional[str]
+    cnpj: Optional[str]
+    pais_id: int
+    naturalidade: constr(max_length=100)
+    responsavel_cadastro: Optional[str]
+    data_cadastro: datetime
+    data_atualizacao: Optional[datetime]
+    status: int
+    data_exclusao: Optional[datetime]
+
+    class Config:
+        orm_mode = True

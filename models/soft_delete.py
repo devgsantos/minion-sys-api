@@ -1,7 +1,10 @@
-from sqlalchemy import Column, DateTime
+from sqlalchemy import Column, func,  DateTime
 from sqlalchemy.orm import Query
 from sqlalchemy.ext.declarative import declared_attr
 from datetime import datetime
+
+from models.datetime_fortaleza_local import fortaleza_now
+
 
 class SoftDeleteQuery(Query):
     def __new__(cls, *args, **kwargs):
@@ -22,10 +25,10 @@ class SoftDeleteQuery(Query):
 class SoftDeleteMixin:
     @declared_attr
     def data_exclusao(cls):
-        return Column(DateTime, nullable=True)
+        return Column(DateTime(timezone=False), nullable=True)
 
     def delete(self):
-        self.data_exclusao = datetime.utcnow()
+        self.data_exclusao = fortaleza_now
 
     def restore(self):
         self.data_exclusao = None

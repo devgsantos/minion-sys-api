@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey
+from pydantic import BaseModel, constr
+from sqlalchemy import Column, func,  Integer, String, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from .base import Base
 from .soft_delete import SoftDeleteQuery
@@ -16,7 +16,7 @@ class ProdutoCategoriaModel(Base, SoftDeleteQuery):
     descricao = Column('descricao', String(500))
     sigla = Column('sigla', String(3))
     imagem = Column('imagem', String(300))
-    data_cadastro = Column('data_cadastro', DateTime, default=fortaleza_now)
+    data_cadastro = Column('data_cadastro, DateTime(timezone=False), default=func.current_timestamp())
     data_atualizacao = Column('data_atualizacao', DateTime)
     usuario_id = Column('responsavel_cadastro', Integer, ForeignKey('usuario.usuario_id'))
     status = Column('status', Boolean)
@@ -27,17 +27,18 @@ class ProdutoCategoriaModel(Base, SoftDeleteQuery):
     produtos = relationship('produto', back_populates='produto_categoria')
 
 
-class ProdutoCategoriaSchema(BaseModel):
-    Titulo: str
-    Descricao: str
-    Imagem: Optional[str] = None
-    DataCadastro: datetime
-    ResponsavelCadastro: str
-    Status: bool
+class ProdutoCategoriaBaseModel(BaseModel):
+    produto_categoria_id: int
+    titulo: Optional[constr(max_length=300)]
+    descricao: Optional[constr(max_length=500)]
+    sigla: Optional[constr(max_length=3)]
+    imagem: Optional[str]
+    data_cadastro: Optional[datetime]
+    data_atualizacao: Optional[datetime]
+    usuario_id: Optional[int]
+    status: Optional[bool]
+    data_exclusao: Optional[datetime]
 
-class ProdutoCategoriaCreate(ProdutoCategoriaSchema):
-    pass
-
-class ProdutoCategoria(ProdutoCategoriaSchema):
-    ProdutoCategoriaId: int
+    class Config:
+        orm_mode = True
 

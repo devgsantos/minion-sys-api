@@ -1,7 +1,9 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
-from pydantic import BaseModel
-from sqlalchemy.orm import scoped_session, sessionmaker, relationship
 from datetime import datetime
+from typing import Optional
+
+from sqlalchemy import Column, func,  Integer, String, Boolean, DateTime, ForeignKey
+from pydantic import BaseModel, EmailStr, constr
+from sqlalchemy.orm import relationship
 
 from .base import Base
 from models.soft_delete import SoftDeleteQuery
@@ -26,27 +28,34 @@ class EmpresaModel(Base, SoftDeleteQuery):
     responsavel_cadastro = Column('responsavel_cadastro', String, nullable=True)
     empresa_categoria_id = Column('empresa_categoria_id', Integer, ForeignKey('empresa_categoria.empresa_categoria_id'),
                                   nullable=False)
-    data_cadastro = Column('data_cadastro', DateTime, default=fortaleza_now, nullable=False)
-    data_atualizacao = Column('data_atualizacao', DateTime, nullable=True)
+    data_cadastro = Column('data_cadastro, DateTime(timezone=False), default=func.current_timestamp(), nullable=False)
+    data_atualizacao = Column('data_atualizacao, DateTime(timezone=False), nullable=True)
     status = Column('status', Boolean, nullable=False)
-    data_exclusao = Column('data_exclusao', DateTime, nullable=True, default=None)
+    data_exclusao = Column('data_exclusao, DateTime(timezone=False), nullable=True, default=None)
 
     empresa_categoria = relationship('EmpresaCategoria', back_populates='empresas')
     pais = relationship('pais', back_populates='empresas')
 
-class EmpresaBase(BaseModel):
-    EmpresaId: int
-    Email: str
-    Nome: str
-    Logradouro: str
-    NumeroEndereco: str
-    Bairro: str
-    Cidade: str
-    UF: str
-    Telefone: str
-    Cpf: str = None
-    Cnpj: str = None
-    Nacionalidade: str
-    Naturalidade: str
-    ResponsavelCadastro: str = None
-    Status: bool
+class EmpresaBaseModel(BaseModel):
+    empresa_id: int
+    email: EmailStr
+    nome: constr(max_length=500)
+    logradouro: constr(max_length=300)
+    numero_endereco: constr(max_length=10)
+    bairro: constr(max_length=100)
+    cidade: constr(max_length=100)
+    uf: constr(max_length=2)
+    telefone: str
+    cpf: Optional[str]
+    cnpj: Optional[str]
+    pais_id: int
+    naturalidade: constr(max_length=100)
+    responsavel_cadastro: Optional[str]
+    empresa_categoria_id: int
+    data_cadastro: datetime
+    data_atualizacao: Optional[datetime]
+    status: bool
+    data_exclusao: Optional[datetime]
+
+    class Config:
+        orm_mode = True

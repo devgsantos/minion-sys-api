@@ -1,5 +1,7 @@
-from sqlalchemy import Column, Integer, String, DateTime
-from pydantic import BaseModel
+from datetime import datetime
+
+from sqlalchemy import Column, func,  Integer, String, DateTime
+from pydantic import BaseModel, constr
 from typing import Optional
 
 from .base import Base
@@ -15,13 +17,12 @@ class ProfissaoModel(Base, SoftDeleteQuery):
     imagem = Column('imagem', String(300))
     data_exclusao = Column('data_exclusao', DateTime)
 
-class ProfissaoSchema(BaseModel):
-    Titulo: str
-    Descricao: Optional[str] = None
-    Imagem: Optional[str] = None
+class ProfissaoBaseModel(BaseModel):
+    profissao_id: int
+    titulo: constr(max_length=300)
+    descricao: Optional[constr(max_length=500)]
+    imagem: Optional[str]
+    data_exclusao: Optional[datetime]
 
-class ProfissaoCreate(ProfissaoSchema):
-    pass
-
-class Profissao(ProfissaoSchema):
-    ProfissaoId: int
+    class Config:
+        orm_mode = True
