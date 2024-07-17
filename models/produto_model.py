@@ -29,10 +29,10 @@ class ProdutoModel(Base, SoftDeleteQuery):
     produto_tipo_id = Column('produto_tipo_id', Integer, ForeignKey('produto_tipo.produto_tipo_id'), nullable=False)
     empresa_id = Column('empresa_id', Integer, ForeignKey('empresa.empresa_id'), nullable=False)
 
-    produto_categoria = relationship('produto_categoria')
-    produto_subcategoria = relationship('produto_subcategoria')
-    produto_tipo = relationship('produto_tipo')
-    empresa = relationship('empresa')
+    produto_categoria = relationship('ProdutoCategoriaModel')
+    produto_subcategoria = relationship('ProdutoSubcategoriaModel')
+    produto_tipo = relationship('ProdutoTipoModel')
+    empresa = relationship('EmpresaModel')
 
 class ProdutoBaseModel(BaseModel):
     produto_id: int

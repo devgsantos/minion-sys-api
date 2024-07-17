@@ -10,7 +10,7 @@ from .soft_delete import SoftDeleteQuery
 from .datetime_fortaleza_local import fortaleza_now
 
 
-class ProdutoSubategoriaModel(Base, SoftDeleteQuery):
+class ProdutoSubcategoriaModel(Base, SoftDeleteQuery):
     __tablename__ = 'produto_subcategoria'
 
     produto_sub_categoria_id = Column('produto_subcategoria_id', Integer, primary_key=True)
@@ -24,8 +24,8 @@ class ProdutoSubategoriaModel(Base, SoftDeleteQuery):
     data_exclusao = Column('data_exclusao', DateTime)
     usuario_id = Column('usuario_id', Integer, ForeignKey('usuario.usuario_id'))
 
-    usuario = relationship('usuario')
-    produtos = relationship('produto', backref='produto_subcategoria')
+    usuario = relationship('UsuarioModel')
+    produtos = relationship('ProdutoModel', backref='produto_subcategoria')
 
 class ProdutoSubcategoriaBaseModel(BaseModel):
     produto_sub_categoria_id: int

@@ -22,8 +22,8 @@ class OrcamentoModel(Base, SoftDeleteQuery):
     delet = Column('delet', Boolean, nullable=False)
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
-    cliente = relationship('cliente')
-    orcamento_itens = relationship('orcamento_item', back_populates='orcamento')
+    cliente = relationship('ClienteModel')
+    orcamento_itens = relationship('OrcamentoItemModel', back_populates='orcamento')
 
 class OrcamentoBaseModel(BaseModel):
     orcamento_id: int

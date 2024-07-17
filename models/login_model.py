@@ -19,8 +19,8 @@ class LoginModel(Base):
     ultimo_login = Column('ultimo_login', DateTime(timezone=False), nullable=True)
     usuario_id = Column(Integer, ForeignKey('usuario.usuario_id'))
 
-    usuario = relationship("usuario", back_populates="logins")
-    permissoes = relationship("permissao", backref="login")
+    usuario = relationship("UsuarioModel")
+    permissoes = relationship("PermissaoModel")
 
 
 class LoginBaseModel(BaseModel):

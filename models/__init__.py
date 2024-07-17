@@ -9,7 +9,7 @@ from models.orcamento_item_model import Base as Orcamento_itemBase, OrcamentoIte
 from models.orcamento_model import Base as OrcamentoBase, OrcamentoModel
 from models.pais_model import Base as PaisBase, PaisModel
 from models.produto_categorias_model import Base as ProdutoCategoriaBase, ProdutoCategoriaModel
-from models.produto_subcategorias_model import Base as ProdutoSubcategoriaBase, ProdutoSubategoriaModel
+from models.produto_subcategorias_model import Base as ProdutoSubcategoriaBase, ProdutoSubcategoriaModel
 from models.produto_tipos_model import Base as Produto_tiposBase, ProdutoTipoModel
 from models.profissao_model import Base as ProfissaoBase, ProfissaoModel
 from models.usuario_model import Base as UsuarioBase, UsuarioModel

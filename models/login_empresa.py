@@ -11,8 +11,8 @@ class LoginEmpresaModel(Base):
     login_id = Column(Integer, ForeignKey('login.login_id'), nullable=False)
     empresa_id = Column(Integer, ForeignKey('empresa.empresa_id'), nullable=False)
 
-    login = relationship('login', backref='login_empresas')
-    empresa = relationship('empresa', backref='login_empresas')
+    login = relationship('LoginModel', backref='login_empresas')
+    empresa = relationship('EmpresaModel', backref='login_empresas')
 
 
 class LoginEmpresaBaseModel(BaseModel):

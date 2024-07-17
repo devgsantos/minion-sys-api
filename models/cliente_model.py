@@ -1,4 +1,4 @@
-from sqlalchemy import func, Column, Integer, String, Boolean, DateTime
+from sqlalchemy import func, Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import sessionmaker, scoped_session, relationship
 from datetime import datetime
 
@@ -24,7 +24,7 @@ class ClienteModel(Base, SoftDeleteQuery):
     telefone = Column('telefone', String, nullable=False)
     cpf = Column('cpf', String, nullable=True)
     cnpj = Column('cnpj', String, nullable=True)
-    pais_id = Column('pais_id', Integer, nullable=False)
+    pais_id = Column('nacionalidade', Integer, ForeignKey('pais.pais_id'), nullable=False)
     naturalidade = Column('naturalidade', String(100), nullable=False)
     responsavel_cadastro = Column('responsavel_cadastro', String, nullable=True)
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.current_timestamp(), nullable=False)
@@ -32,7 +32,7 @@ class ClienteModel(Base, SoftDeleteQuery):
     status = Column('status', Integer, nullable=False)
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
-    pais = relationship('pais', back_populates='clientes')
+    pais = relationship('PaisModel')
 
 class ClienteBaseModel(BaseModel):
     cliente_id: int

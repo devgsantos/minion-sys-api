@@ -33,8 +33,8 @@ class EmpresaModel(Base, SoftDeleteQuery):
     status = Column('status', Boolean, nullable=False)
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
-    empresa_categoria = relationship('EmpresaCategoria', back_populates='empresas')
-    pais = relationship('pais', back_populates='empresas')
+    empresa_categoria = relationship('EmpresaCategoriaModel', back_populates='empresas')
+    pais = relationship('PaisModel', back_populates='empresas')
 
 class EmpresaBaseModel(BaseModel):
     empresa_id: int

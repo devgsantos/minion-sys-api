@@ -16,7 +16,7 @@ from models.base import Base
 from models.produto_model import ProdutoModel
 from models.produto_categorias_model import ProdutoCategoriaModel
 from models.produto_tipos_model import ProdutoTipoModel
-from models.produto_subcategorias_model import ProdutoSubategoriaModel
+from models.produto_subcategorias_model import ProdutoSubcategoriaModel
 from models.produto_categorias_model import ProdutoCategoriaModel
 
 from models.cliente_model import ClienteModel

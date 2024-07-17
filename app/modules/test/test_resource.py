@@ -9,5 +9,5 @@ from app.modules.test.test_usecase import TestUseCase
 class TestResource(Resource):
     @auth_decorator
     @dto_decorator(TestModel)
-    def post(self):
+    def get(self):
         return TestUseCase().execute()

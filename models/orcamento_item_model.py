@@ -23,8 +23,8 @@ class OrcamentoItemModel(Base, SoftDeleteQuery):
     delet = Column('delet', Boolean, nullable=False)
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
-    orcamento = relationship('orcamento', back_populates='orcamento_itens')
-    produto = relationship('produto')
+    orcamento = relationship('OrcamentoModel', back_populates='orcamento_itens')
+    produto = relationship('ProdutoModel')
 
 class OrcamentoItemBaseModel(BaseModel):
     orcamento_item_id: int

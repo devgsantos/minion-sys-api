@@ -25,7 +25,7 @@ class LeadModel(Base, SoftDeleteQuery):
     telefone = Column('telefone', String, nullable=False)
     cpf = Column('cpf', String)
     cnpj = Column('cnpj', String)
-    nacionalidade = Column('nacionalidade', String(100), nullable=False)
+    pais_id = Column('nacionalidade', Integer, ForeignKey('pais.pais_id'), nullable=False)
     naturalidade = Column('naturalidade', String(100), nullable=False)
     responsavel_cadastro = Column('responsavel_cadastro', String)
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.current_timestamp(), nullable=False)
@@ -33,7 +33,8 @@ class LeadModel(Base, SoftDeleteQuery):
     status = Column('status', Boolean, nullable=False)
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
-    profissao = relationship('profissao')
+    profissao = relationship('ProfissaoModel')
+    pais = relationship('PaisModel')
 
 class LeadBaseModel(BaseModel):
     lead_id: int

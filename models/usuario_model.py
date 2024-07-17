@@ -32,8 +32,8 @@ class UsuarioModel(Base, SoftDeleteQuery):
     status = Column('status', Boolean, nullable=False)
     data_exclusao = Column('data_exclusao', DateTime)
 
-    profissao = relationship('ProfissaoModel', back_populates='usuarios')
-    pais = relationship('PaisModel', back_populates='usuarios')
+    profissao = relationship('ProfissaoModel')
+    pais = relationship('PaisModel')
 
 
 class UsuarioBaseModel(BaseModel):
