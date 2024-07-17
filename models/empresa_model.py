@@ -28,10 +28,10 @@ class EmpresaModel(Base, SoftDeleteQuery):
     responsavel_cadastro = Column('responsavel_cadastro', String, nullable=True)
     empresa_categoria_id = Column('empresa_categoria_id', Integer, ForeignKey('empresa_categoria.empresa_categoria_id'),
                                   nullable=False)
-    data_cadastro = Column('data_cadastro, DateTime(timezone=False), default=func.current_timestamp(), nullable=False)
-    data_atualizacao = Column('data_atualizacao, DateTime(timezone=False), nullable=True)
+    data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.current_timestamp(), nullable=False)
+    data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), nullable=True)
     status = Column('status', Boolean, nullable=False)
-    data_exclusao = Column('data_exclusao, DateTime(timezone=False), nullable=True, default=None)
+    data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
     empresa_categoria = relationship('EmpresaCategoria', back_populates='empresas')
     pais = relationship('pais', back_populates='empresas')

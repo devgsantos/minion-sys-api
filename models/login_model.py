@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import Column, DateTime,  Integer, String, ForeignKey
@@ -15,6 +16,7 @@ class LoginModel(Base):
     senha = Column(String(200), nullable=False)
     codigo_confirmacao = Column(String(6))
     token = Column(String(1000))
+    ultimo_login = Column('ultimo_login', DateTime(timezone=False), nullable=True)
     usuario_id = Column(Integer, ForeignKey('usuario.usuario_id'))
 
     usuario = relationship("usuario", back_populates="logins")
@@ -27,7 +29,7 @@ class LoginBaseModel(BaseModel):
     senha: constr(max_length=200)
     codigo_confirmacao: Optional[constr(max_length=6)]
     token: Optional[constr(max_length=1000)]
-    ultimo_login = Column('data_exclusao, DateTime(timezone=False), nullable=True)
+    ultimo_login: Optional[datetime]
     usuario_id: Optional[int]
 
     class Config:

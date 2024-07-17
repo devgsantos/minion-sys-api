@@ -16,7 +16,7 @@ class ProdutoCategoriaModel(Base, SoftDeleteQuery):
     descricao = Column('descricao', String(500))
     sigla = Column('sigla', String(3))
     imagem = Column('imagem', String(300))
-    data_cadastro = Column('data_cadastro, DateTime(timezone=False), default=func.current_timestamp())
+    data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.current_timestamp())
     data_atualizacao = Column('data_atualizacao', DateTime)
     usuario_id = Column('responsavel_cadastro', Integer, ForeignKey('usuario.usuario_id'))
     status = Column('status', Boolean)

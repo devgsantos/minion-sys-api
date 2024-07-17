@@ -27,7 +27,7 @@ class UsuarioModel(Base, SoftDeleteQuery):
     pais_id = Column('nacionalidade', Integer, ForeignKey('pais.pais_id'), nullable=False)
     naturalidade = Column('naturalidade', String(150), nullable=False)
     foto = Column('foto', String(300))
-    data_cadastro = Column('data_cadastro, DateTime(timezone=False), nullable=False, default=func.current_timestamp())
+    data_cadastro = Column('data_cadastro', DateTime(timezone=False), nullable=False, default=func.current_timestamp())
     data_atualizacao = Column('data_atualizacao', DateTime)
     status = Column('status', Boolean, nullable=False)
     data_exclusao = Column('data_exclusao', DateTime)

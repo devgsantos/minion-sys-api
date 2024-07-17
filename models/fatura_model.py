@@ -17,10 +17,10 @@ class FaturaModel(Base, SoftDeleteQuery):
     fatura_id = Column('fatura_id', Integer, primary_key=True)
     orcamento_id = Column('orcamento_id', Integer, ForeignKey('orcamento.orcamento_id'), nullable=False)
     cliente_id = Column('cliente_id', Integer, ForeignKey('cliente.cliente_id'), nullable=False)
-    data_cadastro = Column('data_cadastro, DateTime(timezone=False), default=func.current_timestamp(), nullable=False)
+    data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.current_timestamp(), nullable=False)
     status_entrega = Column('status_entrega', Integer, nullable=False)
     delet = Column('delet', Boolean, nullable=False)
-    data_exclusao = Column('data_exclusao, DateTime(timezone=False), nullable=True, default=None)
+    data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
     cliente = relationship('cliente', back_populates='faturas')
     orcamento = relationship('orcamento', back_populates='fatura')

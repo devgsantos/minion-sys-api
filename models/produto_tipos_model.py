@@ -15,7 +15,7 @@ class ProdutoTipoModel(Base, SoftDeleteQuery):
     titulo = Column('titulo', String(300), nullable=False)
     descricao = Column('descricao', String(500))
     imagem = Column('imagem', String(300))
-    data_cadastro = Column('data_cadastro, DateTime(timezone=False), nullable=False, default=func.current_timestamp())
+    data_cadastro = Column('data_cadastro', DateTime(timezone=False), nullable=False, default=func.current_timestamp())
     data_atualizacao = Column('data_atualizacao', DateTime)
     responsavel_cadastro = Column('responsavel_cadastro', String(100), nullable=False)
     status = Column('status', Boolean, nullable=False)

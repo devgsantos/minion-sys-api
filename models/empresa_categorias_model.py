@@ -17,9 +17,9 @@ class EmpresaCategoriaModel(Base, SoftDeleteQuery):
     descricao = Column('descricao', String(500), nullable=True)
     sigla = Column('sigla', String(3), nullable=False)
     imagem = Column('imagem', String(300), nullable=True)
-    data_cadastro = Column('data_cadastro, DateTime(timezone=False), default=func.current_timestamp(), nullable=True)
-    data_atualizacao = Column('data_atualizacao, DateTime(timezone=False), nullable=True)
-    data_exclusao = Column('data_exclusao, DateTime(timezone=False), nullable=True, default=None)
+    data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.current_timestamp(), nullable=True)
+    data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), nullable=True)
+    data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
 class EmpresaCategoriaBaseModel(BaseModel):
     empresa_categoria_id: int

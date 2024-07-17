@@ -15,10 +15,10 @@ class FaturaItemModel(Base, SoftDeleteQuery):
     fatura_item_id = Column('fatura_item_id', Integer, primary_key=True)
     fatura_id = Column('fatura_id', Integer, ForeignKey('fatura.fatura_id'), nullable=False)
     produto_id = Column('produto_id', Integer, ForeignKey('produto.produto_id'), nullable=False)
-    data_cadastro = Column('data_cadastro, DateTime(timezone=False), default=func.current_timestamp(), nullable=False)
-    data_atualizacao = Column('data_atualizacao, DateTime(timezone=False), nullable=True)
+    data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.current_timestamp(), nullable=False)
+    data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), nullable=True)
     quantidade_faturada = Column('quantidade_faturada', Integer, nullable=False)
-    data_exclusao = Column('data_exclusao, DateTime(timezone=False), nullable=True, default=None)
+    data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
     fatura = relationship('fatura', back_populates='fatura_itens')
     produto = relationship('produto')
