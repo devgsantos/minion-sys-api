@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Column, DateTime,  Integer, String, ForeignKey
+from sqlalchemy import Column, DateTime, Integer, String, ForeignKey, func
 from sqlalchemy.orm import relationship
 
 from .base import Base
@@ -17,6 +17,7 @@ class LoginModel(Base):
     codigo_confirmacao = Column(String(6))
     token = Column(String(1000))
     ultimo_login = Column('ultimo_login', DateTime(timezone=False), nullable=True)
+    data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=False)
     usuario_id = Column(Integer, ForeignKey('usuario.usuario_id'))
 
     usuario = relationship("UsuarioModel")

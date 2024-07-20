@@ -1,4 +1,4 @@
-from sqlalchemy import Column, func,  Integer, ForeignKey
+from sqlalchemy import Column, func, Integer, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from .base import Base
 from pydantic import BaseModel
@@ -10,6 +10,7 @@ class LoginEmpresaModel(Base):
     login_empresa_id = Column(Integer, primary_key=True, autoincrement=True)
     login_id = Column(Integer, ForeignKey('login.login_id'), nullable=False)
     empresa_id = Column(Integer, ForeignKey('empresa.empresa_id'), nullable=False)
+    data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=False)
 
     login = relationship('LoginModel', backref='login_empresas')
     empresa = relationship('EmpresaModel', backref='login_empresas')

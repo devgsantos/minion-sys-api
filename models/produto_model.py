@@ -16,8 +16,9 @@ class ProdutoModel(Base, SoftDeleteQuery):
     preco = Column('preco', Numeric(precision=10, scale=2), nullable=False)
     descricao = Column('descricao', String(1000))
     imagem = Column('imagem', String(300))
-    data_cadastro = Column('data_cadastro', DateTime(timezone=False), nullable=False, default=func.current_timestamp())
-    data_atualizacao = Column('data_atualizacao', DateTime)
+    data_cadastro = Column('data_cadastro', DateTime(timezone=False), nullable=False, server_default=func.now(),
+                           default=func.now())
+    data_atualizacao = Column('data_atualizacao', DateTime, onupdate=func.now())
     responsavel_cadastro = Column('responsavel_cadastro', String(300))
     detalhes_opcionais = Column('detalhes_opcionais', String(500))
     status = Column('status', Boolean, nullable=False)

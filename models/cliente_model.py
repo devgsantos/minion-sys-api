@@ -27,7 +27,7 @@ class ClienteModel(Base, SoftDeleteQuery):
     pais_id = Column('nacionalidade', Integer, ForeignKey('pais.pais_id'), nullable=False)
     naturalidade = Column('naturalidade', String(100), nullable=False)
     responsavel_cadastro = Column('responsavel_cadastro', String, nullable=True)
-    data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.current_timestamp(), nullable=False)
+    data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=False)
     data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), nullable=True)
     status = Column('status', Integer, nullable=False)
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)

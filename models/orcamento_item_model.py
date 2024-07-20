@@ -16,7 +16,7 @@ class OrcamentoItemModel(Base, SoftDeleteQuery):
     orcamento_item_id = Column('orcamento_item_id', Integer, primary_key=True)
     orcamento_id = Column('orcamento_id', Integer, ForeignKey('orcamento.orcamento_id'))
     produto_id = Column('produto_id', Integer, ForeignKey('produto.produto_id'))
-    data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.current_timestamp(), nullable=False)
+    data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=False)
     data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), nullable=True)
     quantidade_orcamento = Column('quantidade_orcamento', Integer, nullable=False)
     finalizado = Column('finalizado', Boolean, nullable=False)
