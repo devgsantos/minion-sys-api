@@ -5,7 +5,7 @@ from sqlalchemy import Column, func,  Integer, String, Boolean, DateTime, Foreig
 from pydantic import BaseModel, EmailStr, constr
 from sqlalchemy.orm import relationship
 
-from .base import Base
+from models.base import Base
 from models.soft_delete import SoftDeleteQuery
 
 class EmpresaModel(Base, SoftDeleteQuery):
@@ -33,8 +33,10 @@ class EmpresaModel(Base, SoftDeleteQuery):
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
     empresa_categoria = relationship('EmpresaCategoriaModel', back_populates='empresas')
-    pais = relationship('PaisModel', back_populates='empresas')
+    paises = relationship('PaisModel', back_populates='empresas')
     responsavel_cadastro = relationship('UsuarioModel', back_populates='empresas')
+    produtos = relationship('ProdutoModel', back_populates='empresas')
+
 
 class EmpresaBaseModel(BaseModel):
     empresa_id: int

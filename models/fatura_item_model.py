@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from pydantic import BaseModel
 from datetime import datetime
 
-from .base import Base
+from models.base import Base
 from .soft_delete import SoftDeleteQuery
 from .datetime_fortaleza_local import fortaleza_now
 from typing import Optional
@@ -20,8 +20,8 @@ class FaturaItemModel(Base, SoftDeleteQuery):
     quantidade_faturada = Column('quantidade_faturada', Integer, nullable=False)
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
-    fatura = relationship('fatura', back_populates='fatura_itens')
-    produto = relationship('produto')
+    fatura = relationship('FaturaModel', back_populates='fatura_itens')
+    produto = relationship('ProdutoModel')
 
 class FaturaItemBaseModel(BaseModel):
     fatura_item_id: int

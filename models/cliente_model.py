@@ -2,7 +2,7 @@ from sqlalchemy import func, Column, Integer, String, Boolean, DateTime, Foreign
 from sqlalchemy.orm import sessionmaker, scoped_session, relationship
 from datetime import datetime
 
-from .base import Base
+from models.base import Base
 from pydantic import BaseModel, EmailStr, constr
 from typing import Optional
 

@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from pydantic import BaseModel
 from datetime import datetime
 
-from .base import Base
+from models.base import Base
 from .soft_delete import SoftDeleteQuery
 from .datetime_fortaleza_local import fortaleza_now
 from typing import Optional

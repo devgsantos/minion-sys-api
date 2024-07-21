@@ -5,7 +5,7 @@ from sqlalchemy import func,  Column, Integer, String, Boolean, ForeignKey, Date
 from sqlalchemy.orm import relationship
 from pydantic import BaseModel, constr
 
-from .base import Base
+from models.base import Base
 from .datetime_fortaleza_local import fortaleza_now
 from .soft_delete import SoftDeleteQuery
 
@@ -34,6 +34,9 @@ class UsuarioModel(Base, SoftDeleteQuery):
 
     profissao = relationship('ProfissaoModel')
     pais = relationship('PaisModel')
+    empresas = relationship('EmpresaModel')
+    login = relationship('LoginModel')
+
 
 
 class UsuarioBaseModel(BaseModel):

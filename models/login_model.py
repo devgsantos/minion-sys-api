@@ -4,7 +4,7 @@ from typing import Optional
 from sqlalchemy import Column, DateTime, Integer, String, ForeignKey, func
 from sqlalchemy.orm import relationship
 
-from .base import Base
+from models.base import Base
 from pydantic import BaseModel, EmailStr, constr
 
 
@@ -21,7 +21,7 @@ class LoginModel(Base):
     usuario_id = Column(Integer, ForeignKey('usuario.usuario_id'))
 
     usuario = relationship("UsuarioModel")
-    permissoes = relationship("PermissaoModel")
+    permissoes = relationship("LoginPermissaoModel")
 
 
 class LoginBaseModel(BaseModel):

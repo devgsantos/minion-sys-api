@@ -3,7 +3,9 @@ from typing import Optional
 from sqlalchemy import Column, func,  Integer, String, DateTime
 from datetime import datetime
 
-from .base import Base
+from sqlalchemy.orm import relationship
+
+from models.base import Base
 from .soft_delete import SoftDeleteQuery
 from .datetime_fortaleza_local import fortaleza_now
 from pydantic import BaseModel, constr
@@ -20,6 +22,8 @@ class EmpresaCategoriaModel(Base, SoftDeleteQuery):
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=True)
     data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), nullable=True)
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
+
+    empresas = relationship('EmpresaModel', back_populates='empresa_categoria')
 
 class EmpresaCategoriaBaseModel(BaseModel):
     empresa_categoria_id: int

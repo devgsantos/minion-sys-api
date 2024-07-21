@@ -4,7 +4,7 @@ from sqlalchemy import Column, func,  Integer, String, DateTime
 from pydantic import BaseModel, constr
 from typing import Optional
 
-from .base import Base
+from models.base import Base
 from .soft_delete import SoftDeleteQuery
 
 

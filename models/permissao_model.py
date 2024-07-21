@@ -3,7 +3,7 @@ from typing import Optional
 from pydantic import constr, BaseModel
 from sqlalchemy import Column, func,  Integer, String
 from sqlalchemy.orm import relationship
-from .base import Base
+from models.base import Base
 
 class PermissaoModel(Base):
     __tablename__ = 'permissao'

@@ -1,7 +1,7 @@
 from models.cliente_model import Base as ClienteBase, ClienteModel
 from models.produto_model import Base as ProdutoBase, ProdutoModel
 from models.empresa_model import Base as EmpresaBase, EmpresaModel
-from models.empresa_categorias_model import  Base as EmpresaCategoriaBase, EmpresaCategoriaBaseModel
+from models.empresa_categorias_model import Base as EmpresaCategoriaBase, EmpresaCategoriaModel
 from models.estoque_model import Base as EstoqueBase, EstoqueModel
 from models.fatura_item_model import Base as FaturaItemBase, FaturaItemModel
 from models.fatura_model import Base as FaturaBase, FaturaModel

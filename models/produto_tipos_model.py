@@ -1,7 +1,7 @@
 from pydantic import BaseModel, constr
 from sqlalchemy import Column, func,  Integer, String, Numeric, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship
-from .base import Base
+from models.base import Base
 from datetime import datetime
 from typing import List, Optional
 
@@ -22,7 +22,7 @@ class ProdutoTipoModel(Base, SoftDeleteQuery):
     delet = Column('delet', Boolean, nullable=False)
     data_exclusao = Column('data_exclusao', DateTime)
 
-    produtos = relationship('ProdutoModel', backref='produto_tipo')
+    produtos = relationship('ProdutoModel', back_populates='produto_tipo')
 class ProdutoTipoBaseModel(BaseModel):
     produto_tipo_id: int
     titulo: constr(max_length=300)

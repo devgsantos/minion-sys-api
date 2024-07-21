@@ -65,7 +65,7 @@ if config.config_file_name is not None:
 # target_metadata = mymodel.Base.metadata
 Base.metadata.bind = engine
 target_metadata = Base.metadata
-model_operations = ModelOperations(engine)
+# model_operations = ModelOperations(engine)
 
 context.configure(
     url=url,

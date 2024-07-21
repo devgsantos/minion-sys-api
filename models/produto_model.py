@@ -4,7 +4,7 @@ from typing import Optional
 from pydantic import BaseModel, condecimal, constr
 from sqlalchemy import Column, func,  Integer, String, Numeric, ForeignKey, DateTime, Boolean, Float
 from sqlalchemy.orm import relationship, scoped_session, sessionmaker
-from .base import Base
+from models.base import Base
 from .soft_delete import SoftDeleteQuery
 from .datetime_fortaleza_local import fortaleza_now
 
@@ -30,10 +30,10 @@ class ProdutoModel(Base, SoftDeleteQuery):
     produto_tipo_id = Column('produto_tipo_id', Integer, ForeignKey('produto_tipo.produto_tipo_id'), nullable=False)
     empresa_id = Column('empresa_id', Integer, ForeignKey('empresa.empresa_id'), nullable=False)
 
-    produto_categoria = relationship('ProdutoCategoriaModel')
-    produto_subcategoria = relationship('ProdutoSubcategoriaModel')
-    produto_tipo = relationship('ProdutoTipoModel')
-    empresa = relationship('EmpresaModel')
+    produto_categoria = relationship('ProdutoCategoriaModel', back_populates='produtos')
+    produto_subcategoria = relationship('ProdutoSubcategoriaModel', back_populates='produtos')
+    produto_tipo = relationship('ProdutoTipoModel', back_populates='produtos')
+    empresas = relationship('EmpresaModel', back_populates='produtos')
 
 class ProdutoBaseModel(BaseModel):
     produto_id: int

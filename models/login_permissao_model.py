@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from sqlalchemy import Column, func,  Integer, ForeignKey
 from sqlalchemy.orm import relationship
-from .base import Base
+from models.base import Base
 
 class LoginPermissaoModel(Base):
     __tablename__ = 'login_permissao'
@@ -10,8 +10,8 @@ class LoginPermissaoModel(Base):
     login_id = Column(Integer, ForeignKey('login.login_id'), nullable=False)
     permissao_id = Column(Integer, ForeignKey('permissao.permissao_id'), nullable=False)
 
-    login = relationship('login')
-    permissao = relationship('permissao')
+    login = relationship('LoginModel')
+    permissao = relationship('PermissaoModel')
 
 class LoginPermissaoBaseModel(BaseModel):
     login_permissao_id: int

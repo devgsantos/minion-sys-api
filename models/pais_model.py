@@ -2,7 +2,9 @@ from typing import Optional
 
 from pydantic import BaseModel, constr
 from sqlalchemy import Column, func,  Integer, String
-from .base import Base
+from sqlalchemy.orm import relationship
+
+from models.base import Base
 
 class PaisModel(Base):
     __tablename__ = 'pais'
@@ -11,6 +13,8 @@ class PaisModel(Base):
     codigo_area = Column('codigo_area', String(5), nullable=False)
     sigla = Column('sigla', String(2), nullable=False)
     bandeira = Column('bandeira', String(300))
+
+    empresas = relationship('EmpresaModel')
 
 class PaisBaseModel(BaseModel):
     pais_id: int

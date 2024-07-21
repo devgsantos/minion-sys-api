@@ -4,8 +4,8 @@ from pydantic import BaseModel, EmailStr, constr
 from sqlalchemy import Column, func,  Integer, ForeignKey, Boolean, String, DateTime
 from sqlalchemy.orm import relationship
 
-from .base import Base
-from .soft_delete import SoftDeleteQuery
+from models.base import Base
+from models.soft_delete import SoftDeleteQuery
 from .datetime_fortaleza_local import fortaleza_now
 from typing import Optional
 

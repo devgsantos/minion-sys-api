@@ -4,7 +4,7 @@ from typing import Optional
 from pydantic import BaseModel, constr
 from sqlalchemy import Column, func,  Integer, String, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
-from .base import Base
+from models.base import Base
 from .soft_delete import SoftDeleteQuery
 from .datetime_fortaleza_local import fortaleza_now
 

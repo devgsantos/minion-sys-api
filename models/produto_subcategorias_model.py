@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, constr
 from sqlalchemy import Column, func,  Integer, String, Numeric, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship
-from .base import Base
+from models.base import Base
 from typing import List, Optional
 
 from .soft_delete import SoftDeleteQuery
@@ -25,7 +25,7 @@ class ProdutoSubcategoriaModel(Base, SoftDeleteQuery):
     usuario_id = Column('usuario_id', Integer, ForeignKey('usuario.usuario_id'))
 
     usuario = relationship('UsuarioModel')
-    produtos = relationship('ProdutoModel', backref='produto_subcategoria')
+    produtos = relationship('ProdutoModel', back_populates='produto_subcategoria')
 
 class ProdutoSubcategoriaBaseModel(BaseModel):
     produto_sub_categoria_id: int

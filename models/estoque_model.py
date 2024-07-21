@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from sqlalchemy import Column, func,  Integer, ForeignKey, Boolean, DateTime
 from sqlalchemy.orm import relationship, sessionmaker, scoped_session
 
-from .base import Base
+from models.base import Base
 from models.soft_delete import SoftDeleteQuery
 from .datetime_fortaleza_local import fortaleza_now
 from typing import Optional
@@ -19,7 +19,7 @@ class EstoqueModel(Base, SoftDeleteQuery):
     data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), nullable=True)
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
-    produto = relationship('produto', back_populates='estoques')
+    produtos = relationship('ProdutoModel')
 
 class EstoqueBaseModel(BaseModel):
     estoque_id: int

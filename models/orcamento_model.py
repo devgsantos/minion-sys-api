@@ -5,7 +5,7 @@ from typing import Optional
 
 from datetime import datetime
 
-from .base import Base
+from models.base import Base
 from .soft_delete import SoftDeleteQuery
 from .datetime_fortaleza_local import fortaleza_now
 
