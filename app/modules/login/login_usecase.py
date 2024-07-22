@@ -1,4 +1,6 @@
 from datetime import datetime
+from typing import Type
+
 from flask import request, jsonify, make_response
 from app.shared.helpers.model_operations import ModelOperations
 from app.shared.singletons.logger import Logger
@@ -14,9 +16,9 @@ class LoginUseCase:
 
     def login(self):
         try:
-            login = self.operations.findOne(self.login_model, email=request.json['email'], senha=request.json['senha'])
+            login: Type[LoginModel] = self.operations.findOne(self.login_model, email=request.json['email'], senha=request.json['senha'])
             if login:
-                token = Token().generate(username=request.json.get('email'))
+                token = Token().generate(login_id=login.login_id, permissions=login.permissoes)
                 self.operations.update(self.login_model, login.login_id, ultimo_login=datetime.now(), token=token.get('result'))
 
             return make_response(jsonify(

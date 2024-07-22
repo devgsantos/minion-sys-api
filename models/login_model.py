@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List, Any
 
 from sqlalchemy import Column, DateTime, Integer, String, ForeignKey, func
 from sqlalchemy.orm import relationship
@@ -18,11 +18,9 @@ class LoginModel(Base):
     token = Column(String(1000))
     ultimo_login = Column('ultimo_login', DateTime(timezone=False), nullable=True)
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=False)
-    usuario_id = Column(Integer, ForeignKey('usuario.usuario_id'))
 
     usuario = relationship("UsuarioModel")
     permissoes = relationship("LoginPermissaoModel")
-
 
 class LoginBaseModel(BaseModel):
     login_id: int
@@ -32,6 +30,16 @@ class LoginBaseModel(BaseModel):
     token: Optional[constr(max_length=1000)]
     ultimo_login: Optional[datetime]
     usuario_id: Optional[int]
+    permissoes: Optional[List[Any]]
+    permissoes_id: Optional[List[Any]]
 
     class Config:
         orm_mode = True
+
+class LoginRequestModel(BaseModel):
+    email: str
+    senha: constr(max_length=200)
+
+class LoginPermissoesRequest(BaseModel):
+    login_id: int
+    permissoes_id: List[int]

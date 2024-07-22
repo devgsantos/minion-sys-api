@@ -10,7 +10,6 @@ class LoginPermissaoModel(Base):
     login_id = Column(Integer, ForeignKey('login.login_id'), nullable=False)
     permissao_id = Column(Integer, ForeignKey('permissao.permissao_id'), nullable=False)
 
-    login = relationship('LoginModel')
     permissao = relationship('PermissaoModel')
 
 class LoginPermissaoBaseModel(BaseModel):

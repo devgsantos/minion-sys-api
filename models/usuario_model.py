@@ -22,11 +22,12 @@ class UsuarioModel(Base, SoftDeleteQuery):
     cidade = Column('cidade', String(100), nullable=False)
     uf = Column('uf', String(2), nullable=False)
     profissao_id = Column('profissao_id', Integer, ForeignKey('profissao.profissao_id'), nullable=False)
+    login_id = Column('login_id', Integer, ForeignKey('login.login_id'), nullable=False)
     telefone = Column('telefone', String, nullable=False)
     cpf = Column('cpf', String(14), nullable=False)
     pais_id = Column('nacionalidade', Integer, ForeignKey('pais.pais_id'), nullable=False)
     naturalidade = Column('naturalidade', String(150), nullable=False)
-    foto = Column('foto', String(300))
+    foto = Column('foto', String(300), nullable=True)
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), nullable=False, server_default=func.now(), default=func.now())
     data_atualizacao = Column('data_atualizacao', DateTime, onupdate=func.now())
     status = Column('status', Boolean, nullable=False)
@@ -61,3 +62,18 @@ class UsuarioBaseModel(BaseModel):
 
     class Config:
         orm_mode = True
+
+class UsuarioRequestModel(BaseModel):
+    email: constr(max_length=200)
+    nome: constr(max_length=500)
+    logradouro: constr(max_length=300)
+    numero_endereco: constr(max_length=10)
+    bairro: constr(max_length=100)
+    cidade: constr(max_length=100)
+    uf: constr(max_length=2)
+    profissao_id: int
+    telefone: str
+    cpf: constr(max_length=14)
+    pais_id: int
+    naturalidade: constr(max_length=150)
+    foto: Optional[str]

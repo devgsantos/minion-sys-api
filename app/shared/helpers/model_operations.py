@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from typing import Type, List, Optional, Any
 
 from flask import request
@@ -38,7 +39,7 @@ class ModelOperations:
             return session.query(model).options(joinedload('*')).all()
 
     # Buscar um único registro baseado em uma condição
-    def findOne(self,  model: Type[Base], **kwargs) -> Optional[Any]:
+    def findOne(self, model: Type[Base], **kwargs) -> Optional[Any]:
         with self.session_scope() as session:
             try:
                 results = session.query(model).filter_by(**kwargs).one()
@@ -52,21 +53,39 @@ class ModelOperations:
             return session.query(model).get(id)
 
     # Inserir um novo registro
-    def insert(self, model: Type[Base], data: dict) -> Any:
+    def insert(self, model: Type[Base], **kwargs) -> Any:
         with self.session_scope() as session:
-            instance = model(**data)
-            session.add(instance)
-            return instance
+            if any(isinstance(value, list) for value in kwargs.values()):
+                instances = []
+                for key, value in kwargs.items():
+                    if isinstance(value, list):
+                        for item in value:
+                            instance_kwargs = {k: v if k != key else item for k, v in kwargs.items() if not isinstance(v, list)}
+                            instances.append(model(**item))
+                session.add_all(instances)
+                return instances
+            else:
+                instance = model(**kwargs)
+                session.add(instance)
+                return instance
 
     # Atualizar um registro existente
     def update(self, model: Type[Base], instance_id: int, **kwargs) -> Optional[Any]:
-        instance = self.Session.query(model).get(instance_id)
-        if instance:
-            for key, value in kwargs.items():
-                setattr(instance, key, value)
-            self.Session.commit()
-            return instance
-        return None
+        with self.session_scope() as session:
+            instance = session.query(model).get(instance_id)
+            if instance:
+                for key, value in kwargs.items():
+                    setattr(instance, key, value)
+
+                session.commit()  # Commit inicial das alterações
+
+                # Verifica se o modelo tem a coluna 'data_atualizacao'
+                if hasattr(instance, 'data_atualizacao'):
+                    setattr(instance, 'data_atualizacao', datetime.now())
+                    session.commit()  # Commit após atualização da data_atualizacao
+
+                return instance
+            return None
 
     # Deletar um registro
     def delete(self, model: Type[Base], id: int) -> bool:

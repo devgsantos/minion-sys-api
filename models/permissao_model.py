@@ -13,6 +13,8 @@ class PermissaoModel(Base):
     apelido = Column(String(100), nullable=False)
     descricao = Column(String(500))
 
+    permissao_desc =  relationship('LoginPermissaoModel')
+
 class PermissaoBaseModel(BaseModel):
     permissao_id: int
     titulo: constr(max_length=255)

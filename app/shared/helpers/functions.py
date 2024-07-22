@@ -4,12 +4,19 @@ import os
 import jwt
 from flask import request, jsonify
 
+from app.shared.helpers.model_operations import ModelOperations
+from app.shared.helpers.token import Token
+from app.shared.singletons.logger import Logger
+from models import UsuarioModel
 
 
 class Functions:
     def __init__(self):
         self.jwt = jwt
         self.auth_key = os.getenv('JWT_SECRET')
+        self.operations = ModelOperations()
+        self.logger = Logger()
+        self.user_model = UsuarioModel
 
     def password_encrypt(string):
         hash = hashlib.md5(string.encode('utf-8'))
@@ -27,3 +34,26 @@ class Functions:
     def token_decript(self):
         payload = self.jwt.decode(request.headers.get("x-auth-token"), self.auth_key, algorithms=['HS256'])
         return payload
+
+    def check_user_login(self):
+        try:
+            payload = Token().decode_token(request.headers.get('Authorization').split(' ')[1])
+            user = self.operations.findOne(self.user_model, login_id=payload.get('login_id'))
+            if user:
+                return {
+                    'status': True,
+                    'data': user
+                }
+            else:
+                return {
+                    'status': True,
+                    'data': None
+                }
+        except Exception as exc:
+            self.logger.log(message=str(exc), level='error')
+            return jsonify(
+                {
+                    'status': True,
+                    'message': str(exc),
+                }
+            ), 500
