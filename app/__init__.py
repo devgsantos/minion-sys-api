@@ -36,24 +36,22 @@ def teardown_request(exception=None):
         db_session.close()
         db_session.remove()
 
+@app.after_request
+def after_request(request):
+    if isinstance(request, flask.wrappers.Response):
+        if request.mimetype == 'application/json':
+            content = gzip.compress(flask.json.dumps(request.json).encode('utf8'))
 
-# @app.after_request
-# def after_request(request):
-#     if isinstance(request, flask.wrappers.Response):
-#         if request.mimetype == 'application/json':
-#             content = gzip.compress(flask.json.dumps(request.json).encode('utf8'))
-#
-#             response = flask.make_response(content)
-#
-#             if request.json.get('code'):
-#                 response.status = request.json['code']
-#
-#             response.headers = {
-#                 "Content-Type": 'application/json',
-#                 "Content-Encoding": 'gzip',
-#                 "Content-length": len(content),
-#             }
-#
-#             return response
-#
-#     return request
+            response = flask.make_response(content)
+
+            response.headers = {
+                "Content-Type": 'application/json',
+                "Content-Encoding": 'gzip',
+                "Content-length": len(content),
+            }
+
+            Logger().log(message=request.response[0], level='info' if response.status_code < 300 else 'error')
+
+            return response
+
+    return request

@@ -21,7 +21,7 @@ class ProdutoModel(Base, SoftDeleteQuery):
     data_atualizacao = Column('data_atualizacao', DateTime, onupdate=func.now())
     responsavel_cadastro = Column('responsavel_cadastro', String(300))
     detalhes_opcionais = Column('detalhes_opcionais', String(500))
-    status = Column('status', Boolean, nullable=False)
+    status = Column('status', Boolean, nullable=False, default=True)
     data_exclusao = Column('data_exclusao', DateTime)
     produto_categoria_id = Column('produto_categoria_id', Integer, ForeignKey('produto_categoria.produto_categoria_id'),
                                   nullable=False)

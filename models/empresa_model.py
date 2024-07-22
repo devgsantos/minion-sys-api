@@ -29,7 +29,7 @@ class EmpresaModel(Base, SoftDeleteQuery):
                                   nullable=False)
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=False)
     data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), nullable=True)
-    status = Column('status', Boolean, nullable=False)
+    status = Column('status', Boolean, nullable=False, default=True)
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
     empresa_categoria = relationship('EmpresaCategoriaModel', back_populates='empresas')

@@ -12,7 +12,7 @@ def auth_decorator(func):
     try:
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if not request.headers.get('Authorization'):
+            if not request.headers.get('x-auth-token'):
                 logger.log(message='Requisição sem token de autenticação', level='error')
 
                 return {
@@ -22,7 +22,7 @@ def auth_decorator(func):
                     'code': 401
                 }
 
-            bearer, token = request.headers.get('Authorization').split(' ')
+            token = request.headers.get('x-auth-token')
 
             if not token:
                 logger.log(message='Requisição sem token de autenticação', level='error')

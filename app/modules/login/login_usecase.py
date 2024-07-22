@@ -30,7 +30,6 @@ class LoginUseCase:
             ), 200)
 
         except Exception as exc:
-            self.logger.log(message=str(exc), level='error')
 
             return jsonify(
                 {

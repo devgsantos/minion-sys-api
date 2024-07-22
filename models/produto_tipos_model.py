@@ -18,7 +18,7 @@ class ProdutoTipoModel(Base, SoftDeleteQuery):
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), nullable=False, server_default=func.now(), default=func.now())
     data_atualizacao = Column('data_atualizacao', DateTime, onupdate=func.now())
     responsavel_cadastro = Column('responsavel_cadastro', String(100), nullable=False)
-    status = Column('status', Boolean, nullable=False)
+    status = Column('status', Boolean, nullable=False, default=True)
     delet = Column('delet', Boolean, nullable=False)
     data_exclusao = Column('data_exclusao', DateTime)
 

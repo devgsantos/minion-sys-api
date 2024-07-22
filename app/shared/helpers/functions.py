@@ -37,7 +37,7 @@ class Functions:
 
     def check_user_login(self):
         try:
-            payload = Token().decode_token(request.headers.get('Authorization').split(' ')[1])
+            payload = Token().decode_token(request.headers.get('x-auth-token'))
             user = self.operations.findOne(self.user_model, login_id=payload.get('login_id'))
             if user:
                 return {
