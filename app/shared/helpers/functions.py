@@ -1,13 +1,18 @@
 import hashlib
 import os
+from datetime import datetime
 
 import jwt
 from flask import request, jsonify
+import json
 
 from app.shared.helpers.model_operations import ModelOperations
 from app.shared.helpers.token import Token
 from app.shared.singletons.logger import Logger
+from sqlalchemy.ext.declarative import DeclarativeMeta
+from sqlalchemy.inspection import inspect
 from models import UsuarioModel
+from models.base import Base
 
 
 class Functions:
@@ -57,3 +62,27 @@ class Functions:
                     'message': str(exc),
                 }
             ), 500
+
+    # def model_to_dict(self, model):
+    #     return {
+    #         c.key: getattr(model, c.key)
+    #         for c in inspect(model).mapper.column_attrs
+    #     }
+
+    def instance_to_object(self, instance):
+        """Iterate over each attribute of a SQLAlchemy model instance and print its name and value."""
+        if not isinstance(instance, Base):
+            raise TypeError("model must be an instance of SQLAlchemy model")
+
+        # Use SQLAlchemy's inspect to get the model's attributes
+        obj = {}
+        mapper = inspect(instance)
+        for attr_name in mapper.unmodified:
+            attr_value = getattr(instance, attr_name)
+            if not isinstance(attr_value, Base):
+                if isinstance(attr_value, datetime):
+                    attr_value = attr_value.strftime('%Y-%m-%d %H:%M:%S')
+                obj[attr_name] = attr_value
+            else:
+                obj[attr_name] = self.instance_to_object(attr_value)
+        return obj

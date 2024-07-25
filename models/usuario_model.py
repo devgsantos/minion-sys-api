@@ -24,7 +24,7 @@ class UsuarioModel(Base, SoftDeleteQuery):
     profissao_id = Column('profissao_id', Integer, ForeignKey('profissao.profissao_id'), nullable=False)
     login_id = Column('login_id', Integer, ForeignKey('login.login_id'), unique=True, nullable=False)
     telefone = Column('telefone', String, nullable=False)
-    cpf = Column('cpf', String(14), nullable=False)
+    cpf = Column('cpf', String(14), unique=True, nullable=False)
     pais_id = Column('nacionalidade', Integer, ForeignKey('pais.pais_id'), nullable=False)
     naturalidade = Column('naturalidade', String(150), nullable=False)
     foto = Column('foto', String(300), nullable=True)
@@ -35,8 +35,6 @@ class UsuarioModel(Base, SoftDeleteQuery):
 
     profissao = relationship('ProfissaoModel')
     pais = relationship('PaisModel')
-    empresas = relationship('EmpresaModel')
-    login = relationship('LoginModel')
 
 
 

@@ -15,6 +15,8 @@ class ProfissaoModel(Base, SoftDeleteQuery):
     titulo = Column('titulo', String(300), nullable=False)
     descricao = Column('descricao', String(500))
     imagem = Column('imagem', String(300))
+    data_cadastro = Column('data_cadastro', DateTime(timezone=False), nullable=False, server_default=func.now(),
+                           default=func.now())
     data_exclusao = Column('data_exclusao', DateTime)
 
 class ProfissaoBaseModel(BaseModel):

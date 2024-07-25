@@ -6,7 +6,7 @@ from datetime import datetime
 from models.datetime_fortaleza_local import fortaleza_now
 
 
-class SoftDeleteQuery(Query):
+class SoftDeleteQuery:
     def __new__(cls, *args, **kwargs):
         obj = super(SoftDeleteQuery, cls).__new__(cls)
         obj.__hidden_filters__ = []

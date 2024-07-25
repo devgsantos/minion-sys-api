@@ -23,23 +23,19 @@ class UserUseCase:
             request.json['login_id'] = user.get('login_id')
             insert_user = self.operations.insert(self.user_model, **request.json)
             if insert_user:
-                return make_response(
-                    jsonify({
-                        {
-                            'status': True,
-                            'message': 'Perfil de usuário criado com sucesso.'
-                        }
-                    }, 200)
-                )
+                return make_response(jsonify(
+                    {
+                        'status': True,
+                        'message': 'Perfil de usuário criado com sucesso.'
+                    }
+                ), 200)
             else:
-                return make_response(
-                    jsonify({
-                        {
-                            'status': False,
-                            'message': 'Nenhum perfil foi criado.'
-                        }
-                    }, 204)
-                )
+                return make_response(jsonify(
+                    {
+                        'status': False,
+                        'message': 'Nenhum perfil criado.'
+                    }
+                ), 204)
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
             return make_response(jsonify(

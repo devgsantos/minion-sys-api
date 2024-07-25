@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import os
 
 from flask import request
+from flask_cors import CORS
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 
@@ -16,8 +17,8 @@ load_dotenv(dotenv_path=os.path.join(os.getcwd(), '.env'))
 Logger()
 
 app = flask.Flask(__name__)
+cors = CORS(app, resources={r"*": {"origins": "*"}})
 app.register_blueprint(api_blueprint, url_prefix='/api/v1')
-engine = create_engine(os.environ.get("DB_URL"))
 engine = create_engine(os.environ.get("DB_URL"))
 Session = scoped_session(sessionmaker(bind=engine))
 

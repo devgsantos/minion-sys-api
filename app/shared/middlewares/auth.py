@@ -46,7 +46,7 @@ def auth_decorator(func):
                     'code': 401
                 }
 
-            logger.log(message='Usuario autenticado com sucesso!', level='error')
+            logger.log(message='Usuario autenticado com sucesso!', level='info')
 
             request.username = decoded_token_info.get('username')
 

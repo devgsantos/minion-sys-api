@@ -18,9 +18,11 @@ class LoginModel(Base):
     token = Column(String(1000))
     ultimo_login = Column('ultimo_login', DateTime(timezone=False), nullable=True)
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=False)
+    data_exclusao = Column('data_exclusao', DateTime)
 
     usuario = relationship("UsuarioModel")
     permissoes = relationship("LoginPermissaoModel")
+
 
 class LoginBaseModel(BaseModel):
     login_id: int
@@ -29,6 +31,7 @@ class LoginBaseModel(BaseModel):
     codigo_confirmacao: Optional[constr(max_length=6)]
     token: Optional[constr(max_length=1000)]
     ultimo_login: Optional[datetime]
+    data_atualizacao: Optional[datetime]
     usuario_id: Optional[int]
     permissoes: Optional[List[Any]]
     permissoes_id: Optional[List[Any]]
@@ -36,9 +39,11 @@ class LoginBaseModel(BaseModel):
     class Config:
         orm_mode = True
 
+
 class LoginRequestModel(BaseModel):
     email: str
     senha: constr(max_length=200)
+
 
 class LoginPermissoesRequest(BaseModel):
     login_id: int

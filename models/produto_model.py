@@ -33,7 +33,6 @@ class ProdutoModel(Base, SoftDeleteQuery):
     produto_categoria = relationship('ProdutoCategoriaModel', back_populates='produtos')
     produto_subcategoria = relationship('ProdutoSubcategoriaModel', back_populates='produtos')
     produto_tipo = relationship('ProdutoTipoModel', back_populates='produtos')
-    empresas = relationship('EmpresaModel', back_populates='produtos')
 
 class ProdutoBaseModel(BaseModel):
     produto_id: int

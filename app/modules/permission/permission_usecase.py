@@ -7,7 +7,7 @@ from app.shared.singletons.logger import Logger
 from models import LoginModel, PermissaoModel, LoginPermissaoModel
 
 
-class PermissionsUseCase:
+class PermissionUseCase:
     def __init__(self):
         self.logger = Logger()
         self.operations = ModelOperations()

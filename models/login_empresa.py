@@ -11,9 +11,10 @@ class LoginEmpresaModel(Base):
     login_id = Column(Integer, ForeignKey('login.login_id'), nullable=False)
     empresa_id = Column(Integer, ForeignKey('empresa.empresa_id'), nullable=False)
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=False)
+    data_exclusao = Column('data_exclusao', DateTime)
 
-    login = relationship('LoginModel', backref='login_empresas')
-    empresa = relationship('EmpresaModel', backref='login_empresas')
+    login = relationship('LoginModel')
+    empresa = relationship('EmpresaModel')
 
 
 class LoginEmpresaBaseModel(BaseModel):

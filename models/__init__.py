@@ -1,6 +1,6 @@
 from models.cliente_model import Base as ClienteBase, ClienteModel
 from models.produto_model import Base as ProdutoBase, ProdutoModel
-from models.empresa_model import Base as EmpresaBase, EmpresaModel
+from models.empresa_model import Base as EmpresaBase, EmpresaModel, EmpresaRequestModel
 from models.empresa_categorias_model import Base as EmpresaCategoriaBase, EmpresaCategoriaModel
 from models.estoque_model import Base as EstoqueBase, EstoqueModel
 from models.fatura_item_model import Base as FaturaItemBase, FaturaItemModel
@@ -18,3 +18,4 @@ from models.login_empresa import Base as LoginEmpresaBase, LoginEmpresaModel
 from models.login_permissao_model import Base as LoginPermissaoBase, LoginPermissaoModel
 from models.login_model import Base as LoginBase, LoginModel, LoginRequestModel, LoginPermissoesRequest
 from models.permissao_model import Base as PermissaoBase, PermissaoModel
+from models.lead_funil_model import Base as LeadFunilBase, LeadFunilModel

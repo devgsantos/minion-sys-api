@@ -20,21 +20,35 @@ class LoginUseCase:
             if login:
                 token = Token().generate(login_id=login.login_id, permissions=login.permissoes)
                 self.operations.update(self.login_model, login.login_id, ultimo_login=datetime.now(), token=token.get('result'))
+            else:
+                return make_response(
+                    jsonify(
+                        {
+                            'status': False,
+                            'message': "Usuário ou senha incorretos.",
+                            'data': None,
+                        }
+                    ), 404
+                )
 
-            return make_response(jsonify(
-                {
-                    'status': True,
-                    'message': 'Autenticação realizada com sucesso.',
-                    'data': token.get('result')
-                }
-            ), 200)
+            return make_response(
+                jsonify(
+                    {
+                        'status': True,
+                        'message': 'Autenticação realizada com sucesso.',
+                        'data': token.get('result')
+                    }
+                ), 200
+            )
 
         except Exception as exc:
 
-            return jsonify(
-                {
-                    'status': True,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500
+            return make_response(
+                jsonify(
+                    {
+                        'status': True,
+                        'message': str(exc),
+                        'data': None,
+                    }
+                ), 500
+            )

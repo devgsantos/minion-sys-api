@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from typing import Type, List, Optional, Any
+from typing import Type, List, Optional, Any, Dict
 
 from flask import request
 from sqlalchemy import create_engine
@@ -26,8 +26,7 @@ class ModelOperations:
         try:
             yield session
             session.commit()
-        except Exception as exc:
-            self.logger.log(message=str(f"ModelOperations -> {exc}"), level='error')
+        except Exception:
             session.rollback()
             raise
         # finally:
@@ -46,6 +45,38 @@ class ModelOperations:
                 return results
             except NoResultFound:
                 return None
+
+    def findMany(self, model: Type[Base], **kwargs) -> Optional[List[Any]]:
+        with self.session_scope() as session:
+            try:
+                results = session.query(model).filter_by(**kwargs).all()
+                return results
+            except NoResultFound:
+                return None
+
+    def findRelated(self, model: Type[Base], joins: List[Type[Base]], **kwargs) -> List[Any]:
+        with self.session_scope() as session:
+            query = session.query(model)
+
+            # Join with each model in the joins list
+            for join_model in joins:
+                # Make sure that joins are made on the right attributes
+                join_attr = getattr(join_model, f'{getattr(model, "__tablename__", None)}_id', None)
+                if join_attr:
+                    query = query.join(join_model, getattr(model, f'{getattr(model, "__tablename__", None)}_id') == join_attr)
+
+                    # Apply filters dynamically
+                    for attr, value in kwargs.items():
+                        if hasattr(model, attr):
+                            query = query.filter(getattr(model, attr) == value)
+
+                    # Execute the query and return results
+                    try:
+                        results = query.all()
+                    except NoResultFound:
+                        results = []
+
+                    return results
 
     # Buscar um registro pelo ID
     def findById(self, model: Type[Base], id: int) -> Optional[Any]:

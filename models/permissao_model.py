@@ -1,7 +1,7 @@
 from typing import Optional
 
 from pydantic import constr, BaseModel
-from sqlalchemy import Column, func,  Integer, String
+from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import relationship
 from models.base import Base
 
@@ -12,8 +12,7 @@ class PermissaoModel(Base):
     titulo = Column(String(255), nullable=False)
     apelido = Column(String(100), nullable=False)
     descricao = Column(String(500))
-
-    permissao_desc =  relationship('LoginPermissaoModel')
+    data_exclusao = Column('data_exclusao', DateTime)
 
 class PermissaoBaseModel(BaseModel):
     permissao_id: int

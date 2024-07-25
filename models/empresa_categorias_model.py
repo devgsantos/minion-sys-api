@@ -7,7 +7,6 @@ from sqlalchemy.orm import relationship
 
 from models.base import Base
 from .soft_delete import SoftDeleteQuery
-from .datetime_fortaleza_local import fortaleza_now
 from pydantic import BaseModel, constr
 
 
@@ -20,10 +19,8 @@ class EmpresaCategoriaModel(Base, SoftDeleteQuery):
     sigla = Column('sigla', String(3), nullable=False)
     imagem = Column('imagem', String(300), nullable=True)
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=True)
-    data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), nullable=True)
+    data_atualizacao = Column('data_atualizacao', DateTime, onupdate=func.now())
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
-
-    empresas = relationship('EmpresaModel', back_populates='empresa_categoria')
 
 class EmpresaCategoriaBaseModel(BaseModel):
     empresa_categoria_id: int

@@ -19,23 +19,20 @@ class EmpresaModel(Base, SoftDeleteQuery):
     cidade = Column('cidade', String(100), nullable=False)
     uf = Column('uf', String(2), nullable=False)
     telefone = Column('telefone', String, nullable=False)
-    cpf = Column('cpf', String, nullable=True)
-    cnpj = Column('cnpj', String, nullable=True)
+    cpf = Column('cpf', String, unique=True, nullable=True)
+    cnpj = Column('cnpj', String, unique=True, nullable=True)
     pais_id = Column('pais_id', Integer, ForeignKey('pais.pais_id'), nullable=False)
-    naturalidade = Column('naturalidade', String(100), nullable=False)
-    responsavel_cadastro_id = Column('responsavel_cadastro_id', Integer, ForeignKey('usuario.usuario_id'),
+    responsavel_cadastro_id = Column('responsavel_cadastro_id', Integer, ForeignKey('login.login_id'),
                                   nullable=False)
     empresa_categoria_id = Column('empresa_categoria_id', Integer, ForeignKey('empresa_categoria.empresa_categoria_id'),
                                   nullable=False)
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=False)
-    data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), nullable=True)
+    data_atualizacao = Column('data_atualizacao', DateTime, onupdate=func.now())
     status = Column('status', Boolean, nullable=False, default=True)
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
-    empresa_categoria = relationship('EmpresaCategoriaModel', back_populates='empresas')
-    paises = relationship('PaisModel', back_populates='empresas')
-    responsavel_cadastro = relationship('UsuarioModel', back_populates='empresas')
-    produtos = relationship('ProdutoModel', back_populates='empresas')
+    empresa_categoria = relationship('EmpresaCategoriaModel')
+    pais = relationship('PaisModel')
 
 
 class EmpresaBaseModel(BaseModel):
@@ -61,3 +58,18 @@ class EmpresaBaseModel(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class EmpresaRequestModel(BaseModel):
+    email: EmailStr
+    nome: constr(max_length=500)
+    logradouro: constr(max_length=300)
+    numero_endereco: constr(max_length=10)
+    bairro: constr(max_length=100)
+    cidade: constr(max_length=100)
+    uf: constr(max_length=2)
+    telefone: str
+    cpf: Optional[str]
+    cnpj: Optional[str]
+    pais_id: int
+    empresa_categoria_id: int

@@ -14,8 +14,6 @@ class PaisModel(Base):
     sigla = Column('sigla', String(2), nullable=False)
     bandeira = Column('bandeira', String(300))
 
-    empresas = relationship('EmpresaModel')
-
 class PaisBaseModel(BaseModel):
     pais_id: int
     nome: constr(max_length=300)

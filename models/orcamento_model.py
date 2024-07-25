@@ -17,9 +17,8 @@ class OrcamentoModel(Base, SoftDeleteQuery):
     orcamento_id = Column('orcamento_id', Integer, primary_key=True)
     cliente_id = Column('cliente_id', Integer, ForeignKey('cliente.cliente_id'))
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=False)
-    data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), nullable=True)
+    data_atualizacao = Column('data_atualizacao', DateTime, onupdate=func.now())
     finalizado = Column('finalizado', Boolean, nullable=False)
-    delet = Column('delet', Boolean, nullable=False)
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
     cliente = relationship('ClienteModel')
