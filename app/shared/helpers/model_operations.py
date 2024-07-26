@@ -33,28 +33,29 @@ class ModelOperations:
         #     session.close()
 
     # Buscar todos os registros de um modelo
-    def findAll(self, model: Type[Base]) -> List[Any]:
+    def findAll(self, model: Type[Base], offset: int = 0, limit: int = 10,) -> List[Any]:
         with self.session_scope() as session:
-            return session.query(model).options(joinedload('*')).all()
+            return session.query(model).options(joinedload('*')).offset(offset).limit(limit).all()
 
     # Buscar um único registro baseado em uma condição
-    def findOne(self, model: Type[Base], **kwargs) -> Optional[Any]:
+    def findOne(self, model: Type[Base],, **kwargs) -> Optional[Any]:
         with self.session_scope() as session:
             try:
                 results = session.query(model).filter_by(**kwargs).one()
+
                 return results
             except NoResultFound:
                 return None
 
-    def findMany(self, model: Type[Base], **kwargs) -> Optional[List[Any]]:
+    def findMany(self, model: Type[Base], offset: int = 0, limit: int = 10, **kwargs) -> Optional[List[Any]]:
         with self.session_scope() as session:
             try:
-                results = session.query(model).filter_by(**kwargs).all()
+                results = session.query(model).filter_by(**kwargs).offset(offset).limit(limit).all()
                 return results
             except NoResultFound:
                 return None
 
-    def findRelated(self, model: Type[Base], joins: List[Type[Base]], **kwargs) -> List[Any]:
+    def findRelated(self, model: Type[Base], joins: List[Type[Base]], offset: int = 0, limit: int = 10, **kwargs) -> List[Any]:
         with self.session_scope() as session:
             query = session.query(model)
 
@@ -69,6 +70,8 @@ class ModelOperations:
                     for attr, value in kwargs.items():
                         if hasattr(model, attr):
                             query = query.filter(getattr(model, attr) == value)
+
+                    query = query.offset(offset).limit(limit)
 
                     # Execute the query and return results
                     try:

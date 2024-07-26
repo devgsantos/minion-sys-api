@@ -17,12 +17,15 @@ class SoftDeleteQuery:
         self.__hidden_filters__.append(self._soft_deleted_filter)
 
     def _soft_deleted_filter(self, query):
-        return query.filter_by(deleted_at=None)
+        return query.filter_by(data_exclusao=None)
 
     def soft_delete(self):
-        self.update({"deleted_at": datetime.utcnow()})
+        self.update({"data_exclusao": datetime.utcnow()})
 
 class SoftDeleteMixin:
+    def __init__(self):
+        self.data_exclusao = None
+
     @declared_attr
     def data_exclusao(cls):
         return Column(DateTime(timezone=False), nullable=True)

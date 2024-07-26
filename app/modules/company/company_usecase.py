@@ -37,7 +37,9 @@ class CompanyUseCase:
                         {
                             'status': True,
                             'message': 'Listagem de empresas carregada com sucesso.',
-                            'data': companies_array
+                            'data': {
+                                'result': companies_array
+                            }
                         }
                     ), 200
                 )
