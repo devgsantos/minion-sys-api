@@ -38,7 +38,7 @@ class ModelOperations:
             return session.query(model).options(joinedload('*')).offset(offset).limit(limit).all()
 
     # Buscar um único registro baseado em uma condição
-    def findOne(self, model: Type[Base],, **kwargs) -> Optional[Any]:
+    def findOne(self, model: Type[Base], **kwargs) -> Optional[Any]:
         with self.session_scope() as session:
             try:
                 results = session.query(model).filter_by(**kwargs).one()

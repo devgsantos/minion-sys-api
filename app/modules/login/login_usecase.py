@@ -36,7 +36,9 @@ class LoginUseCase:
                     {
                         'status': True,
                         'message': 'Autenticação realizada com sucesso.',
-                        'data': token.get('result')
+                        'data': {
+                            'result': token.get('result')
+                        }
                     }
                 ), 200
             )
