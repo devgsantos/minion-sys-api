@@ -10,7 +10,7 @@ from models import PermissaoModel, LoginModel, LoginPermissoesRequest, EmpresaRe
 class CompanyResource(Resource):
 
     @auth_decorator
-    def get(self, action):
+    def get(self, action=None):
         if action == 'by_user':
             return CompanyUseCase().get_company_by_user()
         return CompanyUseCase().get_company()

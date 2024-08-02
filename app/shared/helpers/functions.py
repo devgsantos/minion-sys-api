@@ -9,7 +9,6 @@ import json
 from app.shared.helpers.model_operations import ModelOperations
 from app.shared.helpers.token import Token
 from app.shared.singletons.logger import Logger
-from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.inspection import inspect
 from models import UsuarioModel
 from models.base import Base
@@ -86,3 +85,27 @@ class Functions:
             else:
                 obj[attr_name] = self.instance_to_object(attr_value)
         return obj
+
+    def gerar_sigla(self, string: str) -> str:
+        # Divide a string em palavras
+        palavras = string.split()
+
+        # Verifica se é uma única palavra
+        if len(palavras) == 1:
+            # Retorna as três primeiras letras em maiúsculo
+            return palavras[0][:3].upper()
+        else:
+            # Itera sobre as palavras para encontrar a segunda palavra válida
+            primeira = palavras[0][:2].upper()
+            segunda = ""
+
+            for palavra in palavras[1:]:
+                if len(palavra) > 2:
+                    segunda = palavra[0].upper()
+                    break
+
+            # Se não encontrou uma segunda palavra válida, use a próxima palavra disponível
+            if not segunda and len(palavras) > 1:
+                segunda = palavras[1][0].upper()
+
+            return primeira + segunda

@@ -44,7 +44,7 @@ class PermissionUseCase:
 
             return jsonify(
                 {
-                    'status': True,
+                    'status': False,
                     'message': str(exc),
                     'data': None,
                 }

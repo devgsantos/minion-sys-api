@@ -13,13 +13,13 @@ class ProdutoModel(Base, SoftDeleteQuery):
     __tablename__ = 'produto'
     produto_id = Column('produto_id', Integer, primary_key=True)
     titulo = Column('titulo', String(500), nullable=False)
-    preco = Column('preco', Numeric(precision=10, scale=2), nullable=False)
-    descricao = Column('descricao', String(1000))
-    imagem = Column('imagem', String(300))
+    preco = Column('preco', Numeric(precision=10, scale=2), nullable=False, default=0)
+    descricao = Column('descricao', String(1000), nullable=True)
+    imagem = Column('imagem', String(300), nullable=True)
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), nullable=False, server_default=func.now(),
                            default=func.now())
     data_atualizacao = Column('data_atualizacao', DateTime, onupdate=func.now())
-    responsavel_cadastro = Column('responsavel_cadastro', String(300))
+    responsavel_cadastro_id = Column('responsavel_cadastro_id', Integer)
     detalhes_opcionais = Column('detalhes_opcionais', String(500))
     status = Column('status', Boolean, nullable=False, default=True)
     data_exclusao = Column('data_exclusao', DateTime)
@@ -42,7 +42,6 @@ class ProdutoBaseModel(BaseModel):
     imagem: Optional[str]
     data_cadastro: datetime
     data_atualizacao: Optional[datetime]
-    responsavel_cadastro: Optional[constr(max_length=300)]
     detalhes_opcionais: Optional[constr(max_length=500)]
     status: bool
     data_exclusao: Optional[datetime]
@@ -53,3 +52,14 @@ class ProdutoBaseModel(BaseModel):
 
     class Config:
         orm_mode = True
+
+class ProdutoRequestModel(BaseModel):
+    titulo: constr(max_length=500)
+    preco: Optional[condecimal(max_digits=10, decimal_places=2)]
+    descricao: Optional[constr(max_length=1000)]
+    imagem: Optional[str]
+    detalhes_opcionais: Optional[constr(max_length=500)]
+    produto_categoria_id: int
+    produto_subcategoria_id: int
+    produto_tipo_id: int
+    empresa_id: int

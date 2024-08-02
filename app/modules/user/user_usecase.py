@@ -40,7 +40,7 @@ class UserUseCase:
             self.logger.log(message=str(exc), level='error')
             return make_response(jsonify(
                 {
-                    'status': True,
+                    'status': False,
                     'message': str(exc),
                 }
             ), 500)

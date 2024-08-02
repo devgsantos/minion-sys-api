@@ -19,12 +19,11 @@ class ProdutoSubcategoriaModel(Base, SoftDeleteQuery):
     imagem = Column('imagem', String(300))
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), nullable=False, server_default=func.now(), default=func.now())
     data_atualizacao = Column('data_atualizacao', DateTime, onupdate=func.now())
-    responsavel_cadastro = Column('responsavel_cadastro', String(100))
+    responsavel_cadastro_id = Column('responsavel_cadastro_id', Integer)
     status = Column('status', Boolean)
     data_exclusao = Column('data_exclusao', DateTime)
     usuario_id = Column('usuario_id', Integer, ForeignKey('usuario.usuario_id'))
 
-    usuario = relationship('UsuarioModel')
     produtos = relationship('ProdutoModel', back_populates='produto_subcategoria')
 
 class ProdutoSubcategoriaBaseModel(BaseModel):

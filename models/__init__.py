@@ -1,5 +1,5 @@
 from models.cliente_model import Base as ClienteBase, ClienteModel
-from models.produto_model import Base as ProdutoBase, ProdutoModel
+from models.produto_model import Base as ProdutoBase, ProdutoModel, ProdutoRequestModel
 from models.empresa_model import Base as EmpresaBase, EmpresaModel, EmpresaRequestModel
 from models.empresa_categorias_model import Base as EmpresaCategoriaBase, EmpresaCategoriaModel
 from models.estoque_model import Base as EstoqueBase, EstoqueModel
@@ -9,7 +9,7 @@ from models.lead_model import Base as LeadBase, LeadModel
 from models.orcamento_item_model import Base as Orcamento_itemBase, OrcamentoItemModel
 from models.orcamento_model import Base as OrcamentoBase, OrcamentoModel
 from models.pais_model import Base as PaisBase, PaisModel
-from models.produto_categorias_model import Base as ProdutoCategoriaBase, ProdutoCategoriaModel
+from models.produto_categorias_model import Base as ProdutoCategoriaBase, ProdutoCategoriaModel, ProdutoCategoriaRequestModel
 from models.produto_subcategorias_model import Base as ProdutoSubcategoriaBase, ProdutoSubcategoriaModel
 from models.produto_tipos_model import Base as Produto_tiposBase, ProdutoTipoModel
 from models.profissao_model import Base as ProfissaoBase, ProfissaoModel

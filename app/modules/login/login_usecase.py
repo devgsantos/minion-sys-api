@@ -48,7 +48,7 @@ class LoginUseCase:
             return make_response(
                 jsonify(
                     {
-                        'status': True,
+                        'status': False,
                         'message': str(exc),
                         'data': None,
                     }
