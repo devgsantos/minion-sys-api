@@ -13,7 +13,7 @@ class CompanyResource(Resource):
     def get(self, action=None):
         if action == 'by_user':
             return CompanyUseCase().get_company_by_user()
-        return CompanyUseCase().get_company()
+        return CompanyUseCase().get_company_all()
 
     @auth_decorator
     @dto_decorator(EmpresaRequestModel)

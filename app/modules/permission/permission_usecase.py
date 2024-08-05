@@ -40,8 +40,6 @@ class PermissionUseCase:
                     }), 204
                 )
         except Exception as exc:
-            self.logger.log(message=str(exc), level='error')
-
             return jsonify(
                 {
                     'status': False,

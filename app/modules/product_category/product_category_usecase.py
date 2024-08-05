@@ -14,6 +14,37 @@ class ProductCategoryUseCase:
         self.functions = Functions()
         self.product_category_model = ProdutoCategoriaModel
 
+    def get_product_category_all(self):
+        try:
+            page = int(request.args.get('page'))
+            limit = int(request.args.get('limit'))
+            categories = self.operations.findAll(self.product_category_model, page, limit)
+            categories_array = self.functions.instance_list_to_array(categories)
+
+            return make_response(jsonify(
+                {
+                    'status': True,
+                    'message': 'Categorias carregadas com sucesso.',
+                    'data': {
+                        'result': categories_array,
+                        'page': page,
+                        'limit': limit
+                    }
+
+                }
+            ), 201)
+        except Exception as exc:
+            return make_response(jsonify(
+                {
+                    'status': False,
+                    'message': str(exc),
+                    'data': None,
+                }
+            ), 500)
+
+    def get_product_category_by_id(self):
+        print('by id')
+
     def create_product_category(self):
         try:
             user = self.functions.token_decript()
@@ -27,8 +58,6 @@ class ProductCategoryUseCase:
                 }
             ), 201)
         except Exception as exc:
-            self.logger.log(message=str(exc), level='error')
-
             return make_response(jsonify(
                 {
                     'status': False,

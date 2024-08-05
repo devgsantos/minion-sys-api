@@ -33,8 +33,9 @@ class ModelOperations:
         #     session.close()
 
     # Buscar todos os registros de um modelo
-    def findAll(self, model: Type[Base], offset: int = 0, limit: int = 10,) -> List[Any]:
+    def findAll(self, model: Type[Base], page: int = 1, limit: int = 10,) -> List[Any]:
         with self.session_scope() as session:
+            offset = (page - 1) * limit
             return session.query(model).options(joinedload('*')).offset(offset).limit(limit).all()
 
     # Buscar um único registro baseado em uma condição

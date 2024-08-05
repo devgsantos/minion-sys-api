@@ -19,7 +19,7 @@ class CompanyUseCase:
         self.empresa_model = EmpresaModel
         self.login_empresa_model = LoginEmpresaModel
 
-    def get_company(self):
+    def get_company_all(self):
         print('pegou a empresa')
 
     def get_company_by_user(self):
@@ -75,8 +75,6 @@ class CompanyUseCase:
                 }
             ), 201)
         except Exception as exc:
-            self.logger.log(message=str(exc), level='error')
-
             return make_response(jsonify(
                 {
                     'status': False,

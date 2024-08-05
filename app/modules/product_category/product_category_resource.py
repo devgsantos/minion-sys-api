@@ -9,11 +9,12 @@ from models import ProdutoCategoriaRequestModel
 
 class ProductCategoryResource(Resource):
 
-    # @auth_decorator
-    # def get(self, action=None):
-    #     if action == 'by_id':
-    #         return ProductUseCase().get_by_id()
-    #     return ProductUseCase().get_all()
+    @auth_decorator
+    def get(self, action=None):
+        if action == 'by_id':
+            return ProductCategoryUseCase().get_product_category_by_id()
+        if action == 'all':
+            return ProductCategoryUseCase().get_product_category_all()
 
     @auth_decorator
     @dto_decorator(ProdutoCategoriaRequestModel)

@@ -38,25 +38,3 @@ class ProductUseCase:
                     'data': None,
                 }
             ), 500)
-
-    def create_category(self):
-        try:
-            user = self.functions.token_decript()
-            request.json['responsavel_cadastro_id'] = user.get('login_id')
-            self.operations.insert(self.product_category_model, **request.json)
-            return make_response(jsonify(
-                {
-                    'status': True,
-                    'message': 'Produto criado com sucesso.'
-                }
-            ), 201)
-        except Exception as exc:
-            self.logger.log(message=str(exc), level='error')
-
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)

@@ -68,6 +68,13 @@ class Functions:
     #         for c in inspect(model).mapper.column_attrs
     #     }
 
+    def instance_list_to_array(self, list):
+        array = []
+        for item in list:
+            dict = self.functions.instance_to_object(item)
+            array.append(dict)
+        return array
+
     def instance_to_object(self, instance):
         """Iterate over each attribute of a SQLAlchemy model instance and print its name and value."""
         if not isinstance(instance, Base):

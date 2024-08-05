@@ -30,4 +30,4 @@ api.add_resource(CompanyResource, '/company/<string:action>')
 api.add_resource(ProductResource, '/product')
 
 # PRODUCT CATEGORY
-api.add_resource(ProductCategoryResource, '/product_category')
+api.add_resource(ProductCategoryResource, '/product_category/<string:action>')
