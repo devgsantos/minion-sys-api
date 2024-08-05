@@ -22,7 +22,7 @@ class ProdutoCategoriaModel(Base, SoftDeleteQuery):
     status = Column('status', Boolean, default=True)
     data_exclusao = Column('data_exclusao', DateTime)
 
-    produtos = relationship('ProdutoModel', back_populates='produto_categoria')
+    # produtos = relationship('ProdutoModel', back_populates='produto_categoria')
 
 
 class ProdutoCategoriaBaseModel(BaseModel):

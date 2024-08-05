@@ -19,3 +19,4 @@ from models.login_permissao_model import Base as LoginPermissaoBase, LoginPermis
 from models.login_model import Base as LoginBase, LoginModel, LoginRequestModel, LoginPermissoesRequest
 from models.permissao_model import Base as PermissaoBase, PermissaoModel
 from models.lead_funil_model import Base as LeadFunilBase, LeadFunilModel
+from models.rel_produto_produto_subcategoria_model import Base as RelProdutoProdutoSubcategoriaBase, RelProdutoProdutoSubcategoriaBaseModel

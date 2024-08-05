@@ -22,7 +22,6 @@ class ProdutoTipoModel(Base, SoftDeleteQuery):
     delet = Column('delet', Boolean, nullable=False)
     data_exclusao = Column('data_exclusao', DateTime)
 
-    produtos = relationship('ProdutoModel', back_populates='produto_tipo')
 class ProdutoTipoBaseModel(BaseModel):
     produto_tipo_id: int
     titulo: constr(max_length=300)

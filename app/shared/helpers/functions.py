@@ -71,7 +71,7 @@ class Functions:
     def instance_list_to_array(self, list):
         array = []
         for item in list:
-            dict = self.functions.instance_to_object(item)
+            dict = self.instance_to_object(item)
             array.append(dict)
         return array
 

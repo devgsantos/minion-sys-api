@@ -23,16 +23,16 @@ class ProdutoModel(Base, SoftDeleteQuery):
     detalhes_opcionais = Column('detalhes_opcionais', String(500))
     status = Column('status', Boolean, nullable=False, default=True)
     data_exclusao = Column('data_exclusao', DateTime)
-    produto_categoria_id = Column('produto_categoria_id', Integer, ForeignKey('produto_categoria.produto_categoria_id'),
-                                  nullable=False)
-    produto_subcategoria_id = Column('produto_subcategoria_id', Integer,
-                                     ForeignKey('produto_subcategoria.produto_subcategoria_id'), nullable=False)
+    # produto_categoria_id = Column('produto_categoria_id', Integer, ForeignKey('produto_categoria.produto_categoria_id'),
+    #                               nullable=False)
+    # produto_subcategoria_id = Column('produto_subcategoria_id', Integer,
+    #                                  ForeignKey('produto_subcategoria.produto_subcategoria_id'), nullable=False)
     produto_tipo_id = Column('produto_tipo_id', Integer, ForeignKey('produto_tipo.produto_tipo_id'), nullable=False)
     empresa_id = Column('empresa_id', Integer, ForeignKey('empresa.empresa_id'), nullable=False)
 
-    produto_categoria = relationship('ProdutoCategoriaModel', back_populates='produtos')
-    produto_subcategoria = relationship('ProdutoSubcategoriaModel', back_populates='produtos')
-    produto_tipo = relationship('ProdutoTipoModel', back_populates='produtos')
+    # produto_subcategoria = relationship('ProdutoSubcategoriaModel'
+    produto_subcategorias = relationship("RelProdutoProdutoSubcategoria")
+    produto_tipo = relationship('ProdutoTipoModel')
 
 class ProdutoBaseModel(BaseModel):
     produto_id: int
