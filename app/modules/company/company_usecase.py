@@ -24,21 +24,24 @@ class CompanyUseCase:
 
     def get_company_by_user(self):
         try:
+            page = int(request.args.get('page'))
+            limit = int(request.args.get('limit'))
             user = self.functions.token_decript()
-            companies = self.operations.findRelated(self.empresa_model, [self.login_empresa_model, self.login_model],
+            companies, total = self.operations.findRelated(self.empresa_model, [self.login_empresa_model, self.login_model],
                                                     login_id=user.get('login_id'))
+
             if companies:
-                companies_array = []
-                for company in companies:
-                    dict = self.functions.instance_to_object(company)
-                    companies_array.append(dict)
+                companies_array = self.functions.instance_list_to_array(companies)
                 return make_response(
                     jsonify(
                         {
                             'status': True,
                             'message': 'Listagem de empresas carregada com sucesso.',
                             'data': {
-                                'result': companies_array
+                                'result': companies_array,
+                                'page': page,
+                                'limit': limit,
+                                'total': total
                             }
                         }
                     ), 200

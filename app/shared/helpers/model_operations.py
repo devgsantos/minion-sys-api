@@ -1,9 +1,9 @@
 import os
 from datetime import datetime
-from typing import Type, List, Optional, Any, Dict
+from typing import Type, List, Optional, Any, Dict, Tuple
 
 from flask import request
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker, scoped_session, joinedload
 from sqlalchemy.orm.exc import NoResultFound
 from contextlib import contextmanager
@@ -36,7 +36,16 @@ class ModelOperations:
     def findAll(self, model: Type[Base], page: int = 1, limit: int = 10,) -> List[Any]:
         with self.session_scope() as session:
             offset = (page - 1) * limit
-            return session.query(model).options(joinedload('*')).offset(offset).limit(limit).all()
+
+            # Retorno o total de registros
+            total_count = session.query(func.count(f'{getattr(model, "__tablename__", None)}_id')) \
+                .filter(model.data_exclusao.is_(None)).scalar()
+
+            # Consulta para obter os resultados paginados
+            results = session.query(model).options(joinedload('*')).filter(model.data_exclusao.is_(None)).offset(
+                offset).limit(limit).all()
+
+            return results, total_count
 
     # Buscar um único registro baseado em uma condição
     def findOne(self, model: Type[Base], **kwargs) -> Optional[Any]:
@@ -56,31 +65,67 @@ class ModelOperations:
             except NoResultFound:
                 return None
 
-    def findRelated(self, model: Type[Base], joins: List[Type[Base]], offset: int = 0, limit: int = 10, **kwargs) -> List[Any]:
+    # def findRelated(self, model: Type[Base], joins: List[Type[Base]], offset: int = 0, limit: int = 10, **kwargs) -> List[Any]:
+    #     with self.session_scope() as session:
+    #         query = session.query(model)
+    #
+    #         # Join with each model in the joins list
+    #         for join_model in joins:
+    #             # Make sure that joins are made on the right attributes
+    #             join_attr = getattr(join_model, f'{getattr(model, "__tablename__", None)}_id', None)
+    #             if join_attr:
+    #                 query = query.join(join_model, getattr(model, f'{getattr(model, "__tablename__", None)}_id') == join_attr)
+    #
+    #                 # Apply filters dynamically
+    #                 for attr, value in kwargs.items():
+    #                     if hasattr(model, attr):
+    #                         query = query.filter(getattr(model, attr) == value)
+    #
+    #                 query = query.offset(offset).limit(limit)
+    #
+    #                 # Execute the query and return results
+    #                 try:
+    #                     results = query.all()
+    #                 except NoResultFound:
+    #                     results = []
+    #
+    #                 return results
+
+    def findRelated(self, model: Type[Base], joins: List[Type[Base]], page: int = 1, limit: int = 10, **kwargs) -> \
+    Tuple[List[Any], int]:
         with self.session_scope() as session:
             query = session.query(model)
+            offset = (page - 1) * limit
 
             # Join with each model in the joins list
             for join_model in joins:
-                # Make sure that joins are made on the right attributes
                 join_attr = getattr(join_model, f'{getattr(model, "__tablename__", None)}_id', None)
                 if join_attr:
-                    query = query.join(join_model, getattr(model, f'{getattr(model, "__tablename__", None)}_id') == join_attr)
+                    query = query.join(join_model,
+                                       getattr(model, f'{getattr(model, "__tablename__", None)}_id') == join_attr)
 
-                    # Apply filters dynamically
-                    for attr, value in kwargs.items():
-                        if hasattr(model, attr):
-                            query = query.filter(getattr(model, attr) == value)
+            # Apply filters dynamically
+            for attr, value in kwargs.items():
+                if hasattr(model, attr):
+                    query = query.filter(getattr(model, attr) == value)
 
-                    query = query.offset(offset).limit(limit)
+            # Filter out records with non-null data_exclusao if the field exists
+            if hasattr(model, 'data_exclusao'):
+                query = query.filter(model.data_exclusao.is_(None))
 
-                    # Execute the query and return results
-                    try:
-                        results = query.all()
-                    except NoResultFound:
-                        results = []
+            # Total count of records
+            total_count = query.count()
 
-                    return results
+            # Apply pagination
+            query = query.offset(offset).limit(limit)
+
+            # Execute the query and return results
+            try:
+                results = query.all()
+            except NoResultFound:
+                results = []
+
+            return results, total_count
 
     # Buscar um registro pelo ID
     def findById(self, model: Type[Base], id: int) -> Optional[Any]:
