@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
+from _decimal import Decimal
 from pydantic import BaseModel, condecimal, constr, field_validator
 from sqlalchemy import Column, func,  Integer, String, Numeric, ForeignKey, DateTime, Boolean, Float
 from sqlalchemy.orm import relationship, scoped_session, sessionmaker
@@ -42,7 +43,8 @@ class ProdutoModel(Base, SoftDeleteQuery):
 class ProdutoBaseModel(BaseModel):
     produto_id: int
     titulo: constr(max_length=500)
-    preco: condecimal(max_digits=10, decimal_places=2)
+    preco_custo: float
+    preco_venda: float
     descricao: Optional[constr(max_length=1000)]
     imagem: Optional[str]
     data_cadastro: datetime

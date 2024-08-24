@@ -14,6 +14,7 @@ class ProductCategoryUseCase:
         self.functions = Functions()
         self.product_category_model = ProdutoCategoriaModel
 
+    #  ESTA TRATATIVA DE SERIALIZAÇÃO DEVE SER USADO EM MODELOS GENÉRICOS
     def get_product_category_all(self):
         try:
             page = int(request.args.get('page'))
