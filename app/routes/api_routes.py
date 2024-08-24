@@ -27,7 +27,7 @@ api.add_resource(UserResource, '/users')
 api.add_resource(CompanyResource, '/company/<string:action>')
 
 # PRODUCT
-api.add_resource(ProductResource, '/product')
+api.add_resource(ProductResource, '/product/<string:action>')
 
 # PRODUCT CATEGORY
 api.add_resource(ProductCategoryResource, '/product_category/<string:action>')

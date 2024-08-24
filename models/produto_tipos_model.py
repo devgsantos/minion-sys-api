@@ -1,10 +1,10 @@
-from pydantic import BaseModel, constr
+from pydantic import BaseModel, constr, field_validator
 from sqlalchemy import Column, func,  Integer, String, Numeric, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from models.base import Base
 from datetime import datetime
 from typing import List, Optional
-
+from app.shared.helpers.validators import format_datetime
 from .soft_delete import SoftDeleteQuery
 from .datetime_fortaleza_local import fortaleza_now
 
@@ -28,10 +28,13 @@ class ProdutoTipoBaseModel(BaseModel):
     imagem: Optional[str]
     data_cadastro: datetime
     data_atualizacao: Optional[datetime]
-    responsavel_cadastro: constr(max_length=100)
+    responsavel_cadastro_id: int
     status: bool
-    delet: bool
     data_exclusao: Optional[datetime]
 
+    @field_validator('data_cadastro', 'data_atualizacao', 'data_exclusao')
+    def format_datetime(cls, value):
+        return format_datetime(value)
+
     class Config:
-        orm_mode = True
+        from_attributes = True

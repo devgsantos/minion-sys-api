@@ -14,7 +14,9 @@ class ProductResource(Resource):
     def get(self, action=None):
         if action == 'by_id':
             return ProductUseCase().get_by_id()
-        return ProductUseCase().get_all()
+        elif action == 'all':
+            return ProductUseCase().get_product_all()
+
 
     @auth_decorator
     @dto_decorator(ProdutoRequestModel)

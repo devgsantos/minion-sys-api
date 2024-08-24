@@ -1,11 +1,15 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, condecimal, constr
+from pydantic import BaseModel, condecimal, constr, field_validator
 from sqlalchemy import Column, func,  Integer, String, Numeric, ForeignKey, DateTime, Boolean, Float
 from sqlalchemy.orm import relationship, scoped_session, sessionmaker
 from models.base import Base
+from .produto_categorias_model import ProdutoCategoriaBaseModel
+from .produto_subcategorias_model import ProdutoSubcategoriaBaseModel
+from .produto_tipos_model import ProdutoTipoBaseModel
 from .soft_delete import SoftDeleteQuery
+from app.shared.helpers.validators import format_datetime
 from .datetime_fortaleza_local import fortaleza_now
 
 
@@ -13,7 +17,8 @@ class ProdutoModel(Base, SoftDeleteQuery):
     __tablename__ = 'produto'
     produto_id = Column('produto_id', Integer, primary_key=True)
     titulo = Column('titulo', String(500), nullable=False)
-    preco = Column('preco', Numeric(precision=10, scale=2), nullable=False, default=0)
+    preco_venda = Column('preco_venda', Numeric(precision=10, scale=2), nullable=False, default=0)
+    preco_custo = Column('preco_custo', Numeric(precision=10, scale=2), nullable=False, default=0)
     descricao = Column('descricao', String(1000), nullable=True)
     imagem = Column('imagem', String(300), nullable=True)
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), nullable=False, server_default=func.now(),
@@ -30,7 +35,6 @@ class ProdutoModel(Base, SoftDeleteQuery):
     produto_tipo_id = Column('produto_tipo_id', Integer, ForeignKey('produto_tipo.produto_tipo_id'), nullable=False)
     empresa_id = Column('empresa_id', Integer, ForeignKey('empresa.empresa_id'), nullable=False)
 
-    # produto_subcategorias = relationship("RelProdutoProdutoSubcategoria")
     produto_categoria = relationship('ProdutoCategoriaModel')
     produto_subcategoria = relationship('ProdutoSubcategoriaModel')
     produto_tipo = relationship('ProdutoTipoModel')
@@ -45,14 +49,20 @@ class ProdutoBaseModel(BaseModel):
     data_atualizacao: Optional[datetime]
     detalhes_opcionais: Optional[constr(max_length=500)]
     status: bool
-    data_exclusao: Optional[datetime]
-    produto_categoria_id: int
-    produto_subcategoria_id: int
-    produto_tipo_id: int
     empresa_id: int
+    responsavel_cadastro_id: int
+    data_exclusao: Optional[datetime]
+
+    produto_categoria: Optional[ProdutoCategoriaBaseModel]
+    produto_subcategoria: Optional[ProdutoSubcategoriaBaseModel]
+    produto_tipo: Optional[ProdutoTipoBaseModel]
+
+    @field_validator('data_cadastro', 'data_atualizacao', 'data_exclusao')
+    def format_datetime(cls, value):
+        return format_datetime(value)
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ProdutoRequestModel(BaseModel):
     titulo: constr(max_length=500)
@@ -64,3 +74,5 @@ class ProdutoRequestModel(BaseModel):
     produto_subcategoria_id: int
     produto_tipo_id: int
     empresa_id: int
+
+

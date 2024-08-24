@@ -1,11 +1,12 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, constr
+from pydantic import BaseModel, constr, field_validator
 from sqlalchemy import Column, func,  Integer, String, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from models.base import Base
 from .soft_delete import SoftDeleteQuery
+from app.shared.helpers.validators import format_datetime
 from .datetime_fortaleza_local import fortaleza_now
 
 
@@ -33,12 +34,16 @@ class ProdutoCategoriaBaseModel(BaseModel):
     imagem: Optional[str]
     data_cadastro: Optional[datetime]
     data_atualizacao: Optional[datetime]
-    usuario_id: Optional[int]
+    responsavel_cadastro_id: int
     status: Optional[bool]
     data_exclusao: Optional[datetime]
 
+    @field_validator('data_cadastro', 'data_atualizacao', 'data_exclusao')
+    def format_datetime(cls, value):
+        return format_datetime(value)
+
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ProdutoCategoriaRequestModel(BaseModel):

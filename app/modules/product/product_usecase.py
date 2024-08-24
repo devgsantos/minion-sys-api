@@ -5,6 +5,7 @@ from app.shared.helpers.functions import Functions
 from app.shared.helpers.model_operations import ModelOperations
 from app.shared.singletons.logger import Logger
 from models import ProdutoModel, ProdutoCategoriaModel, ProdutoSubcategoriaModel, ProdutoTipoModel
+from models.produto_model import ProdutoBaseModel
 
 
 class ProductUseCase:
@@ -31,6 +32,36 @@ class ProductUseCase:
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
 
+            return make_response(jsonify(
+                {
+                    'status': False,
+                    'message': str(exc),
+                    'data': None,
+                }
+            ), 500)
+
+    # USAR A SERIALIZAÇÃO DESTA FUNÇÃO COMO BASE PARA AS OUTRAS
+    def get_product_all(self):
+        try:
+            page = int(request.args.get('page'))
+            limit = int(request.args.get('limit'))
+            products, total = self.operations.findAll(self.product_model, page, limit)
+            products_array = [ProdutoBaseModel.from_orm(product).dict() for product in products]
+
+            return make_response(jsonify(
+                {
+                    'status': True,
+                    'message': 'Produtos carregados com sucesso.',
+                    'data': {
+                        'result': products_array,
+                        'page': page,
+                        'limit': limit,
+                        'total': total
+                    }
+
+                }
+            ), 201)
+        except Exception as exc:
             return make_response(jsonify(
                 {
                     'status': False,
