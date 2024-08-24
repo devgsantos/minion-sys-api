@@ -1,6 +1,9 @@
 import hashlib
 import os
 from datetime import datetime
+from flask_restx import Api, fields
+from pydantic import BaseModel
+from typing import Type
 
 import jwt
 from flask import request, jsonify
@@ -116,3 +119,34 @@ class Functions:
                 segunda = palavras[1][0].upper()
 
             return primeira + segunda
+
+
+    def pydantic_to_flask_restx_model(self, model: Type[BaseModel], api) -> dict:
+        """Converte um modelo Pydantic para um modelo Flask-RESTX."""
+        model_fields = {}
+        for name, field in model.__annotations__.items():
+            # Mapeia tipos Pydantic para tipos Flask-RESTX
+            if field == int:
+                model_fields[name] = fields.Integer
+            elif field == float:
+                model_fields[name] = fields.Float
+            elif field == str:
+                model_fields[name] = fields.String
+            elif field == bool:
+                model_fields[name] = fields.Boolean
+            elif field == list:
+                model_fields[name] = fields.List(fields.Raw)  # Suporte básico para listas
+            elif field == dict:
+                model_fields[name] = fields.Raw  # Suporte básico para dicionários
+            elif hasattr(field, '__origin__'):
+                origin = getattr(field, '__origin__')
+                if origin == list:
+                    # Se for uma lista, usa o primeiro tipo genérico encontrado
+                    item_type = field.__args__[0]
+                    model_fields[name] = fields.List(self.pydantic_to_flask_restx_model(item_type, api))
+                elif origin == dict:
+                    # Se for um dicionário, define um formato genérico
+                    model_fields[name] = fields.Raw
+            else:
+                model_fields[name] = fields.Raw  # Tipo não reconhecido, usa Raw
+        return api.model(model.__name__, model_fields)

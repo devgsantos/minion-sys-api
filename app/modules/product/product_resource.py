@@ -1,12 +1,11 @@
-from flask_restful import Resource
+from flask_restx import Resource
+
 
 from app.modules.company.company_usecase import CompanyUseCase
 from app.modules.product.product_usecase import ProductUseCase
 from app.shared.middlewares.auth import auth_decorator
 from app.shared.middlewares.dto import dto_decorator
-from app.modules.permission.permission_usecase import PermissionUseCase
 from models import ProdutoRequestModel
-
 
 class ProductResource(Resource):
 
