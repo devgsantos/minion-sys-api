@@ -20,3 +20,6 @@ from models.login_model import Base as LoginBase, LoginModel, LoginRequestModel,
 from models.permissao_model import Base as PermissaoBase, PermissaoModel
 from models.lead_funil_model import Base as LeadFunilBase, LeadFunilModel
 from models.rel_produto_produto_subcategoria_model import Base as RelProdutoProdutoSubcategoriaBase, RelProdutoProdutoSubcategoriaBaseModel
+from models.servico_model import Base as ServicoBase, ServicoModel, ServicoBaseModel, ServicoRequestModel
+from models.servico_tipos import Base as ServicoTipoBase, ServicoTipoModel, ServicoTipoBaseModel
+from models.rel_servico_produto import Base as RelServicoProdutoBase, RelServicoProdutoModel, RelProdutoProdutoSubcategoriaBaseModel
