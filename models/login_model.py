@@ -22,6 +22,7 @@ class LoginModel(Base):
 
     usuario = relationship("UsuarioModel")
     permissoes = relationship("LoginPermissaoModel")
+    empresas = relationship("LoginEmpresaModel")
 
 
 class LoginBaseModel(BaseModel):

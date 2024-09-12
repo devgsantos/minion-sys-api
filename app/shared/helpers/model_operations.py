@@ -57,13 +57,44 @@ class ModelOperations:
             except NoResultFound:
                 return None
 
-    def findMany(self, model: Type[Base], offset: int = 0, limit: int = 10, **kwargs) -> Optional[List[Any]]:
+    def findMany(self, model: Type[Base], page: int = 1, limit: int = 10, **kwargs) -> Tuple[Optional[List[Any]], int]:
         with self.session_scope() as session:
+            offset = (page - 1) * limit
+
             try:
-                results = session.query(model).filter_by(**kwargs).offset(offset).limit(limit).all()
-                return results
+                # Contar o total de registros com base nos filtros aplicados
+                query_count = session.query(func.count()).select_from(model)
+
+                for key, value in kwargs.items():
+                    column = getattr(model, key, None)
+                    if column is not None:
+                        if isinstance(value, list):
+                            query_count = query_count.filter(column.in_(value))
+                        else:
+                            query_count = query_count.filter(column == value)
+                    else:
+                        raise ValueError(f"Campo '{key}' não encontrado no modelo.")
+
+                total_count = query_count.scalar()  # Total de registros com base nos filtros aplicados
+
+                # Consulta para obter os resultados paginados
+                query_results = session.query(model)
+
+                for key, value in kwargs.items():
+                    column = getattr(model, key, None)
+                    if column is not None:
+                        if isinstance(value, list):
+                            query_results = query_results.filter(column.in_(value))
+                        else:
+                            query_results = query_results.filter(column == value)
+
+                results = query_results.offset(offset).limit(limit).all()
+                return results, total_count
             except NoResultFound:
-                return None
+                return None, 0
+            except Exception as e:
+                print(f"Erro ao executar a consulta: {e}")
+                raise
 
     # def findRelated(self, model: Type[Base], joins: List[Type[Base]], offset: int = 0, limit: int = 10, **kwargs) -> List[Any]:
     #     with self.session_scope() as session:

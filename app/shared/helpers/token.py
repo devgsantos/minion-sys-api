@@ -12,9 +12,10 @@ class Token:
         self.secret_key = os.environ.get('JWT_SECRET')
         self.logger = Logger()
 
-    def generate(self, login_id, permissions):
+    def generate(self, login_id, permissions, companies):
         try:
             list_permissions = []
+            list_companies = []
             for permission in permissions:
                 list_permissions.append({
                     'login_permissao_id': permission.login_permissao_id,
@@ -23,10 +24,15 @@ class Token:
                     'apelido': permission.permissao.apelido,
                     'descricao': permission.permissao.descricao
                 })
+            for company in companies:
+                list_companies.append(
+                    company.empresa_id
+                )
             payload = {
                 'login_id': login_id,
                 'permissoes': list_permissions,
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=6)
+                'companies': list_companies,
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=8)
             }
 
             token = jwt.encode(payload, self.secret_key, algorithm='HS256')

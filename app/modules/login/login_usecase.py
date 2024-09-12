@@ -18,7 +18,7 @@ class LoginUseCase:
         try:
             login: Type[LoginModel] = self.operations.findOne(self.login_model, email=request.json['email'], senha=request.json['senha'])
             if login:
-                token = Token().generate(login_id=login.login_id, permissions=login.permissoes)
+                token = Token().generate(login_id=login.login_id, permissions=login.permissoes, companies=login.empresas)
                 self.operations.update(self.login_model, login.login_id, ultimo_login=datetime.now(), token=token.get('result'))
             else:
                 return make_response(

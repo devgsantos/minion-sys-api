@@ -24,8 +24,8 @@ class CompanyUseCase:
 
     def get_company_by_user(self):
         try:
-            page = int(request.args.get('page'))
-            limit = int(request.args.get('limit'))
+            page = int(request.args.get('page')) if request.args.get('page') else 1
+            limit = int(request.args.get('limit')) if request.args.get('limit') else 10
             user = self.functions.token_decript()
             companies, total = self.operations.findRelated(self.empresa_model, [self.login_empresa_model, self.login_model],
                                                     login_id=user.get('login_id'))

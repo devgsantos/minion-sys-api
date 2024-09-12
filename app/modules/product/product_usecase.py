@@ -43,9 +43,11 @@ class ProductUseCase:
     # USAR A SERIALIZAÇÃO DESTA FUNÇÃO COMO BASE PARA AS OUTRAS
     def get_product_all(self):
         try:
-            page = int(request.args.get('page'))
-            limit = int(request.args.get('limit'))
-            products, total = self.operations.findAll(self.product_model, page, limit)
+            user = self.functions.token_decript()
+            companies = user.get('companies')
+            page = int(request.args.get('page')) if request.args.get('page') else 1
+            limit = int(request.args.get('limit')) if request.args.get('limit') else 10
+            products, total = self.operations.findMany(self.product_model, page, limit, empresa_id=companies)
             products_array = [ProdutoBaseModel.from_orm(product).dict() for product in products]
 
             return make_response(jsonify(
