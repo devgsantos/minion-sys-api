@@ -27,7 +27,7 @@ class EmpresaModel(Base, SoftDeleteQuery):
     empresa_categoria_id = Column('empresa_categoria_id', Integer, ForeignKey('empresa_categoria.empresa_categoria_id'),
                                   nullable=False)
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=False)
-    data_atualizacao = Column('data_atualizacao', DateTime, onupdate=func.now())
+    data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), onupdate=func.now())
     status = Column('status', Boolean, nullable=False, default=True)
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 

@@ -18,7 +18,7 @@ class ServicoModel(Base, SoftDeleteQuery):
     imagem = Column('imagem', String(300), nullable=True)
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), nullable=False, server_default=func.now(),
                            default=func.now())
-    data_atualizacao = Column('data_atualizacao', DateTime, onupdate=func.now())
+    data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), onupdate=func.now())
     responsavel_cadastro_id = Column('responsavel_cadastro_id', Integer)
     detalhes_opcionais = Column('detalhes_opcionais', String(500))
     status = Column('status', Boolean, nullable=False, default=True)

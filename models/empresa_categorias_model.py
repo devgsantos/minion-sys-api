@@ -19,7 +19,7 @@ class EmpresaCategoriaModel(Base, SoftDeleteQuery):
     sigla = Column('sigla', String(3), nullable=False)
     imagem = Column('imagem', String(300), nullable=True)
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=True)
-    data_atualizacao = Column('data_atualizacao', DateTime, onupdate=func.now())
+    data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), onupdate=func.now())
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
 class EmpresaCategoriaBaseModel(BaseModel):

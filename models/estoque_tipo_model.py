@@ -17,7 +17,7 @@ class EstoqueTipoModel(Base, SoftDeleteQuery):
     titulo = Column('titulo', String(500), nullable=False)
     descricao = Column('descricao', String(1000), nullable=True)
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=False)
-    data_atualizacao = Column('data_atualizacao', DateTime, onupdate=func.now())
+    data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), onupdate=func.now())
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
 

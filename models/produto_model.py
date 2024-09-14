@@ -25,7 +25,7 @@ class ProdutoModel(Base, SoftDeleteQuery):
     imagem = Column('imagem', String(300), nullable=True)
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), nullable=False, server_default=func.now(),
                            default=func.now())
-    data_atualizacao = Column('data_atualizacao', DateTime, onupdate=func.now())
+    data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), onupdate=func.now())
     responsavel_cadastro_id = Column('responsavel_cadastro_id', Integer)
     detalhes_opcionais = Column('detalhes_opcionais', String(500))
     status = Column('status', Boolean, nullable=False, default=True)
@@ -71,7 +71,8 @@ class ProdutoBaseModel(BaseModel):
 
 class ProdutoRequestModel(BaseModel):
     titulo: constr(max_length=500)
-    preco: float
+    preco_custo: float
+    preco_venda: float
     descricao: Optional[constr(max_length=1000)]
     imagem: Optional[str]
     detalhes_opcionais: Optional[constr(max_length=500)]
@@ -79,5 +80,8 @@ class ProdutoRequestModel(BaseModel):
     produto_subcategoria_id: int
     produto_tipo_id: int
     empresa_id: int
+    quantidade_estoque: int
+    tipo_estoque: int
+    responsavel_cadastro_id: int
 
 
