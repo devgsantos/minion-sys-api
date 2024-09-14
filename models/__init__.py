@@ -3,6 +3,7 @@ from models.produto_model import Base as ProdutoBase, ProdutoModel, ProdutoReque
 from models.empresa_model import Base as EmpresaBase, EmpresaModel, EmpresaRequestModel
 from models.empresa_categorias_model import Base as EmpresaCategoriaBase, EmpresaCategoriaModel
 from models.estoque_model import Base as EstoqueBase, EstoqueModel
+from models.estoque_tipo_model import Base as EstoqueTipoBase, EstoqueTipoModel
 from models.fatura_item_model import Base as FaturaItemBase, FaturaItemModel
 from models.fatura_model import Base as FaturaBase, FaturaModel
 from models.lead_model import Base as LeadBase, LeadModel

@@ -1,11 +1,12 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 from _decimal import Decimal
 from pydantic import BaseModel, condecimal, constr, field_validator
 from sqlalchemy import Column, func,  Integer, String, Numeric, ForeignKey, DateTime, Boolean, Float
 from sqlalchemy.orm import relationship, scoped_session, sessionmaker
 from models.base import Base
+from .estoque_model import EstoqueBaseModel
 from .produto_categorias_model import ProdutoCategoriaBaseModel
 from .produto_subcategorias_model import ProdutoSubcategoriaBaseModel
 from .produto_tipos_model import ProdutoTipoBaseModel
@@ -39,6 +40,7 @@ class ProdutoModel(Base, SoftDeleteQuery):
     produto_categoria = relationship('ProdutoCategoriaModel')
     produto_subcategoria = relationship('ProdutoSubcategoriaModel')
     produto_tipo = relationship('ProdutoTipoModel')
+    produto_estoque = relationship("EstoqueModel", back_populates="produto", cascade="all, delete-orphan")
 
 class ProdutoBaseModel(BaseModel):
     produto_id: int
@@ -58,6 +60,7 @@ class ProdutoBaseModel(BaseModel):
     produto_categoria: Optional[ProdutoCategoriaBaseModel]
     produto_subcategoria: Optional[ProdutoSubcategoriaBaseModel]
     produto_tipo: Optional[ProdutoTipoBaseModel]
+    produto_estoque: Optional[List[EstoqueBaseModel]]
 
     @field_validator('data_cadastro', 'data_atualizacao', 'data_exclusao')
     def format_datetime(cls, value):
