@@ -80,8 +80,6 @@ class ProdutoRequestModel(BaseModel):
     produto_subcategoria_id: int
     produto_tipo_id: int
     empresa_id: int
-    quantidade_estoque: int
+    quantidade_disponivel: int
     tipo_estoque: int
-    responsavel_cadastro_id: int
-
 
