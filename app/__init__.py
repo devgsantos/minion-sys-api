@@ -19,7 +19,13 @@ Logger()
 app = flask.Flask(__name__)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
 app.register_blueprint(api_blueprint, url_prefix='/api/v1')
-engine = create_engine(os.environ.get("DB_URL"))
+engine = create_engine(
+    os.environ.get("DB_URL"),
+    pool_size=5,  # Número de conexões que o pool vai manter abertas (ajuste conforme necessário)
+    max_overflow=12,  # Número máximo de conexões além do `pool_size`
+    pool_timeout=30,  # Tempo máximo de espera por uma conexão antes de lançar um erro
+    pool_recycle=1800
+)
 Session = scoped_session(sessionmaker(bind=engine))
 
 @app.before_request
