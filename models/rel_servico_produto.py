@@ -7,8 +7,10 @@ class RelServicoProdutoModel(Base):
     __tablename__ = 'rel_servico_produto'
 
     rel_servico_produto_id = Column(Integer, primary_key=True, autoincrement=True)
-    servico_id = Column(Integer, nullable=False)
-    produto_id = Column(Integer, nullable=False)
+    servico_id = Column(Integer, ForeignKey("servico.servico_id"), nullable=False)
+    produto_id = Column(Integer, ForeignKey("produto.produto_id"), nullable=False)
+
+    produto = relationship("ProdutoModel")
 
 
 class RelProdutoProdutoSubcategoriaBaseModel(BaseModel):

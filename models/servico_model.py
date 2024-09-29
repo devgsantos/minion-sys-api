@@ -3,6 +3,8 @@ from typing import Optional, List
 
 from pydantic import BaseModel, condecimal, constr, field_validator
 from sqlalchemy import Column, func,  Integer, String, Numeric, ForeignKey, DateTime, Boolean, Float
+from sqlalchemy.orm import relationship
+
 from models.base import Base
 from .cliente_model import ClienteBaseModel
 from .produto_model import ProdutoBaseModel
@@ -26,7 +28,10 @@ class ServicoModel(Base, SoftDeleteQuery):
     status = Column('status', Boolean, nullable=False, default=True)
     data_exclusao = Column('data_exclusao', DateTime)
     empresa_id = Column('empresa_id', Integer, ForeignKey('empresa.empresa_id'), nullable=False)
+    servico_tipo_id = Column('servico_tipo_id', Integer, ForeignKey('servico_tipo.servico_tipo_id'), nullable=False)
     cliente_solicitante = Column('cliente_solicitante', Integer, ForeignKey('cliente.cliente_id'), nullable=False)
+
+    produto_relacionado = relationship("RelServicoProdutoModel", cascade="all, delete-orphan")
 
 
 class ServicoBaseModel(BaseModel):
@@ -43,6 +48,7 @@ class ServicoBaseModel(BaseModel):
     responsavel_cadastro_id: int
     data_exclusao: Optional[datetime]
     cliente_solicitante: Optional[ClienteBaseModel]
+    produtos_relacionados: Optional[List[ProdutoBaseModel]]
 
     @field_validator('data_cadastro', 'data_atualizacao', 'data_exclusao')
     def format_datetime(cls, value):
@@ -59,5 +65,6 @@ class ServicoRequestModel(BaseModel):
     detalhes_opcionais: Optional[constr(max_length=500)]
     servico_tipo_id: int
     empresa_id: int
-    cliente_solicitante: int
+    servico_tipo_id: int
+    cliente_solicitante: Optional[int]
     produtos_relacionados: Optional[List[int]]

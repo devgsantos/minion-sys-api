@@ -9,10 +9,9 @@ from .soft_delete import SoftDeleteQuery
 
 class ServicoTipoModel(Base, SoftDeleteQuery):
     __tablename__ = 'servico_tipo'
-    produto_tipo_id = Column('servico_tipo_id', Integer, primary_key=True)
+    servico_tipo_id = Column('servico_tipo_id', Integer, primary_key=True)
     titulo = Column('titulo', String(300), nullable=False)
     descricao = Column('descricao', String(500))
-    imagem = Column('imagem', String(300))
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), nullable=False, server_default=func.now(), default=func.now())
     data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), onupdate=func.now())
     responsavel_cadastro_id = Column('responsavel_cadastro_id', Integer)

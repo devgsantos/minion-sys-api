@@ -21,4 +21,4 @@ class PermissaoBaseModel(BaseModel):
     descricao: Optional[constr(max_length=500)]
 
     class Config:
-        orm_mode = True
+        from_attibutes = True

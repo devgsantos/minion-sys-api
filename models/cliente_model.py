@@ -54,4 +54,4 @@ class ClienteBaseModel(BaseModel):
     data_exclusao: Optional[datetime]
 
     class Config:
-        orm_mode = True
+        from_attibutes = True

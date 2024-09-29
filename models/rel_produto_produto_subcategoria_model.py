@@ -18,4 +18,4 @@ class RelProdutoProdutoSubcategoriaBaseModel(BaseModel):
     produto_subcategoria_id: int
 
     class Config:
-        orm_mode = True
+        from_attibutes = True

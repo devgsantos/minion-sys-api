@@ -18,4 +18,4 @@ class LoginPermissaoBaseModel(BaseModel):
     permissao_id: int
 
     class Config:
-        orm_mode = True
+        from_attibutes = True

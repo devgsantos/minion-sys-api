@@ -38,7 +38,7 @@ class LoginBaseModel(BaseModel):
     permissoes_id: Optional[List[Any]]
 
     class Config:
-        orm_mode = True
+        from_attibutes = True
 
 
 class LoginRequestModel(BaseModel):
