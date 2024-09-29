@@ -26,6 +26,7 @@ class ServicoModel(Base, SoftDeleteQuery):
     responsavel_cadastro_id = Column('responsavel_cadastro_id', Integer)
     detalhes_opcionais = Column('detalhes_opcionais', String(500))
     status = Column('status', Boolean, nullable=False, default=True)
+    aprovado = Column('aprovado', Boolean, default=True)
     data_exclusao = Column('data_exclusao', DateTime)
     empresa_id = Column('empresa_id', Integer, ForeignKey('empresa.empresa_id'), nullable=False)
     servico_tipo_id = Column('servico_tipo_id', Integer, ForeignKey('servico_tipo.servico_tipo_id'), nullable=False)
