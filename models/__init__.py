@@ -1,4 +1,4 @@
-from models.cliente_model import Base as ClienteBase, ClienteModel
+from models.cliente_model import Base as ClienteBase, ClienteModel, ClienteServicoBaseModel
 from models.produto_model import Base as ProdutoBase, ProdutoModel, ProdutoRequestModel
 from models.empresa_model import Base as EmpresaBase, EmpresaModel, EmpresaRequestModel
 from models.empresa_categorias_model import Base as EmpresaCategoriaBase, EmpresaCategoriaModel
@@ -23,4 +23,4 @@ from models.lead_funil_model import Base as LeadFunilBase, LeadFunilModel
 from models.rel_produto_produto_subcategoria_model import Base as RelProdutoProdutoSubcategoriaBase, RelProdutoProdutoSubcategoriaBaseModel
 from models.servico_model import Base as ServicoBase, ServicoModel, ServicoBaseModel, ServicoRequestModel
 from models.servico_tipos import Base as ServicoTipoBase, ServicoTipoModel, ServicoTipoBaseModel
-from models.rel_servico_produto import Base as RelServicoProdutoBase, RelServicoProdutoModel, RelProdutoProdutoSubcategoriaBaseModel
+from models.rel_servico_produto import Base as RelServicoProdutoBase, RelServicoProdutoModel, RelProdutoBaseModel

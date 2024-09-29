@@ -21,4 +21,4 @@ class PermissaoBaseModel(BaseModel):
     descricao: Optional[constr(max_length=500)]
 
     class Config:
-        from_attibutes = True
+        from_attributes = True

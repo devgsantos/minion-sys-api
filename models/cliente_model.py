@@ -8,6 +8,7 @@ from typing import Optional
 
 from models.soft_delete import SoftDeleteQuery
 from .datetime_fortaleza_local import fortaleza_now
+from .pais_model import PaisBaseModel
 
 
 class ClienteModel(Base, SoftDeleteQuery):
@@ -30,6 +31,7 @@ class ClienteModel(Base, SoftDeleteQuery):
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=False)
     data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), onupdate=func.now())
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
+    lead_conversao = Column(Integer, nullable=True)
 
     pais = relationship('PaisModel')
 
@@ -45,13 +47,24 @@ class ClienteBaseModel(BaseModel):
     telefone: str
     cpf: Optional[str]
     cnpj: Optional[str]
-    pais_id: int
+    pais_id: Optional[PaisBaseModel]
     naturalidade: constr(max_length=100)
     responsavel_cadastro: Optional[str]
     data_cadastro: datetime
     data_atualizacao: Optional[datetime]
     status: int
+    lead_conversao: Optional[int]
     data_exclusao: Optional[datetime]
 
     class Config:
-        from_attibutes = True
+        from_attributes = True
+
+class ClienteServicoBaseModel(BaseModel):
+    cliente_id: int
+    email: EmailStr
+    nome: constr(max_length=500)
+    cpf: Optional[str]
+    cnpj: Optional[str]
+
+    class Config:
+        from_attributes = True

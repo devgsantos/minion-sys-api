@@ -30,4 +30,4 @@ class LeadFunilBaseModel(BaseModel):
     data_exclusao: Optional[datetime] = None
 
     class Config:
-        from_attibutes = True
+        from_attributes = True

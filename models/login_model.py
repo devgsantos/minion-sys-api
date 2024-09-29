@@ -38,7 +38,7 @@ class LoginBaseModel(BaseModel):
     permissoes_id: Optional[List[Any]]
 
     class Config:
-        from_attibutes = True
+        from_attributes = True
 
 
 class LoginRequestModel(BaseModel):

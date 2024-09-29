@@ -59,7 +59,7 @@ class UsuarioBaseModel(BaseModel):
     data_exclusao: Optional[datetime]
 
     class Config:
-        from_attibutes = True
+        from_attributes = True
 
 class UsuarioRequestModel(BaseModel):
     email: EmailStr

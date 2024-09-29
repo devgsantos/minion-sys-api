@@ -1,20 +1,20 @@
 from datetime import datetime
 from typing import Optional, List
 
-from pydantic import BaseModel, condecimal, constr, field_validator
+from pydantic import BaseModel, constr, field_validator
 from sqlalchemy import Column, func,  Integer, String, Numeric, ForeignKey, DateTime, Boolean, Float
 from sqlalchemy.orm import relationship
 
 from models.base import Base
-from .cliente_model import ClienteBaseModel
-from .produto_model import ProdutoBaseModel
+from models import ClienteServicoBaseModel
+from .rel_servico_produto import RelProdutoBaseModel
 from .soft_delete import SoftDeleteQuery
 from app.shared.helpers.validators import format_datetime
 
 
 class ServicoModel(Base, SoftDeleteQuery):
     __tablename__ = 'servico'
-    produto_id = Column('servico_id', Integer, primary_key=True)
+    servico_id = Column('servico_id', Integer, primary_key=True)
     titulo = Column('titulo', String(500), nullable=False)
     preco_mao_de_obra = Column('preco_mao_de_obra', Numeric(precision=10, scale=2), nullable=False, default=0)
     descricao = Column('descricao', String(1000), nullable=True)
@@ -29,9 +29,10 @@ class ServicoModel(Base, SoftDeleteQuery):
     data_exclusao = Column('data_exclusao', DateTime)
     empresa_id = Column('empresa_id', Integer, ForeignKey('empresa.empresa_id'), nullable=False)
     servico_tipo_id = Column('servico_tipo_id', Integer, ForeignKey('servico_tipo.servico_tipo_id'), nullable=False)
-    cliente_solicitante = Column('cliente_solicitante', Integer, ForeignKey('cliente.cliente_id'), nullable=False)
+    cliente_solicitante_id = Column('cliente_solicitante_id', Integer, ForeignKey('cliente.cliente_id'), nullable=False)
 
-    produto_relacionado = relationship("RelServicoProdutoModel", cascade="all, delete-orphan")
+    cliente_solicitante = relationship("ClienteModel")
+    produtos_relacionados = relationship("RelServicoProdutoModel", cascade="all, delete-orphan")
 
 
 class ServicoBaseModel(BaseModel):
@@ -47,8 +48,8 @@ class ServicoBaseModel(BaseModel):
     empresa_id: int
     responsavel_cadastro_id: int
     data_exclusao: Optional[datetime]
-    cliente_solicitante: Optional[ClienteBaseModel]
-    produtos_relacionados: Optional[List[ProdutoBaseModel]]
+    cliente_solicitante: Optional[ClienteServicoBaseModel]
+    produtos_relacionados: Optional[List[RelProdutoBaseModel]]
 
     @field_validator('data_cadastro', 'data_atualizacao', 'data_exclusao')
     def format_datetime(cls, value):

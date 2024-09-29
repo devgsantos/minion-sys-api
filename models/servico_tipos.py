@@ -15,6 +15,7 @@ class ServicoTipoModel(Base, SoftDeleteQuery):
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), nullable=False, server_default=func.now(), default=func.now())
     data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), onupdate=func.now())
     responsavel_cadastro_id = Column('responsavel_cadastro_id', Integer)
+    empresa_id = Column('empresa_id', Integer, ForeignKey('empresa.empresa_id'), nullable=False)
     status = Column('status', Boolean, nullable=False, default=True)
     data_exclusao = Column('data_exclusao', DateTime)
 

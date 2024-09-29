@@ -18,4 +18,4 @@ class RelProdutoProdutoSubcategoriaBaseModel(BaseModel):
     produto_subcategoria_id: int
 
     class Config:
-        from_attibutes = True
+        from_attributes = True

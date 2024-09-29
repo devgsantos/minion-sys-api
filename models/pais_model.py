@@ -22,4 +22,4 @@ class PaisBaseModel(BaseModel):
     bandeira: Optional[str]
 
     class Config:
-        from_attibutes = True
+        from_attributes = True

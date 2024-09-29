@@ -34,7 +34,6 @@ class EstoqueBaseModel(BaseModel):
 
     tipo_estoque: Optional[EstoqueTipoBaseModel]
 
-
     @field_validator('data_cadastro', 'data_atualizacao')
     def format_datetime(cls, value):
         return format_datetime(value)

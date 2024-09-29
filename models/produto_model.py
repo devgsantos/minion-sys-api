@@ -19,6 +19,7 @@ class ProdutoModel(Base, SoftDeleteQuery):
     __tablename__ = 'produto'
     produto_id = Column('produto_id', Integer, primary_key=True)
     titulo = Column('titulo', String(500), nullable=False)
+    sku = Column('sku', String(13), nullable=True)
     preco_venda = Column('preco_venda', Numeric(precision=10, scale=2), nullable=False, default=0)
     preco_custo = Column('preco_custo', Numeric(precision=10, scale=2), nullable=False, default=0)
     descricao = Column('descricao', String(1000), nullable=True)
@@ -65,6 +66,22 @@ class ProdutoBaseModel(BaseModel):
     @field_validator('data_cadastro', 'data_atualizacao', 'data_exclusao')
     def format_datetime(cls, value):
         return format_datetime(value)
+
+    class Config:
+        from_attributes = True
+
+class ProdutoRelBaseModel(BaseModel):
+    produto_id: int
+    titulo: constr(max_length=500)
+    sku: Optional[str]
+    preco_custo: float
+    preco_venda: float
+    descricao: Optional[constr(max_length=1000)]
+    imagem: Optional[str]
+    empresa_id: int
+    status: int
+
+    produto_estoque: Optional[List[EstoqueBaseModel]]
 
     class Config:
         from_attributes = True
