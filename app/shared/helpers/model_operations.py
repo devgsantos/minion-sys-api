@@ -198,6 +198,70 @@ class ModelOperations:
                 return instance
             return None
 
+    def merge(self, model: Type[Base], instance_id: Optional[int] = None, **kwargs) -> Optional[Any]:
+        with self.session_scope() as session:
+            # Tenta buscar a instância existente, se um 'instance_id' foi passado
+            instance = session.query(model).get(instance_id) if instance_id else None
+
+            if instance:
+                # Atualiza a instância existente
+                for key, value in kwargs.items():
+                    setattr(instance, key, value)
+
+                # Verifica se o modelo tem a coluna 'data_atualizacao'
+                if hasattr(instance, 'data_atualizacao'):
+                    setattr(instance, 'data_atualizacao', datetime.now())
+            else:
+                # Cria uma nova instância caso não exista
+                instance = model(**kwargs)
+                session.add(instance)
+
+                # Verifica se o modelo tem a coluna 'data_cadastro'
+                if hasattr(instance, 'data_cadastro'):
+                    setattr(instance, 'data_cadastro', datetime.now())
+
+            session.commit()  # Faz o commit das alterações
+            return instance
+
+    def merge_insert_if_not_exists(self, model: Type[Base], unique_fields: dict, **kwargs) -> Optional[Any]:
+        """
+        Função merge que verifica se uma combinação única de campos existe.
+        Se existir, atualiza o registro. Se não existir, insere um novo registro.
+
+        Parâmetros:
+        - model: O modelo SQLAlchemy da tabela
+        - unique_fields: Um dicionário contendo os campos únicos usados para identificar a instância
+        - kwargs: Os campos a serem atualizados ou inseridos
+
+        Retorno:
+        - A instância atualizada ou criada
+        """
+        with self.session_scope() as session:
+            # Verifica se já existe uma instância com base nos campos únicos
+            instance = session.query(model).filter_by(**unique_fields).first()
+
+            if instance:
+                # Atualiza a instância existente com os novos valores
+                if kwargs:
+                    for key, value in kwargs.items():
+                        setattr(instance, key, value)
+
+                # Verifica se o modelo tem a coluna 'data_atualizacao' e atualiza
+                if hasattr(instance, 'data_atualizacao'):
+                    setattr(instance, 'data_atualizacao', datetime.now())
+            else:
+                # Cria uma nova instância caso não exista
+                instance = model(**{**unique_fields, **kwargs})
+
+                # Verifica se o modelo tem a coluna 'data_cadastro'
+                if hasattr(instance, 'data_cadastro'):
+                    setattr(instance, 'data_cadastro', datetime.now())
+
+                session.add(instance)
+
+            session.commit()  # Faz o commit após inserção ou atualização
+            return instance
+
     # Deletar um registro
     def delete(self, model: Type[Base], id: int) -> bool:
         with self.session_scope() as session:

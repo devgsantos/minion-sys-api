@@ -19,3 +19,8 @@ class ServiceResource(Resource):
     @dto_decorator(ServicoRequestModel)
     def post(self):
         return ServiceUseCase().create_service()
+
+    @auth_decorator
+    @dto_decorator(ServicoRequestModel)
+    def put(self):
+        return ServiceUseCase().update_service()

@@ -68,5 +68,5 @@ class ServicoRequestModel(BaseModel):
     servico_tipo_id: int
     empresa_id: int
     servico_tipo_id: int
-    cliente_solicitante: Optional[int]
+    cliente_solicitante_id: Optional[int]
     produtos_relacionados: Optional[List[int]]

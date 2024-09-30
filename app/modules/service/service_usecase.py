@@ -80,3 +80,34 @@ class ServiceUseCase:
                     'data': None,
                 }
             ), 500)
+
+    def update_service(self):
+        try:
+            user = self.functions.token_decript()
+            data = request.json
+            data['responsavel_cadastro_id'] = user.get('login_id')
+            service_update = {key: value for key, value in data.items() if key != 'produtos_relacionados' and key !='servico_id'}
+            result = self.operations.update(self.service_model, data['servico_id'], **service_update)
+            if len(data['produtos_relacionados']) > 0:
+                for product in request.json['produtos_relacionados']:
+                    unique_data = {
+                        "servico_id": result.servico_id,
+                        "produto_id": product
+                    }
+                    self.operations.merge_insert_if_not_exists(self.rel_service_product_model, unique_fields=unique_data, **{})
+            return make_response(jsonify(
+                {
+                    'status': True,
+                    'message': 'Servico alterado com sucesso.'
+                }
+            ), 201)
+        except Exception as exc:
+            self.logger.log(message=str(exc), level='error')
+
+            return make_response(jsonify(
+                {
+                    'status': False,
+                    'message': str(exc),
+                    'data': None,
+                }
+            ), 500)
