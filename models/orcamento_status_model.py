@@ -1,4 +1,6 @@
-from sqlalchemy import Column, func, Integer, Boolean, ForeignKey, DateTime, Numeric
+from tokenize import String
+
+from sqlalchemy import Column, func,  Integer, Boolean, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from pydantic import BaseModel
 from typing import Optional
@@ -9,22 +11,19 @@ from models.base import Base
 from .soft_delete import SoftDeleteQuery
 from .datetime_fortaleza_local import fortaleza_now
 
-
+# TODO -> Criar modelo de status de orcamento
 
 class OrcamentoModel(Base, SoftDeleteQuery):
-    __tablename__ = 'orcamento'
+    __tablename__ = 'orcamento_status'
 
-    orcamento_id = Column('orcamento_id', Integer, primary_key=True)
-    cliente_id = Column('cliente_id', Integer, ForeignKey('cliente.cliente_id'))
-    preco = Column('preco_venda', Numeric(precision=10, scale=2), nullable=False, default=0)
-    desconto = Column('preco_custo', Numeric(precision=10, scale=2), nullable=False, default=0)
+    orcamento_status_id = Column('orcamento_status_id', Integer, primary_key=True)
+    titulo = Column('titulo', Integer, ForeignKey('cliente.cliente_id'))
+    descricao = Column('descricao', String(1000), nullable=True)
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=False)
     data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), onupdate=func.now())
-    status_id = Column('finalizado', Boolean, nullable=False)
+    orcamento_status_id = Column('orcamento_status_id', Integer, nullable=False, default=1)
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
-    cliente = relationship('ClienteModel')
-    orcamento_itens = relationship('OrcamentoItemModel', back_populates='orcamento')
 
 class OrcamentoBaseModel(BaseModel):
     orcamento_id: int
