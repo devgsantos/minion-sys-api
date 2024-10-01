@@ -11,7 +11,7 @@ from models.base import Base
 from .soft_delete import SoftDeleteQuery
 from .datetime_fortaleza_local import fortaleza_now
 
-# TODO -> Criar modelo de status de orcamento
+# TODO -> Criar modelo de status de orcamento e relações
 
 class OrcamentoModel(Base, SoftDeleteQuery):
     __tablename__ = 'orcamento_status'
