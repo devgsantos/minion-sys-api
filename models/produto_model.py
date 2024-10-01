@@ -6,7 +6,7 @@ from pydantic import BaseModel, condecimal, constr, field_validator
 from sqlalchemy import Column, func,  Integer, String, Numeric, ForeignKey, DateTime, Boolean, Float
 from sqlalchemy.orm import relationship, scoped_session, sessionmaker
 from models.base import Base
-from .estoque_model import EstoqueBaseModel
+from .estoque_model import EstoqueBaseModel, EstoqueProdutoBaseModel
 from .produto_categorias_model import ProdutoCategoriaBaseModel
 from .produto_subcategorias_model import ProdutoSubcategoriaBaseModel
 from .produto_tipos_model import ProdutoTipoBaseModel
@@ -41,7 +41,7 @@ class ProdutoModel(Base, SoftDeleteQuery):
     produto_categoria = relationship('ProdutoCategoriaModel')
     produto_subcategoria = relationship('ProdutoSubcategoriaModel')
     produto_tipo = relationship('ProdutoTipoModel')
-    produto_estoque = relationship("EstoqueModel", back_populates="produto", cascade="all, delete-orphan")
+    estoque = relationship("EstoqueModel", back_populates="produto", cascade="all, delete-orphan")
 
 class ProdutoBaseModel(BaseModel):
     produto_id: int
@@ -61,7 +61,7 @@ class ProdutoBaseModel(BaseModel):
     produto_categoria: Optional[ProdutoCategoriaBaseModel]
     produto_subcategoria: Optional[ProdutoSubcategoriaBaseModel]
     produto_tipo: Optional[ProdutoTipoBaseModel]
-    produto_estoque: Optional[List[EstoqueBaseModel]]
+    estoque: Optional[List[EstoqueBaseModel]]
 
     @field_validator('data_cadastro', 'data_atualizacao', 'data_exclusao')
     def format_datetime(cls, value):
@@ -81,10 +81,11 @@ class ProdutoRelBaseModel(BaseModel):
     empresa_id: int
     status: int
 
-    produto_estoque: Optional[List[EstoqueBaseModel]]
+    estoque: Optional[List[EstoqueBaseModel]]
 
     class Config:
         from_attributes = True
+
 
 class ProdutoRequestModel(BaseModel):
     titulo: constr(max_length=500)
@@ -97,6 +98,8 @@ class ProdutoRequestModel(BaseModel):
     produto_subcategoria_id: int
     produto_tipo_id: int
     empresa_id: int
-    quantidade_disponivel: int
-    tipo_estoque: int
+    estoque: Optional[List[EstoqueProdutoBaseModel]]
+
+    class Config:
+        from_attributes = True
 

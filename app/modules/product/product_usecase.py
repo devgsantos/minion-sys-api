@@ -4,7 +4,7 @@ from flask import request, jsonify, make_response
 from app.shared.helpers.functions import Functions
 from app.shared.helpers.model_operations import ModelOperations
 from app.shared.singletons.logger import Logger
-from models import ProdutoModel, ProdutoCategoriaModel, ProdutoSubcategoriaModel, ProdutoTipoModel
+from models import ProdutoModel, ProdutoCategoriaModel, ProdutoSubcategoriaModel, ProdutoTipoModel, EstoqueModel
 from models.produto_model import ProdutoBaseModel
 
 
@@ -17,28 +17,8 @@ class ProductUseCase:
         self.product_category_model = ProdutoCategoriaModel
         self.product_subcategory_model = ProdutoSubcategoriaModel
         self.product_type_model = ProdutoTipoModel
+        self.stock_model = EstoqueModel
 
-    def create_product(self):
-        try:
-            user = self.functions.token_decript()
-            request.json['responsavel_cadastro_id'] = user.get('login_id')
-            self.operations.insert(self.product_model, **request.json)
-            return make_response(jsonify(
-                {
-                    'status': True,
-                    'message': 'Produto criado com sucesso.'
-                }
-            ), 201)
-        except Exception as exc:
-            self.logger.log(message=str(exc), level='error')
-
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
 
     # USAR A SERIALIZAÇÃO DESTA FUNÇÃO COMO BASE PARA AS OUTRAS
     def get_product_all(self):
@@ -69,6 +49,70 @@ class ProductUseCase:
                 }
             ), 201)
         except Exception as exc:
+            return make_response(jsonify(
+                {
+                    'status': False,
+                    'message': str(exc),
+                    'data': None,
+                }
+            ), 500)
+
+    def create_product(self):
+        try:
+            user = self.functions.token_decript()
+            request.json['responsavel_cadastro_id'] = user.get('login_id')
+            product_insert = {key: value for key, value in request.json.items() if key != 'estoque'}
+            result = self.operations.insert(self.product_model, **product_insert)
+            if len(request.json['estoque']) > 0:
+                for param in request.json['estoque']:
+                    insert_data = {
+                        "produto_id": result.produto_id,
+                        "estoque_tipo_id": param['estoque_tipo_id'],
+                        "quantidade_disponivel": param['quantidade_disponivel']
+                    }
+                    self.operations.insert(self.stock_model, **insert_data)
+            return make_response(jsonify(
+                {
+                    'status': True,
+                    'message': 'Produto criado com sucesso.'
+                }
+            ), 201)
+        except Exception as exc:
+            self.logger.log(message=str(exc), level='error')
+
+            return make_response(jsonify(
+                {
+                    'status': False,
+                    'message': str(exc),
+                    'data': None,
+                }
+            ), 500)
+
+    def update_product(self):
+        try:
+            user = self.functions.token_decript()
+            request.json['responsavel_cadastro_id'] = user.get('login_id')
+            product_update = {key: value for key, value in request.json.items() if key != 'estoque' and key !='produto_id'}
+            self.operations.update(self.product_model, request.json['produto_id'], **product_update)
+            if len(request.json['estoque']) > 0:
+                for param in request.json['estoque']:
+                    unique_data = {
+                        "produto_id": request.json['produto_id'],
+                        "estoque_tipo_id": param['estoque_tipo_id']
+                    }
+                    data_to_update = {
+                        "quantidade_disponivel": param['quantidade_disponivel']
+                    }
+                    self.operations.merge_insert_if_not_exists(self.stock_model, unique_fields=unique_data, **data_to_update)
+            return make_response(jsonify(
+                {
+                    'status': True,
+                    'message': 'Produto alterado com sucesso.'
+                }
+            ), 201)
+        except Exception as exc:
+            self.logger.log(message=str(exc), level='error')
+
             return make_response(jsonify(
                 {
                     'status': False,

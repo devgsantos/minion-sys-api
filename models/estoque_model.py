@@ -22,7 +22,7 @@ class EstoqueModel(Base, SoftDeleteQuery):
     data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), onupdate=func.now())
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
-    produto = relationship("ProdutoModel", back_populates="produto_estoque")
+    produto = relationship("ProdutoModel", back_populates="estoque")
     tipo_estoque =  relationship("EstoqueTipoModel")
 
 
@@ -40,3 +40,11 @@ class EstoqueBaseModel(BaseModel):
 
     class Config:
         from_attributes = True
+
+class EstoqueProdutoBaseModel(BaseModel):
+    estoque_tipo_id: int
+    quantidade_disponivel: int
+
+    class Config:
+        from_attributes = True
+

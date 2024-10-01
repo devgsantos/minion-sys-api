@@ -16,8 +16,13 @@ class ProductResource(Resource):
         elif action == 'all':
             return ProductUseCase().get_product_all()
 
-
     @auth_decorator
     @dto_decorator(ProdutoRequestModel)
     def post(self):
         return ProductUseCase().create_product()
+
+    @auth_decorator
+    @dto_decorator(ProdutoRequestModel)
+    def put(self):
+        return ProductUseCase().update_product()
+
