@@ -29,9 +29,9 @@ class OrcamentoTipoBaseModel(BaseModel):
     orcamento_tipo_id: Optional[int]
     quantidade_orcamento: int
     finalizado: bool
-    data_exclusao: Optional[datetime]
+    data_cadastro: Optional[datetime]
 
-    @field_validator('data_cadastro', 'data_atualizacao', 'data_exclusao')
+    @field_validator('data_cadastro')
     def format_datetime(cls, value):
         return format_datetime(value)
 

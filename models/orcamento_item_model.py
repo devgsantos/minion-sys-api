@@ -6,7 +6,6 @@ from datetime import datetime
 from app.shared.helpers.validators import format_datetime
 from models.base import Base
 from .soft_delete import SoftDeleteQuery
-from .datetime_fortaleza_local import fortaleza_now
 from typing import Optional
 from pydantic import BaseModel
 
@@ -31,7 +30,7 @@ class OrcamentoItemBaseModel(BaseModel):
     finalizado: bool
     data_cadastro: Optional[datetime]
 
-    @field_validator('data_cadastro', 'data_atualizacao', 'data_exclusao')
+    @field_validator('data_cadastro')
     def format_datetime(cls, value):
         return format_datetime(value)
 

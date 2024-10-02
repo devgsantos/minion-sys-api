@@ -27,4 +27,4 @@ from models.rel_servico_produto import Base as RelServicoProdutoBase, RelServico
 from models.orcamento_model import Base as OrcamentoBase, OrcamentoModel, OrcamentoBaseModel
 from models.orcamento_item_model import Base as OrcamentoItemBase, OrcamentoItemModel, OrcamentoItemBaseModel
 from models.orcamento_status_model import Base as OrcamentoStatusBase, OrcamentoStatusModel, OrcamentoStatusBaseModel
-from models.orcamento_tipo_model import Base as OrcamentoItemBase, OrcamentoTipoModel, OrcamentoTipoBaseModel
+from models.orcamento_tipo_model import Base as OrcamentoTipoBase, OrcamentoTipoModel, OrcamentoTipoBaseModel
