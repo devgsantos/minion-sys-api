@@ -13,7 +13,7 @@ from .datetime_fortaleza_local import fortaleza_now
 
 # TODO -> Criar modelo de status de orcamento e relações
 
-class OrcamentoModel(Base, SoftDeleteQuery):
+class OrcamentoStatusModel(Base, SoftDeleteQuery):
     __tablename__ = 'orcamento_status'
 
     orcamento_status_id = Column('orcamento_status_id', Integer, primary_key=True)
@@ -25,7 +25,7 @@ class OrcamentoModel(Base, SoftDeleteQuery):
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
 
-class OrcamentoBaseModel(BaseModel):
+class OrcamentoStatusBaseModel(BaseModel):
     orcamento_id: int
     cliente_id: Optional[int]
     data_cadastro: datetime

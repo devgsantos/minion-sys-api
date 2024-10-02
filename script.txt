@@ -1,0 +1,71 @@
+#Iniciar o venv
+source ./venv/bin/activate
+# Inicar script em background - dev
+nohup python /opt/python-projects/apis-minion-sys/main.py &
+# Printar logos em arquivo
+output.log &
+# Listar os serviços
+ps aux | grep ggpti
+# Encerrar servico pelo ID
+kill PID id-do-servico
+
+# Upload em docker
+docker build -f .dockerfile -t nome-da-imagem --build-arg variavel-customizada=14.214.12
+
+### WEB APP ###
+# IP
+http://191.101.232.31:9091/
+# Configuração Apache
+/etc/httpd/conf/httpd.conf
+# Caminho dist
+/opt/python-projects/gpti-mobile-app/dist/ggpti-app/
+# Excluir build atual
+rm -rf /var/www/ggpti-app/
+#Copiar para o apache
+cp -r /opt/python-projects/gpti-mobile-app/dist/ggpti-app/ /var/www/
+
+### WEB ADMIN ###
+# IP
+http://191.101.232.31:9092/
+# Configuração Apache
+/etc/httpd/conf/httpd.conf
+# Caminho dist
+/opt/python-projects/gpti-admin/dist/gpti-admin/
+# Excluir build atual
+rm -rf /var/www/gpti-admin/
+#Copiar para o apache
+cp -r /opt/python-projects/gpti-admin/dist/gpti-admin/ /var/www/
+
+# Reiniciar Serviço do Apache
+systemctl restart httpd.service
+
+# Caminho do PGSQL CONFIG
+/var/lib/pgsql/14/data
+
+# Para automatizar a iniciação do backend criar um arquivo inicializar.sh com o seguinte comando
+#! /bin/bash
+
+pid_py=$(ps aux | grep '[m]eu-projeto/venv/bin/python main.py' | awk '{print $2}')
+
+if [ -z $pid_py ]
+then
+        pid_py=-1
+fi
+
+echo "Achado os seguintes pid:"
+echo $pid_py
+
+if [ $pid_py -ne -1 ]
+then
+        echo "O Servidor Python do Meu Projeto esta em execucao"
+else
+        path_pwd=$(pwd)
+        echo "O Servidor Python do Meu Projeto nao estava em execucao"
+        cd $path_pwd
+        # Caso queira criar o venv
+        # $path_pwd/venv/bin/python -m venv venv
+        # Ativar o venv já existente
+        source  ./venv/bin/activate
+        ./venv/bin/pip install -r requirements.txt
+        nohup $path_pwd/venv/bin/python main.py 2>output.out &
+fi
