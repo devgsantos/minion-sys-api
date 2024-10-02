@@ -1,0 +1,12 @@
+cx_Oracle==7.3.0   # A versão 8.x requer Python 3.7 ou superior
+Flask==2.0.3       # A versão 3.x não é compatível com Python 3.6
+flask_restful==0.3.9   # A versão mais recente compatível com Python 3.6
+psycopg2==2.8.6    # Versões mais recentes exigem Python 3.7 ou superior
+pydantic==1.10.7   # A versão 2.x exige Python 3.7 ou superior
+PyJWT==2.3.0       # Versões superiores exigem Python 3.7 ou mais
+pyodbc==4.0.30     # A versão 5.x exige Python 3.7 ou superior
+python-dotenv==0.19.0   # A versão 1.x exige Python 3.7 ou mais
+Requests==2.26.0   # A versão 2.32.3 é compatível, mas por segurança uso uma versão antiga
+SQLAlchemy==1.4.48 # A versão 2.x exige Python 3.7 ou superior
+waitress==2.1.2    # Versão mais recente compatível com Python 3.6
+alembic==1.7.7     # Alembic 1.13.x exige Python 3.7 ou superior

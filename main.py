@@ -3,7 +3,6 @@ import os
 from app import app
 from waitress import serve
 
-
 def main():
     print('Running', f"PORT:{os.getenv('APP_PORT')}")
     serve(app, host='0.0.0.0', port=os.getenv("APP_PORT"), threads=600,
