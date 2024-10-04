@@ -23,8 +23,6 @@ class OrcamentoTipoModel(Base, SoftDeleteQuery):
     status = Column('status', Boolean, nullable=False, default=True)
     data_exclusao = Column('data_exclusao', DateTime)
 
-    produto = relationship('ProdutoModel')
-
 class OrcamentoTipoBaseModel(BaseModel):
     orcamento_tipo_id: Optional[int]
     quantidade_orcamento: int
