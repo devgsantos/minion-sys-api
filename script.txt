@@ -1,5 +1,5 @@
 #Iniciar o venv
-source ./venv/bin/activate
+-m
 # Inicar script em background - dev
 nohup python /opt/python-projects/apis-minion-sys/main.py &
 # Printar logos em arquivo
