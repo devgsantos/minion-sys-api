@@ -9,11 +9,11 @@ class TestUseCase:
 
     def execute(self):
         try:
-            self.logger.log(message='Hello world from api!')
+            self.logger.log(message='MinionSys online!')
 
             return {
                 'status': True,
-                'message': 'Hello world from api!',
+                'message': 'MinionSys online!',
                 'result': request.json,
                 'code': 200
             }
