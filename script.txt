@@ -1,11 +1,11 @@
 #Iniciar o venv
 -m
 # Inicar script em background - dev
-nohup python /opt/apis/apis-minion-sysmain.py &
+nohup python /opt/apis/apis-minion-sys/main.py &
 # Printar logos em arquivo
 output.log &
 # Listar os serviços
-ps aux | grep ggpti
+ps aux | grep apis-minion-sys
 # Encerrar servico pelo ID
 kill PID id-do-servico
 
