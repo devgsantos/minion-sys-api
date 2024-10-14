@@ -50,6 +50,7 @@ class ProdutoBaseModel(BaseModel):
     preco_venda: float
     descricao: Optional[constr(max_length=1000)]
     imagem: Optional[str]
+    sku: Optional[str]
     data_cadastro: datetime
     data_atualizacao: Optional[datetime]
     detalhes_opcionais: Optional[constr(max_length=500)]
