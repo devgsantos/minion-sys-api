@@ -4,12 +4,14 @@ from flask_restx import Resource
 from app.modules.company.company_usecase import CompanyUseCase
 from app.modules.product.product_usecase import ProductUseCase
 from app.shared.middlewares.auth import auth_decorator
+from app.shared.middlewares.user_company import user_company
 from app.shared.middlewares.dto import dto_decorator
 from models import ProdutoRequestModel
 
 class ProductResource(Resource):
 
     @auth_decorator
+    @user_company
     def get(self, action=None):
         if action == 'by_id':
             return ProductUseCase().get_by_id()
@@ -17,11 +19,13 @@ class ProductResource(Resource):
             return ProductUseCase().get_product_all()
 
     @auth_decorator
+    @user_company
     @dto_decorator(ProdutoRequestModel)
     def post(self):
         return ProductUseCase().create_product()
 
     @auth_decorator
+    @user_company
     @dto_decorator(ProdutoRequestModel)
     def put(self):
         return ProductUseCase().update_product()

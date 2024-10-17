@@ -7,34 +7,17 @@ import os
 from app.shared.singletons.logger import Logger
 logger = Logger()
 
-def auth_decorator(func):
+def user_company(func):
     try:
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if not request.headers.get('x-auth-token'):
-                logger.log(message='Requisição sem token de autenticação', level='error')
-
-                return {
-                    'status': False,
-                    'message': 'Requisição sem token de autenticação',
-                    'result': None,
-                    'code': 401
-                }
-
-            token = request.headers.get('x-auth-token')
-
-            if not token:
-                logger.log(message='Requisição sem token de autenticação', level='error')
-
-                return {
-                    'status': False,
-                    'message': 'Requisição sem token de autenticação',
-                    'result': None,
-                    'code': 401
-                }
-
             try:
+                company_from_json = request.json.get('company') if request.json else None
+                company_from_link = request.args.get('company') if request.args.get('company') else None
+                request_company = company_from_json or company_from_link or None
+                token = request.headers.get('x-auth-token')
                 decoded_token_info = jwt.decode(token, os.environ.get('JWT_SECRET'), algorithms=['HS256'])
+                print(decoded_token_info)
             except Exception as exc:
                 logger.log(message='Token inválido', level='error')
 

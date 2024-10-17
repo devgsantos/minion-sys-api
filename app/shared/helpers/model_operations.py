@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Type, List, Optional, Any, Dict, Tuple
 
 from flask import request
-from sqlalchemy import create_engine, func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import sessionmaker, scoped_session, joinedload
 from sqlalchemy.orm.exc import NoResultFound
 from contextlib import contextmanager
@@ -87,6 +87,73 @@ class ModelOperations:
                             query_results = query_results.filter(column.in_(value))
                         else:
                             query_results = query_results.filter(column == value)
+
+                results = query_results.offset(offset).limit(limit).all()
+                return results, total_count
+            except NoResultFound:
+                return None, 0
+            except Exception as e:
+                print(f"Erro ao executar a consulta: {e}")
+                raise
+
+    def findManyByTerm(
+            self,
+            model: Type[Base],
+            page: int = 1,
+            limit: int = 10,
+            search_term: Optional[str] = None,
+            search_fields: Optional[List[str]] = None,
+            **kwargs
+    ) -> Tuple[Optional[List[Any]], int]:
+        with self.session_scope() as session:
+            offset = (page - 1) * limit
+
+            try:
+                # Contar o total de registros com base nos filtros aplicados
+                query_count = session.query(func.count()).select_from(model)
+
+                # Aplicar filtros exatos a partir de kwargs
+                for key, value in kwargs.items():
+                    column = getattr(model, key, None)
+                    if column is not None:
+                        if isinstance(value, list):
+                            query_count = query_count.filter(column.in_(value))
+                        else:
+                            query_count = query_count.filter(column == value)
+                    else:
+                        raise ValueError(f"Campo '{key}' não encontrado no modelo.")
+
+                # Adicionar filtro de LIKE com case-insensitive
+                if search_term and search_fields:
+                    like_filters = [
+                        getattr(model, field).ilike(f"%{search_term}%")
+                        for field in search_fields if hasattr(model, field)
+                    ]
+                    if like_filters:
+                        query_count = query_count.filter(or_(*like_filters))
+
+                total_count = query_count.scalar()
+
+                # Consulta para obter os resultados paginados
+                query_results = session.query(model)
+
+                # Aplicar novamente os filtros exatos
+                for key, value in kwargs.items():
+                    column = getattr(model, key, None)
+                    if column is not None:
+                        if isinstance(value, list):
+                            query_results = query_results.filter(column.in_(value))
+                        else:
+                            query_results = query_results.filter(column == value)
+
+                # Adicionar filtros LIKE para a consulta de resultados
+                if search_term and search_fields:
+                    like_filters = [
+                        getattr(model, field).ilike(f"%{search_term}%")
+                        for field in search_fields if hasattr(model, field)
+                    ]
+                    if like_filters:
+                        query_results = query_results.filter(or_(*like_filters))
 
                 results = query_results.offset(offset).limit(limit).all()
                 return results, total_count

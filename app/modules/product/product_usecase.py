@@ -23,15 +23,18 @@ class ProductUseCase:
     # USAR A SERIALIZAÇÃO DESTA FUNÇÃO COMO BASE PARA AS OUTRAS
     def get_product_all(self):
         try:
-            user = self.functions.token_decript()
-            # companies = user.get('companies')
+            search_term = request.args.get('search_term') if request.args.get('search_term') else None
             page = int(request.args.get('page')) if request.args.get('page') else 1
             limit = int(request.args.get('limit')) if request.args.get('limit') else 10
             companies_list = request.args.get('company').split(',')
             companies = []
             for company in companies_list:
                 companies.append(int(company))
-            products, total = self.operations.findMany(self.product_model, page, limit, empresa_id=companies)
+            if search_term:
+                search_fields = ['titulo', 'descricao', 'sku', 'detalhes_opcionais']
+                products, total = self.operations.findManyByTerm(self.product_model, page, limit, search_term, search_fields, empresa_id=companies)
+            else:
+                products, total = self.operations.findMany(self.product_model, page, limit, empresa_id=companies)
             products_array = [ProdutoBaseModel.from_orm(product).dict() for product in products]
             # products_array = self.functions.instance_list_to_array(products)
 
@@ -56,6 +59,7 @@ class ProductUseCase:
                     'data': None,
                 }
             ), 500)
+
 
     def create_product(self):
         try:
