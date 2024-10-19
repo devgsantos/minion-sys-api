@@ -329,12 +329,22 @@ class ModelOperations:
             session.commit()  # Faz o commit após inserção ou atualização
             return instance
 
-    # Deletar um registro
+    # Deletar fisicamente um registro
     def delete(self, model: Type[Base], id: int) -> bool:
         with self.session_scope() as session:
             instance = session.query(model).get(id)
             if instance:
                 session.delete(instance)
+                return True
+            return False
+
+    # Deletar virtualmente um registro
+    def soft_delete(self, model: Type[Base], id: int) -> bool:
+        with self.session_scope() as session:
+            instance = session.query(model).get(id)
+            if instance:
+
+                instance.data_exclusao = datetime.utcnow()  # Marca como excluído
                 return True
             return False
 

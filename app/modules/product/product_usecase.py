@@ -21,7 +21,7 @@ class ProductUseCase:
 
 
     # USAR A SERIALIZAÇÃO DESTA FUNÇÃO COMO BASE PARA AS OUTRAS
-    def get_product_all(self):
+    def get_all_product(self):
         try:
             search_term = request.args.get('search_term') if request.args.get('search_term') else None
             page = int(request.args.get('page')) if request.args.get('page') else 1
@@ -114,6 +114,36 @@ class ProductUseCase:
                     'message': 'Produto alterado com sucesso.'
                 }
             ), 201)
+        except Exception as exc:
+            self.logger.log(message=str(exc), level='error')
+
+            return make_response(jsonify(
+                {
+                    'status': False,
+                    'message': str(exc),
+                    'data': None,
+                }
+            ), 500)
+
+    def virtual_delete_product(self):
+        try:
+            excluir_produto = self.operations.soft_delete(self.product_model, request.json['produto_id'])
+            if excluir_produto:
+                return make_response(jsonify(
+                    {
+                        'status': True,
+                        'message': 'Produto excluído com sucesso.'
+                    }
+                ), 201)
+            else:
+                self.logger.log(message=f"Falha ao excluir produto.", level='error')
+
+                return make_response(jsonify(
+                    {
+                        'status': False,
+                        'message': 'Falha ao excluir produto.',
+                    }
+                ), 500)
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
 

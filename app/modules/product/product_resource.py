@@ -16,7 +16,7 @@ class ProductResource(Resource):
         if action == 'by_id':
             return ProductUseCase().get_by_id()
         elif action == 'all':
-            return ProductUseCase().get_product_all()
+            return ProductUseCase().get_all_product()
 
     @auth_decorator
     @user_company_validator
@@ -29,4 +29,10 @@ class ProductResource(Resource):
     @dto_decorator(ProdutoRequestModel)
     def put(self):
         return ProductUseCase().update_product()
+
+    @auth_decorator
+    @user_company_validator
+    def delete(self):
+        return ProductUseCase().virtual_delete_product()
+
 
