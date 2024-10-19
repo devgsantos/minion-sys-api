@@ -13,7 +13,7 @@ def user_company_validator(func):
         def wrapper(*args, **kwargs):
             try:
                 company_from_json = None
-                if request.method in ['POST', 'PUT', 'DELETE']:
+                if request.method in ['POST', 'PUT']:
                     company_from_json = request.json.get('company') if request.json else None
                     company_from_link = request.args.get('company') if request.args.get('company') else None
                 else:
