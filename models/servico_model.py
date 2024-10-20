@@ -32,7 +32,7 @@ class ServicoModel(Base, SoftDeleteQuery):
     servico_tipo_id = Column('servico_tipo_id', Integer, ForeignKey('servico_tipo.servico_tipo_id'), nullable=False)
     # cliente_solicitante_id = Column('cliente_solicitante_id', Integer, ForeignKey('cliente.cliente_id'), nullable=False)
 
-    cliente_solicitante = relationship("ClienteModel")
+    # cliente_solicitante = relationship("ClienteModel")
     produtos_relacionados = relationship("RelServicoProdutoModel", cascade="all, delete-orphan")
 
 
