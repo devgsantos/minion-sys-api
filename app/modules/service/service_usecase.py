@@ -103,3 +103,33 @@ class ServiceUseCase:
                     'data': None,
                 }
             ), 500)
+
+    def virtual_delete_service(self):
+        try:
+            excluir_servico = self.operations.soft_delete(self.service_model, request.args.get('servico_id'), request.args.get('empresa_id'))
+            if excluir_servico:
+                return make_response(jsonify(
+                    {
+                        'status': True,
+                        'message': 'Produto excluído com sucesso.'
+                    }
+                ), 201)
+            else:
+                self.logger.log(message=f"Falha ao excluir produto.", level='error')
+
+                return make_response(jsonify(
+                    {
+                        'status': False,
+                        'message': 'Falha ao excluir produto.',
+                    }
+                ), 500)
+        except Exception as exc:
+            self.logger.log(message=str(exc), level='error')
+
+            return make_response(jsonify(
+                {
+                    'status': False,
+                    'message': str(exc),
+                    'data': None,
+                }
+            ), 500)
