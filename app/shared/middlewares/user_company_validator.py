@@ -15,6 +15,7 @@ def user_company_validator(func):
                 company_from_json = None
                 if request.method in ['POST', 'PUT']:
                     company_from_json = request.json.get('empresa_id') if request.json else None
+                    company_from_form = request.json.get('empresa_id') if request.json else None
                     company_from_link = request.args.get('empresa_id') if request.args.get('empresa_id') else None
                 else:
                     company_from_link = request.args.get('empresa_id') if request.args.get('empresa_id') else None

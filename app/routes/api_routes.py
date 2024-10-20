@@ -2,6 +2,7 @@ from flask import Blueprint
 from flask_restful import Api
 
 from app.modules.company.company_resource import CompanyResource
+from app.modules.file_repository.file_repository_resource import FileRepositoryResource
 from app.modules.login.login_resource import LoginResource
 from app.modules.permission.permission_resource import PermissionResource
 from app.modules.product.product_resource import ProductResource
@@ -16,6 +17,9 @@ api = Api(api_blueprint)
 
 
 api.add_resource(TestResource, '/teste')
+
+# FILES
+api.add_resource(FileRepositoryResource, '/arquivo', '/arquivo/<string:action>')
 
 # LOGIN
 api.add_resource(LoginResource, '/login')
