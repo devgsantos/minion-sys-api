@@ -22,7 +22,7 @@ class ServicoModel(Base, SoftDeleteQuery):
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), nullable=False, server_default=func.now(),
                            default=func.now())
     data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), onupdate=func.now())
-    previsao_entrega = Column('previsao_entrega', DateTime(timezone=False))
+    previsao_entrega_dias = Column('previsao_entrega_dias', Integer, nullable=True)
     responsavel_cadastro_id = Column('responsavel_cadastro_id', Integer)
     detalhes_opcionais = Column('detalhes_opcionais', String(500))
     status = Column('status', Boolean, nullable=False, default=True)
@@ -30,7 +30,7 @@ class ServicoModel(Base, SoftDeleteQuery):
     data_exclusao = Column('data_exclusao', DateTime)
     empresa_id = Column('empresa_id', Integer, ForeignKey('empresa.empresa_id'), nullable=False)
     servico_tipo_id = Column('servico_tipo_id', Integer, ForeignKey('servico_tipo.servico_tipo_id'), nullable=False)
-    cliente_solicitante_id = Column('cliente_solicitante_id', Integer, ForeignKey('cliente.cliente_id'), nullable=False)
+    # cliente_solicitante_id = Column('cliente_solicitante_id', Integer, ForeignKey('cliente.cliente_id'), nullable=False)
 
     cliente_solicitante = relationship("ClienteModel")
     produtos_relacionados = relationship("RelServicoProdutoModel", cascade="all, delete-orphan")

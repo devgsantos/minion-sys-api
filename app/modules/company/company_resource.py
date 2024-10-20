@@ -11,7 +11,7 @@ class CompanyResource(Resource):
 
     @auth_decorator
     def get(self, action=None):
-        if action == 'by_user':
+        if action == 'por_usuario':
             return CompanyUseCase().get_company_by_user()
         return CompanyUseCase().get_company_all()
 
