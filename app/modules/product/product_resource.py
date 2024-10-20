@@ -13,9 +13,9 @@ class ProductResource(Resource):
     @auth_decorator
     @user_company_validator
     def get(self, action=None):
-        if action == 'by_id':
+        if action == 'por_id':
             return ProductUseCase().get_by_id()
-        elif action == 'all':
+        elif action == 'todos':
             return ProductUseCase().get_all_product()
 
     @auth_decorator
@@ -34,5 +34,3 @@ class ProductResource(Resource):
     @user_company_validator
     def delete(self):
         return ProductUseCase().virtual_delete_product()
-
-

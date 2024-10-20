@@ -23,10 +23,10 @@ class ProductUseCase:
     # USAR A SERIALIZAÇÃO DESTA FUNÇÃO COMO BASE PARA AS OUTRAS
     def get_all_product(self):
         try:
-            search_term = request.args.get('search_term') if request.args.get('search_term') else None
-            page = int(request.args.get('page')) if request.args.get('page') else 1
-            limit = int(request.args.get('limit')) if request.args.get('limit') else 10
-            companies_list = request.args.get('company').split(',')
+            search_term = request.args.get('termo_pesquisa') if request.args.get('termo_pesquisa') else None
+            page = int(request.args.get('pagina')) if request.args.get('pagina') else 1
+            limit = int(request.args.get('limite')) if request.args.get('limite') else 10
+            companies_list = request.args.get('empresa_id').split(',')
             companies = []
             for company in companies_list:
                 companies.append(int(company))
@@ -127,7 +127,7 @@ class ProductUseCase:
 
     def virtual_delete_product(self):
         try:
-            excluir_produto = self.operations.soft_delete(self.product_model, request.json['produto_id'])
+            excluir_produto = self.operations.soft_delete(self.product_model, request.args.get('produto_id'), request.args.get('empresa_id'))
             if excluir_produto:
                 return make_response(jsonify(
                     {

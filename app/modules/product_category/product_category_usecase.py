@@ -17,8 +17,8 @@ class ProductCategoryUseCase:
     #  ESTA TRATATIVA DE SERIALIZAÇÃO DEVE SER USADO EM MODELOS GENÉRICOS
     def get_product_category_all(self):
         try:
-            page = int(request.args.get('page'))
-            limit = int(request.args.get('limit'))
+            page = int(request.args.get('pagina'))
+            limit = int(request.args.get('limite'))
             categories, total = self.operations.findAll(self.product_category_model, page, limit)
             categories_array = self.functions.instance_list_to_array(categories)
 

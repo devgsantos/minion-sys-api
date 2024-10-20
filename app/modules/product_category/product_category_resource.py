@@ -11,9 +11,9 @@ class ProductCategoryResource(Resource):
 
     @auth_decorator
     def get(self, action=None):
-        if action == 'by_id':
+        if action == 'por_id':
             return ProductCategoryUseCase().get_product_category_by_id()
-        if action == 'all':
+        if action == 'todos':
             return ProductCategoryUseCase().get_product_category_all()
 
     @auth_decorator

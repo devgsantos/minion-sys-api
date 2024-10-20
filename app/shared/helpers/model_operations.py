@@ -52,6 +52,7 @@ class ModelOperations:
         with self.session_scope() as session:
             try:
                 results = session.query(model).filter_by(**kwargs).one()
+                results = results.filter(model.data_exclusao.is_(None))
 
                 return results
             except NoResultFound:
@@ -64,6 +65,7 @@ class ModelOperations:
             try:
                 # Contar o total de registros com base nos filtros aplicados
                 query_count = session.query(func.count()).select_from(model)
+                query_count = query_count.filter(model.data_exclusao.is_(None))
 
                 for key, value in kwargs.items():
                     column = getattr(model, key, None)
@@ -79,6 +81,7 @@ class ModelOperations:
 
                 # Consulta para obter os resultados paginados
                 query_results = session.query(model)
+                query_results = query_results.filter(model.data_exclusao.is_(None))
 
                 for key, value in kwargs.items():
                     column = getattr(model, key, None)
@@ -111,6 +114,7 @@ class ModelOperations:
             try:
                 # Contar o total de registros com base nos filtros aplicados
                 query_count = session.query(func.count()).select_from(model)
+                query_count = query_count.filter(model.data_exclusao.is_(None))
 
                 # Aplicar filtros exatos a partir de kwargs
                 for key, value in kwargs.items():
@@ -136,6 +140,7 @@ class ModelOperations:
 
                 # Consulta para obter os resultados paginados
                 query_results = session.query(model)
+                query_results = query_results.filter(model.data_exclusao.is_(None))
 
                 # Aplicar novamente os filtros exatos
                 for key, value in kwargs.items():
@@ -339,14 +344,23 @@ class ModelOperations:
             return False
 
     # Deletar virtualmente um registro
-    def soft_delete(self, model: Type[Base], id: int) -> bool:
+    def soft_delete(self, model: Type[Base], produto_id: int, empresa_id: int) -> bool:
         with self.session_scope() as session:
-            instance = session.query(model).get(id)
-            if instance:
+            try:
+                # Busca a instância com produto_id e empresa_id
+                instance = (
+                    session.query(model)
+                    .filter_by(produto_id=produto_id, empresa_id=empresa_id)
+                    .one()
+                )
 
-                instance.data_exclusao = datetime.utcnow()  # Marca como excluído
+                # Marca a data de exclusão lógica
+                instance.data_exclusao = datetime.utcnow()
+                session.commit()  # Salva a mudança
                 return True
-            return False
+            except NoResultFound:
+                # Retorna False se não encontrar a instância
+                return False
 
     def model_to_dict(self, model_instance):
         return {c.name: getattr(model_instance, c.name) for c in model_instance.__table__.columns}

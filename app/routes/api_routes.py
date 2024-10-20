@@ -15,25 +15,25 @@ api_blueprint = Blueprint('api', __name__)
 api = Api(api_blueprint)
 
 
-api.add_resource(TestResource, '/test')
+api.add_resource(TestResource, '/teste')
 
 # LOGIN
 api.add_resource(LoginResource, '/login')
 
 # PERMISSION
-api.add_resource(PermissionResource, '/permission')
+api.add_resource(PermissionResource, '/permissao')
 
 # USER
-api.add_resource(UserResource, '/users')
+api.add_resource(UserResource, '/usuarios')
 
 # COMPANY
-api.add_resource(CompanyResource, '/company', '/company/<string:action>')
+api.add_resource(CompanyResource, '/empresa', '/empresa/<string:action>')
 
 # PRODUCT
-api.add_resource(ProductResource, '/product', '/product/<string:action>')
+api.add_resource(ProductResource, '/produto', '/produto/<string:action>')
 
 # PRODUCT CATEGORY
-api.add_resource(ProductCategoryResource, '/product_category', '/product_category/<string:action>')
+api.add_resource(ProductCategoryResource, '/produto-categoria', '/produto-categoria/<string:action>')
 
 # SERVICE
-api.add_resource(ServiceResource, '/service', '/service/<string:action>')
+api.add_resource(ServiceResource, '/servico', '/servico/<string:action>')
