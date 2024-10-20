@@ -33,7 +33,7 @@ class ServicoModel(Base, SoftDeleteQuery):
     # cliente_solicitante_id = Column('cliente_solicitante_id', Integer, ForeignKey('cliente.cliente_id'), nullable=False)
 
     # cliente_solicitante = relationship("ClienteModel")
-    produtos_relacionados = relationship("RelServicoProdutoModel", cascade="all, delete-orphan")
+    # produtos_relacionados = relationship("RelServicoProdutoModel", cascade="all, delete-orphan")
 
 
 class ServicoBaseModel(BaseModel):
@@ -49,8 +49,6 @@ class ServicoBaseModel(BaseModel):
     empresa_id: int
     responsavel_cadastro_id: int
     data_exclusao: Optional[datetime]
-    cliente_solicitante: Optional[ClienteServicoBaseModel]
-    produtos_relacionados: Optional[List[RelProdutoBaseModel]]
 
     @field_validator('data_cadastro', 'data_atualizacao', 'data_exclusao')
     def format_datetime(cls, value):
@@ -68,5 +66,3 @@ class ServicoRequestModel(BaseModel):
     servico_tipo_id: int
     empresa_id: int
     servico_tipo_id: int
-    cliente_solicitante_id: Optional[int]
-    produtos_relacionados: Optional[List[int]]

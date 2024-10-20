@@ -10,9 +10,9 @@ class ServiceResource(Resource):
 
     @auth_decorator
     def get(self, action=None):
-        if action == 'by_id':
+        if action == 'por_id':
             return ServiceUseCase().get_service_by_id()
-        if action == 'all':
+        if action == 'todos':
             return ServiceUseCase().get_service_all()
 
     @auth_decorator

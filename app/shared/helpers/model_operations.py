@@ -51,10 +51,14 @@ class ModelOperations:
     def findOne(self, model: Type[Base], **kwargs) -> Optional[Any]:
         with self.session_scope() as session:
             try:
-                results = session.query(model).filter_by(**kwargs).one()
-                results = results.filter(model.data_exclusao.is_(None))
+                # Criar a query e filtrar por data_exclusao is None e outros filtros fornecidos
+                query = session.query(model).filter_by(**kwargs)
+                query = query.filter(model.data_exclusao.is_(None))  # Soft delete
 
-                return results
+                # Obter o resultado único
+                result = query.one()
+                return result
+
             except NoResultFound:
                 return None
 

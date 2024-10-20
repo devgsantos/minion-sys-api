@@ -26,15 +26,11 @@ class ProductUseCase:
             search_term = request.args.get('termo_pesquisa') if request.args.get('termo_pesquisa') else None
             page = int(request.args.get('pagina')) if request.args.get('pagina') else 1
             limit = int(request.args.get('limite')) if request.args.get('limite') else 10
-            companies_list = request.args.get('empresa_id').split(',')
-            companies = []
-            for company in companies_list:
-                companies.append(int(company))
             if search_term:
                 search_fields = ['titulo', 'descricao', 'sku', 'detalhes_opcionais']
-                products, total = self.operations.findManyByTerm(self.product_model, page, limit, search_term, search_fields, empresa_id=companies)
+                products, total = self.operations.findManyByTerm(self.product_model, page, limit, search_term, search_fields, empresa_id=request.args.get('empresa_id'))
             else:
-                products, total = self.operations.findMany(self.product_model, page, limit, empresa_id=companies)
+                products, total = self.operations.findMany(self.product_model, page, limit, empresa_id=request.args.get('empresa_id'))
             products_array = [ProdutoBaseModel.from_orm(product).dict() for product in products]
             # products_array = self.functions.instance_list_to_array(products)
 
