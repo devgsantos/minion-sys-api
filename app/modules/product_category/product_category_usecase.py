@@ -17,9 +17,16 @@ class ProductCategoryUseCase:
     #  ESTA TRATATIVA DE SERIALIZAÇÃO DEVE SER USADO EM MODELOS GENÉRICOS
     def get_product_category_all(self):
         try:
+            search_term = request.args.get('termo_pesquisa') if request.args.get('termo_pesquisa') else None
             page = int(request.args.get('pagina'))
             limit = int(request.args.get('limite'))
-            categories, total = self.operations.findAll(self.product_category_model, page, limit)
+            if search_term:
+                search_fields = ['titulo', 'descricao', 'sku', 'detalhes_opcionais']
+                categories, total = self.operations.findManyByTerm(self.product_category_model, page, limit, search_term,
+                                                                 search_fields,
+                                                                 empresa_id=request.args.get('empresa_id'))
+            else:
+                categories, total = self.operations.findAll(self.product_category_model, page, limit)
             categories_array = self.functions.instance_list_to_array(categories)
 
             return make_response(jsonify(
@@ -56,7 +63,7 @@ class ProductCategoryUseCase:
             return make_response(jsonify(
                 {
                     'status': True,
-                    'message': 'Produto criado com sucesso.'
+                    'message': 'Categoria de produtos criada com sucesso.'
                 }
             ), 201)
         except Exception as exc:
@@ -68,3 +75,54 @@ class ProductCategoryUseCase:
                 }
             ), 500)
 
+    def update_product_category(self):
+        try:
+            user = self.functions.token_decript()
+            request.json['responsavel_cadastro_id'] = user.get('login_id')
+            self.operations.update(self.product_category_model, request.json['produto_categoria_id'], **request.json)
+            return make_response(jsonify(
+                {
+                    'status': True,
+                    'message': 'Categoria de produtos alterada com sucesso.'
+                }
+            ), 201)
+        except Exception as exc:
+            self.logger.log(message=str(exc), level='error')
+
+            return make_response(jsonify(
+                {
+                    'status': False,
+                    'message': str(exc),
+                    'data': None,
+                }
+            ), 500)
+
+    def virtual_delete_product_category(self):
+        try:
+            excluir_produto = self.operations.soft_delete(self.product_category_model, request.args.get('produto_categoria_id'), request.args.get('empresa_id'))
+            if excluir_produto:
+                return make_response(jsonify(
+                    {
+                        'status': True,
+                        'message': 'Categoria de produtos excluída com sucesso.'
+                    }
+                ), 201)
+            else:
+                self.logger.log(message=f"Falha ao excluir categoria de produtos.", level='error')
+
+                return make_response(jsonify(
+                    {
+                        'status': False,
+                        'message': 'Falha ao excluir categoria de produtos.',
+                    }
+                ), 500)
+        except Exception as exc:
+            self.logger.log(message=str(exc), level='error')
+
+            return make_response(jsonify(
+                {
+                    'status': False,
+                    'message': str(exc),
+                    'data': None,
+                }
+            ), 500)

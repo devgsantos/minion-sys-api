@@ -348,23 +348,27 @@ class ModelOperations:
             return False
 
     # Deletar virtualmente um registro
-    def soft_delete(self, model: Type[Base], produto_id: int, empresa_id: int) -> bool:
+    def soft_delete(self, model: Type[Base], instance_id: int, empresa_id: int) -> Optional[Any]:
         with self.session_scope() as session:
-            try:
-                # Busca a instância com produto_id e empresa_id
-                instance = (
-                    session.query(model)
-                    .filter_by(produto_id=produto_id, empresa_id=empresa_id)
-                    .one()
-                )
+            # Identifica dinamicamente o nome da chave primária do modelo
+            primary_key = list(model.__mapper__.primary_key)[0].key  # Obtém o nome da chave primária
 
-                # Marca a data de exclusão lógica
-                instance.data_exclusao = datetime.utcnow()
-                session.commit()  # Salva a mudança
-                return True
-            except NoResultFound:
-                # Retorna False se não encontrar a instância
-                return False
+            # Busca a instância usando filtros dinâmicos para instance_id e empresa_id
+            instance = (
+                session.query(model)
+                .filter(getattr(model, primary_key) == instance_id, model.empresa_id == empresa_id)
+                .first()
+            )
+
+            if instance:
+                # Verifica se a instância possui 'data_exclusao' e atualiza
+                if hasattr(instance, 'data_exclusao'):
+                    setattr(instance, 'data_exclusao', datetime.utcnow())
+
+                session.commit()  # Salva as mudanças
+                return instance  # Retorna a instância alterada
+
+            return None  # Retorna None se não encontrar a instância
 
     def model_to_dict(self, model_instance):
         return {c.name: getattr(model_instance, c.name) for c in model_instance.__table__.columns}

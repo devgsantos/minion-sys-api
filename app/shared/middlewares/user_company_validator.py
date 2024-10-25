@@ -36,7 +36,7 @@ def user_company_validator(func):
                         'code': 401
                     }
             except Exception as exc:
-                logger.log(message='Token inválido', level='error')
+                logger.log(message='Falha ao validar empresa.', level='error')
 
                 return {
                     'status': False,
@@ -45,7 +45,7 @@ def user_company_validator(func):
                     'code': 400
                 }
 
-            logger.log(message='Usuario autenticado com sucesso!', level='info')
+            logger.log(message=f'Usuario com permissão na empresa_id -> {request_company}', level='info')
 
             return func(*args, **kwargs)
 
