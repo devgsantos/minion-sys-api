@@ -1,4 +1,4 @@
-from flask import render_template, Response
+from flask import Response
 
 from app.shared.singletons.logger import Logger
 
@@ -25,7 +25,7 @@ class TestUseCase:
                 </html> 
             '''
 
-            return Response(html_content, mimetype='text/html')
+            return Response(html_content)
 
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
