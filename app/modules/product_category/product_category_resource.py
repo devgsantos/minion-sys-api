@@ -1,6 +1,5 @@
 from flask_restful import Resource
 
-from app.modules.product.product_usecase import ProductUseCase
 from app.modules.product_category.product_category_usecase import ProductCategoryUseCase
 from app.shared.middlewares.auth import auth_decorator
 from app.shared.middlewares.dto import dto_decorator

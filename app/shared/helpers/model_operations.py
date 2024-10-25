@@ -8,6 +8,8 @@ from sqlalchemy.orm import sessionmaker, scoped_session, joinedload
 from sqlalchemy.orm.exc import NoResultFound
 from contextlib import contextmanager
 
+from unicodedata import normalize
+
 from app.shared.singletons.logger import Logger
 from models.base import Base
 
@@ -18,6 +20,9 @@ class ModelOperations:
         self.Session = request.db_session
         self.logger = Logger()
 
+    def normalize_term(self, term: str) -> str:
+        """Remove acentos e retorna o termo normalizado."""
+        return normalize('NFKD', term).encode('ASCII', 'ignore').decode('utf-8').lower()
 
     # Context manager para gerenciar a sessão do SQLAlchemy
     @contextmanager
@@ -116,11 +121,14 @@ class ModelOperations:
             offset = (page - 1) * limit
 
             try:
-                # Contar o total de registros com base nos filtros aplicados
+                # Normaliza o termo de busca
+                normalized_term = self.normalize_term(search_term) if search_term else None
+
+                # Consulta para contar o total de registros
                 query_count = session.query(func.count()).select_from(model)
                 query_count = query_count.filter(model.data_exclusao.is_(None))
 
-                # Aplicar filtros exatos a partir de kwargs
+                # Filtros exatos com kwargs
                 for key, value in kwargs.items():
                     column = getattr(model, key, None)
                     if column is not None:
@@ -131,10 +139,10 @@ class ModelOperations:
                     else:
                         raise ValueError(f"Campo '{key}' não encontrado no modelo.")
 
-                # Adicionar filtro de LIKE com case-insensitive
-                if search_term and search_fields:
+                # Adiciona filtros LIKE com normalização
+                if normalized_term and search_fields:
                     like_filters = [
-                        getattr(model, field).ilike(f"%{search_term}%")
+                        func.lower(func.unaccent(getattr(model, field))).ilike(f"%{normalized_term}%")
                         for field in search_fields if hasattr(model, field)
                     ]
                     if like_filters:
@@ -142,7 +150,7 @@ class ModelOperations:
 
                 total_count = query_count.scalar()
 
-                # Consulta para obter os resultados paginados
+                # Consulta para resultados paginados
                 query_results = session.query(model)
                 query_results = query_results.filter(model.data_exclusao.is_(None))
 
@@ -155,10 +163,10 @@ class ModelOperations:
                         else:
                             query_results = query_results.filter(column == value)
 
-                # Adicionar filtros LIKE para a consulta de resultados
-                if search_term and search_fields:
+                # Adiciona filtros LIKE para resultados
+                if normalized_term and search_fields:
                     like_filters = [
-                        getattr(model, field).ilike(f"%{search_term}%")
+                        func.lower(func.unaccent(getattr(model, field))).ilike(f"%{normalized_term}%")
                         for field in search_fields if hasattr(model, field)
                     ]
                     if like_filters:

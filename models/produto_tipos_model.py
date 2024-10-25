@@ -40,3 +40,9 @@ class ProdutoTipoBaseModel(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ProdutoTipoRequestModel(BaseModel):
+    titulo: constr(max_length=300)
+    descricao: Optional[constr(max_length=500)]
+    imagem: Optional[str]
+    empresa_id: int

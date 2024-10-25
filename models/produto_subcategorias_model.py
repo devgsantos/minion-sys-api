@@ -14,7 +14,7 @@ from .datetime_fortaleza_local import fortaleza_now
 class ProdutoSubcategoriaModel(Base, SoftDeleteQuery):
     __tablename__ = 'produto_subcategoria'
 
-    produto_sub_categoria_id = Column('produto_subcategoria_id', Integer, primary_key=True)
+    produto_subcategoria_id = Column('produto_subcategoria_id', Integer, primary_key=True)
     titulo = Column('titulo', String(300), nullable=False)
     descricao = Column('descricao', String(500))
     imagem = Column('imagem', String(300))
@@ -48,3 +48,12 @@ class ProdutoSubcategoriaBaseModel(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ProdutoSubcategoriaRequestModel(BaseModel):
+    titulo: constr(max_length=300)
+    descricao: Optional[constr(max_length=500)]
+    imagem: Optional[str]
+    sigla: str
+    empresa_id: int
+    produto_categoria_id: int
+

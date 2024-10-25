@@ -123,8 +123,8 @@ class ProductUseCase:
 
     def virtual_delete_product(self):
         try:
-            excluir_produto = self.operations.soft_delete(self.product_model, request.args.get('produto_id'), request.args.get('empresa_id'))
-            if excluir_produto:
+            delete_product = self.operations.soft_delete(self.product_model, request.args.get('produto_id'), request.args.get('empresa_id'))
+            if delete_product:
                 return make_response(jsonify(
                     {
                         'status': True,

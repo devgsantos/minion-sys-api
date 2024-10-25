@@ -7,6 +7,8 @@ from app.modules.login.login_resource import LoginResource
 from app.modules.permission.permission_resource import PermissionResource
 from app.modules.product.product_resource import ProductResource
 from app.modules.product_category.product_category_resource import ProductCategoryResource
+from app.modules.product_subcategory.product_subcategory_resource import ProductSubcategoryResource
+from app.modules.product_type.product_type_resource import ProductTypeResource
 from app.modules.service.service_resource import ServiceResource
 from app.modules.test.test_resource import TestResource
 from app.modules.user.user_resource import UserResource
@@ -38,6 +40,12 @@ api.add_resource(ProductResource, '/produto', '/produto/<string:action>')
 
 # PRODUCT CATEGORY
 api.add_resource(ProductCategoryResource, '/produto-categoria', '/produto-categoria/<string:action>')
+
+# PRODUCT SUBCATEGORY
+api.add_resource(ProductSubcategoryResource, '/produto-subcategoria', '/produto-subcategoria/<string:action>')
+
+# PRODUCT TYPE
+api.add_resource(ProductTypeResource, '/produto-tipo', '/produto-tipo/<string:action>')
 
 # SERVICE
 api.add_resource(ServiceResource, '/servico', '/servico/<string:action>')
