@@ -1,6 +1,7 @@
 from flask import Blueprint
 from flask_restful import Api
 
+from app.modules.budget.budget_resource import BudgetResource
 from app.modules.company.company_resource import CompanyResource
 from app.modules.file_repository.file_repository_resource import FileRepositoryResource
 from app.modules.login.login_resource import LoginResource
@@ -52,3 +53,6 @@ api.add_resource(ServiceResource, '/servico', '/servico/<string:action>')
 
 # SERVICE TYPE
 api.add_resource(ServiceTypeResource, '/servico-tipo', '/servico-tipo/<string:action>')
+
+# BUDGET
+api.add_resource(BudgetResource, '/orcamento', '/orcamento/<string:action>')

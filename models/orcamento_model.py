@@ -1,12 +1,13 @@
 from sqlalchemy import Column, func, Integer, Boolean, ForeignKey, DateTime, Numeric
 from sqlalchemy.orm import relationship
-from pydantic import BaseModel, field_validator
-from typing import Optional
+from pydantic import BaseModel, field_validator, constr
+from typing import Optional, List
 
 from datetime import datetime
 
 from app.shared.helpers.validators import format_datetime
 from models.base import Base
+from .orcamento_item_model import OrcamentoItemBaseModel
 from .soft_delete import SoftDeleteQuery
 
 
@@ -45,3 +46,11 @@ class OrcamentoBaseModel(BaseModel):
 
     class Config:
         from_attributes = True
+
+class OrcamentoRequestModel(BaseModel):
+    orcamento_id: int
+    cliente_id: Optional[int]
+    desconto: float
+    empresa_id: int
+    orcamento_status_id: int
+    orcamento_itens: Optional[List[OrcamentoItemBaseModel]]
