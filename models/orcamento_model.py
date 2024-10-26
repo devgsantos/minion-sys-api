@@ -22,14 +22,13 @@ class OrcamentoModel(Base, SoftDeleteQuery):
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=False)
     data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), onupdate=func.now())
     orcamento_status_id = Column('orcamento_status_id', Integer, ForeignKey('orcamento_status.orcamento_status_id'))
-    orcamento_tipo_id = Column('orcamento_tipo_id', Integer, ForeignKey('orcamento_tipo.orcamento_tipo_id'))
+    orcamento_tipo_id = Column('orcamento_tipo_id', Integer)
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
     cliente = relationship('ClienteModel')
     empresa = relationship('EmpresaModel')
     orcamento_status = relationship('OrcamentoStatusModel')
-    orcamento_tipo = relationship('OrcamentoTipoModel')
-    orcamento_itens = relationship('OrcamentoItemModel', cascade='all')
+    orcamento_itens = relationship('OrcamentoItemModel')
 
 class OrcamentoBaseModel(BaseModel):
     orcamento_id: int
