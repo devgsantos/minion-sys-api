@@ -10,9 +10,9 @@ from app.modules.product_category.product_category_resource import ProductCatego
 from app.modules.product_subcategory.product_subcategory_resource import ProductSubcategoryResource
 from app.modules.product_type.product_type_resource import ProductTypeResource
 from app.modules.service.service_resource import ServiceResource
+from app.modules.service_type.service_type_resource import ServiceTypeResource
 from app.modules.test.test_resource import TestResource
 from app.modules.user.user_resource import UserResource
-from app.shared.helpers.functions import Functions
 
 api_blueprint = Blueprint('api', __name__)
 api = Api(api_blueprint)
@@ -49,3 +49,6 @@ api.add_resource(ProductTypeResource, '/produto-tipo', '/produto-tipo/<string:ac
 
 # SERVICE
 api.add_resource(ServiceResource, '/servico', '/servico/<string:action>')
+
+# SERVICE TYPE
+api.add_resource(ServiceTypeResource, '/servico-tipo', '/servico-tipo/<string:action>')

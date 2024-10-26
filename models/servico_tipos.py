@@ -36,3 +36,8 @@ class ServicoTipoBaseModel(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ServicoTipoRequestModel(BaseModel):
+    titulo: constr(max_length=300)
+    descricao: Optional[constr(max_length=500)]
+    empresa_id: int
