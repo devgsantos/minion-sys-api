@@ -150,3 +150,6 @@ class Functions:
             else:
                 model_fields[name] = fields.Raw  # Tipo não reconhecido, usa Raw
         return api.model(model.__name__, model_fields)
+
+    def budget_value(self, itens):
+        print('teste')

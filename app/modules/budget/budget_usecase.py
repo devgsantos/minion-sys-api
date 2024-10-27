@@ -4,7 +4,8 @@ from flask import request, jsonify, make_response
 from app.shared.helpers.functions import Functions
 from app.shared.helpers.model_operations import ModelOperations
 from app.shared.singletons.logger import Logger
-from models import OrcamentoModel, OrcamentoItemModel, OrcamentoBaseModel
+from models import OrcamentoModel, OrcamentoItemModel, OrcamentoBaseModel, ProdutoModel, ServicoModel
+
 
 class BudgetUseCase:
     def __init__(self):
@@ -12,7 +13,9 @@ class BudgetUseCase:
         self.operations = ModelOperations()
         self.functions = Functions()
         self.budget_model = OrcamentoModel
-        self.budget_items_model = OrcamentoItemModel
+        self.budget_item_model = OrcamentoItemModel
+        self.product_model = ProdutoModel
+        self.service_model = ServicoModel
 
 
     # USAR A SERIALIZAÇÃO DESTA FUNÇÃO COMO BASE PARA AS OUTRAS
@@ -50,17 +53,31 @@ class BudgetUseCase:
         try:
             user = self.functions.token_decript()
             request.json['responsavel_cadastro_id'] = user.get('login_id')
-            request.json['valor'] = user.get('login_id')
-            product_insert = {key: value for key, value in request.json.items() if key != 'estoque'}
-            result = self.operations.insert(self.budget_model, **product_insert)
-            if len(request.json['estoque']) > 0:
-                for param in request.json['estoque']:
-                    insert_data = {
-                        "orcamento_id": result.orcamento_id,
-                        "estoque_tipo_id": param['estoque_tipo_id'],
-                        "quantidade_disponivel": param['quantidade_disponivel']
-                    }
-                    self.operations.insert(self.stock_model, **insert_data)
+            products_items = []
+            services_items = []
+            for item in request.json.get('orcamento_itens', []):
+                if item.get('produto_id') is not None:
+                    products_items.append(item)
+                elif item.get('servico_id') is not None:
+                    services_items.append(item)
+            budget_value = self.calculate_items_value(products_items, services_items)
+            request.json['valor'] = budget_value
+            budget_insert = {key: value for key, value in request.json.items() if key != 'orcamento_itens'}
+            result = self.operations.insert(self.budget_model, **budget_insert)
+            if len(products_items) > 0:
+                data_insert = {
+                    'orcamento_id': result.orcamento_id,
+                    'produto_id': [item['produto_id'] for item in products_items],  # Lista de IDs de produtos
+                    'quantidade_orcamento': [item['quantidade_orcamento'] for item in products_items]  # Quantidades correspondentes
+                }
+                products_items_result = self.operations.insert(self.budget_item_model, **data_insert)
+            if len(services_items) > 0:
+                data_insert = {
+                    'orcamento_id': result.orcamento_id,
+                    'servico_id': [item['servico_id'] for item in services_items],  # Lista de IDs de produtos
+                    'quantidade_orcamento': [item['quantidade_orcamento'] for item in services_items]  # Quantidades correspondentes
+                }
+                services_items_result = self.operations.insert(self.budget_item_model, **data_insert)
             return make_response(jsonify(
                 {
                     'status': True,
@@ -140,3 +157,16 @@ class BudgetUseCase:
                     'data': None,
                 }
             ), 500)
+
+    def calculate_items_value(self, products_items, services_items):
+        products_value = 0
+        services_value = 0
+        if len(products_items) > 0:
+            products_ids = [item['produto_id'] for item in products_items if 'produto_id' in item]
+            products, products_count = self.operations.findManyNoffset(self.product_model, produto_id=products_ids)
+            products_value = sum(product.preco_venda for product in products)
+        if len(services_items) > 0:
+            services_ids = [item['servico_id'] for item in services_items if 'servico_id' in item]
+            services, services_count = self.operations.findManyNoffset(self.service_model, servico_id=services_ids)
+            services_value = sum(service.preco_mao_de_obra for service in services)
+        return products_value + services_value

@@ -38,17 +38,15 @@ class ModelOperations:
         #     session.close()
 
     # Buscar todos os registros de um modelo
-    def findAll(self, model: Type[Base], page: int = 1, limit: int = 10,) -> List[Any]:
+    def findAll(self, model: Type[Base]) -> List[Any]:
         with self.session_scope() as session:
-            offset = (page - 1) * limit
 
             # Retorno o total de registros
             total_count = session.query(func.count(f'{getattr(model, "__tablename__", None)}_id')) \
                 .filter(model.data_exclusao.is_(None)).scalar()
 
             # Consulta para obter os resultados paginados
-            results = session.query(model).options(joinedload('*')).filter(model.data_exclusao.is_(None)).offset(
-                offset).limit(limit).all()
+            results = session.query(model).options(joinedload('*')).filter(model.data_exclusao.is_(None)).all()
 
             return results, total_count
 
@@ -107,6 +105,46 @@ class ModelOperations:
             except Exception as e:
                 print(f"Erro ao executar a consulta: {e}")
                 raise
+
+    def findManyNoffset(self, model: Type[Base], **kwargs) -> Tuple[Optional[List[Any]], int]:
+        with self.session_scope() as session:  # Context manager para a sessão
+            try:
+                # Contar o total de registros com base nos filtros aplicados
+                query_count = session.query(func.count()).select_from(model)
+                query_count = query_count.filter(model.data_exclusao.is_(None))
+
+                # Aplicar filtros dinâmicos nos campos do modelo
+                for key, value in kwargs.items():
+                    column = getattr(model, key, None)
+                    if column is not None:
+                        if isinstance(value, list):
+                            query_count = query_count.filter(column.in_(value))
+                        else:
+                            query_count = query_count.filter(column == value)
+                    else:
+                        raise ValueError(f"Campo '{key}' não encontrado no modelo.")
+
+                total_count = query_count.scalar()  # Total de registros filtrados
+
+                # Consulta para obter todos os resultados sem paginação
+                query_results = session.query(model).filter(model.data_exclusao.is_(None))
+
+                for key, value in kwargs.items():
+                    column = getattr(model, key, None)
+                    if column is not None:
+                        if isinstance(value, list):
+                            query_results = query_results.filter(column.in_(value))
+                        else:
+                            query_results = query_results.filter(column == value)
+
+                results = query_results.all()  # Obter todos os resultados
+                return results, total_count
+
+            except NoResultFound:
+                return None, 0  # Se não encontrar resultados
+            except Exception as e:
+                print(f"Erro ao executar a consulta: {e}")
+                raise  # Levantar a exceção para tratamento externo
 
     def findManyByTerm(
             self,
@@ -250,19 +288,40 @@ class ModelOperations:
     # Inserir um novo registro
     def insert(self, model: Type[Base], **kwargs) -> Any:
         with self.session_scope() as session:
-            if any(isinstance(value, list) for value in kwargs.values()):
+            try:
                 instances = []
-                for key, value in kwargs.items():
-                    if isinstance(value, list):
-                        for item in value:
-                            instance_kwargs = {k: v if k != key else item for k, v in kwargs.items() if not isinstance(v, list)}
-                            instances.append(model(**item))
-                session.add_all(instances)
-                return instances
-            else:
-                instance = model(**kwargs)
-                session.add(instance)
-                return instance
+
+                # Identificar listas em kwargs e garantir que todas tenham o mesmo tamanho
+                list_keys = [k for k, v in kwargs.items() if isinstance(v, list)]
+                if list_keys:
+                    # Verifica se todas as listas têm o mesmo tamanho
+                    list_length = len(kwargs[list_keys[0]])
+                    if not all(len(kwargs[key]) == list_length for key in list_keys):
+                        raise ValueError("Todas as listas devem ter o mesmo tamanho.")
+
+                    # Criar uma instância para cada conjunto de valores na mesma posição nas listas
+                    for i in range(list_length):
+                        instance_data = {
+                            k: (v[i] if isinstance(v, list) else v) for k, v in kwargs.items()
+                        }
+                        instances.append(model(**instance_data))
+
+                    # Inserção em massa das instâncias
+                    session.add_all(instances)
+                    session.commit()  # Confirma a transação
+                    return instances
+
+                else:
+                    # Inserção simples se não houver listas
+                    instance = model(**kwargs)
+                    session.add(instance)
+                    session.commit()  # Confirma a transação
+                    return instance
+
+            except Exception as e:
+                session.rollback()  # Reverter transação em caso de erro
+                print(f"Erro ao inserir: {e}")
+                raise
 
     # Atualizar um registro existente
     def update(self, model: Type[Base], instance_id: int, **kwargs) -> Optional[Any]:

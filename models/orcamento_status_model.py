@@ -14,7 +14,7 @@ class OrcamentoStatusModel(Base, SoftDeleteQuery):
     __tablename__ = 'orcamento_status'
 
     orcamento_status_id = Column('orcamento_status_id', Integer, primary_key=True)
-    titulo = Column('titulo', Integer, ForeignKey('cliente.cliente_id'))
+    titulo = Column('titulo', String(500))
     descricao = Column('descricao', String(1000), nullable=True)
     empresa_id = Column('empresa_id', Integer, ForeignKey('empresa.empresa_id'), nullable=True)
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=False)

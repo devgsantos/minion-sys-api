@@ -31,7 +31,7 @@ class ClienteModel(Base, SoftDeleteQuery):
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=False)
     data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), onupdate=func.now())
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
-    lead_conversao = Column(Integer, nullable=True)
+    lead_id = Column(Integer, nullable=True)
 
     pais = relationship('PaisModel')
 
