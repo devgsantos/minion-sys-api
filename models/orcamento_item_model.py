@@ -25,14 +25,10 @@ class OrcamentoItemModel(Base, SoftDeleteQuery):
     produto = relationship('ProdutoModel')
 
 class OrcamentoItemBaseModel(BaseModel):
-    orcamento_id: Optional[int]
+    servico_id: Optional[int]
+    produto_id: Optional[int]
     quantidade_orcamento: int
-    finalizado: bool
-    data_cadastro: Optional[datetime]
 
-    @field_validator('data_cadastro')
-    def format_datetime(cls, value):
-        return format_datetime(value)
 
     class Config:
         from_attributes = True
