@@ -107,37 +107,28 @@ class ModelOperations:
                 raise
 
     def findManyNoffset(self, model: Type[Base], **kwargs) -> Tuple[Optional[List[Any]], int]:
-        with self.session_scope() as session:  # Context manager para a sessão
+        with self.session_scope() as session:
             try:
-                # Contar o total de registros com base nos filtros aplicados
-                query_count = session.query(func.count()).select_from(model)
-                query_count = query_count.filter(model.data_exclusao.is_(None))
+                # Aplica o filtro de soft delete (data_exclusao IS NULL) automaticamente
+                query = session.query(model).filter(model.data_exclusao.is_(None))
 
-                # Aplicar filtros dinâmicos nos campos do modelo
+                # Aplica filtros dinâmicos nos campos do modelo
                 for key, value in kwargs.items():
                     column = getattr(model, key, None)
                     if column is not None:
                         if isinstance(value, list):
-                            query_count = query_count.filter(column.in_(value))
+                            query = query.filter(column.in_(value))
                         else:
-                            query_count = query_count.filter(column == value)
+                            query = query.filter(column == value)
                     else:
                         raise ValueError(f"Campo '{key}' não encontrado no modelo.")
 
-                total_count = query_count.scalar()  # Total de registros filtrados
+                # Executa a contagem total de registros com base nos filtros
+                total_count = query.count()
 
-                # Consulta para obter todos os resultados sem paginação
-                query_results = session.query(model).filter(model.data_exclusao.is_(None))
+                # Obter todos os resultados filtrados
+                results = query.all()
 
-                for key, value in kwargs.items():
-                    column = getattr(model, key, None)
-                    if column is not None:
-                        if isinstance(value, list):
-                            query_results = query_results.filter(column.in_(value))
-                        else:
-                            query_results = query_results.filter(column == value)
-
-                results = query_results.all()  # Obter todos os resultados
                 return results, total_count
 
             except NoResultFound:
@@ -366,53 +357,88 @@ class ModelOperations:
             session.commit()  # Faz o commit das alterações
             return instance
 
-    def merge_insert_if_not_exists(self, model: Type[Base], unique_fields: dict, **kwargs) -> Optional[Any]:
-        """
-        Função merge que verifica se uma combinação única de campos existe.
-        Se existir, atualiza o registro. Se não existir, insere um novo registro.
-
-        Parâmetros:
-        - model: O modelo SQLAlchemy da tabela
-        - unique_fields: Um dicionário contendo os campos únicos usados para identificar a instância
-        - kwargs: Os campos a serem atualizados ou inseridos
-
-        Retorno:
-        - A instância atualizada ou criada
-        """
+    def merge_insert_if_not_exists(self, model: Type[Base], unique_fields: Optional[dict] = None, **kwargs) -> Optional[
+        Any]:
         with self.session_scope() as session:
-            # Verifica se já existe uma instância com base nos campos únicos
-            instance = session.query(model).filter_by(**unique_fields).first()
+            try:
+                # Verifica se unique_fields foi passado; se não, cria uma nova instância diretamente
+                if not unique_fields:
+                    instance = model(**kwargs)
+                    session.add(instance)
+                    session.commit()
+                    return instance
 
-            if instance:
-                # Atualiza a instância existente com os novos valores
-                if kwargs:
+                # Se unique_fields foi fornecido, tenta encontrar a instância existente
+                query = session.query(model).filter_by(**unique_fields)
+                if hasattr(model, 'data_exclusao'):
+                    query = query.filter(model.data_exclusao.is_(None))  # Respeita soft delete
+
+                instance = query.first()
+
+                if instance:
+                    # Atualiza a instância existente com os novos valores
                     for key, value in kwargs.items():
                         setattr(instance, key, value)
 
-                # Verifica se o modelo tem a coluna 'data_atualizacao' e atualiza
-                if hasattr(instance, 'data_atualizacao'):
-                    setattr(instance, 'data_atualizacao', datetime.now())
-            else:
-                # Cria uma nova instância caso não exista
-                instance = model(**{**unique_fields, **kwargs})
+                    # Atualiza o campo 'data_atualizacao', se existir
+                    if hasattr(instance, 'data_atualizacao'):
+                        setattr(instance, 'data_atualizacao', datetime.utcnow())
+                else:
+                    # Cria uma nova instância se não encontrada
+                    instance = model(**{**unique_fields, **kwargs})
+                    session.add(instance)
 
-                # Verifica se o modelo tem a coluna 'data_cadastro'
-                if hasattr(instance, 'data_cadastro'):
-                    setattr(instance, 'data_cadastro', datetime.now())
+                    # Define a 'data_cadastro', se existir
+                    if hasattr(instance, 'data_cadastro'):
+                        setattr(instance, 'data_cadastro', datetime.utcnow())
 
-                session.add(instance)
+                session.commit()  # Salva as mudanças
+                return instance
 
-            session.commit()  # Faz o commit após inserção ou atualização
-            return instance
+            except Exception as e:
+                session.rollback()  # Reverte a transação em caso de erro
+                print(f"Erro ao inserir ou atualizar registro: {e}")
+                raise
 
     # Deletar fisicamente um registro
-    def delete(self, model: Type[Base], id: int) -> bool:
+    def delete(self, model: Type[Base], primary_key_value: Any) -> bool:
         with self.session_scope() as session:
-            instance = session.query(model).get(id)
+            # Obtém o nome da chave primária dinamicamente
+            primary_key_column = next(iter(model.__mapper__.primary_key)).name
+
+            # Faz a consulta utilizando a chave primária
+            instance = session.query(model).filter_by(**{primary_key_column: primary_key_value}).first()
+
             if instance:
                 session.delete(instance)
+                session.commit()  # Confirma a exclusão
                 return True
+
             return False
+
+    def soft_delete_relational(self, model: Type[Base], primary_key_value: Any) -> Optional[Base]:
+        with self.session_scope() as session:
+            try:
+                # Obtém o nome da chave primária dinamicamente
+                primary_key_column = next(iter(model.__mapper__.primary_key)).name
+
+                # Faz a consulta utilizando a chave primária
+                instance = session.query(model).filter_by(**{primary_key_column: primary_key_value}).first()
+
+                if instance:
+                    # Verifica se a instância possui 'data_exclusao' e atualiza
+                    if hasattr(instance, 'data_exclusao'):
+                        setattr(instance, 'data_exclusao', datetime.utcnow())
+
+                    session.commit()  # Salva as mudanças
+                    return instance  # Retorna a instância alterada
+
+                return None  # Retorna None se a instância não for encontrada
+
+            except Exception as e:
+                session.rollback()  # Reverte a transação em caso de erro
+                print(f"Erro ao realizar soft delete: {e}")
+                raise
 
     # Deletar virtualmente um registro
     def soft_delete(self, model: Type[Base], instance_id: int, empresa_id: int) -> Optional[Any]:

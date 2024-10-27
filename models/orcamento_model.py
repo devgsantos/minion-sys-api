@@ -1,6 +1,6 @@
-from sqlalchemy import Column, func, Integer, Boolean, ForeignKey, DateTime, Numeric
+from sqlalchemy import Column, func, Integer, ForeignKey, DateTime, Numeric, String
 from sqlalchemy.orm import relationship
-from pydantic import BaseModel, field_validator, model_validator, Field
+from pydantic import BaseModel, field_validator, model_validator, Field, constr
 from typing import Optional, List, Union
 
 from datetime import datetime
@@ -18,6 +18,8 @@ class OrcamentoModel(Base, SoftDeleteQuery):
     orcamento_id = Column('orcamento_id', Integer, primary_key=True)
     cliente_id = Column('cliente_id', Integer, ForeignKey('cliente.cliente_id'))
     empresa_id = Column('empresa_id', Integer, ForeignKey('empresa.empresa_id'))
+    descricao = Column('descricao', String(1000), nullable=True)
+    observacoes = Column('observacoes', String(1000))
     valor = Column('valor', Numeric(precision=10, scale=2), nullable=False, default=0)
     desconto = Column('desconto', Numeric(precision=10, scale=2), nullable=False, default=0)
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=False)
@@ -30,11 +32,18 @@ class OrcamentoModel(Base, SoftDeleteQuery):
     cliente = relationship('ClienteModel')
     empresa = relationship('EmpresaModel')
     orcamento_status = relationship('OrcamentoStatusModel')
-    orcamento_itens = relationship('OrcamentoItemModel')
+    orcamento_itens = relationship(
+        'OrcamentoItemModel',
+        primaryjoin='and_(OrcamentoItemModel.orcamento_id == OrcamentoModel.orcamento_id, '
+                    'OrcamentoItemModel.data_exclusao.is_(None))',
+        lazy='joined'
+    )
 
 class OrcamentoBaseModel(BaseModel):
     orcamento_id: int
     cliente_id: Optional[int]
+    descricao: Optional[constr(max_length=1000)]
+    observacoes: Optional[constr(max_length=1000)]
     data_cadastro: datetime
     data_atualizacao: Optional[datetime]
     data_exclusao: Optional[datetime]
@@ -60,8 +69,10 @@ class OrcamentoRequestModel(BaseModel):
     cliente_id: int
     desconto: float
     empresa_id: int
+    descricao: Optional[constr(max_length=1000)]
+    observacoes: Optional[constr(max_length=1000)]
     orcamento_status_id: int
-    orcamento_itens: List[Union[ProdutoItemOrcamentoModel, ServicoItemOrcamentoModel]]
+    orcamento_itens: List[Union[Optional[ProdutoItemOrcamentoModel], Optional[ServicoItemOrcamentoModel]]]
 
     @model_validator(mode='before')
     def validate_items(cls, values):

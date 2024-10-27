@@ -20,13 +20,13 @@ class BudgetResource(Resource):
     @user_company_validator
     @dto_decorator(OrcamentoRequestModel)
     def post(self):
-        return BudgetUseCase().create_budget()
+        return BudgetUseCase().save_budget()
 
     @auth_decorator
     @user_company_validator
     @dto_decorator(OrcamentoRequestModel)
     def put(self):
-        return BudgetUseCase().update_budget()
+        return BudgetUseCase().save_budget()
 
     @auth_decorator
     @user_company_validator

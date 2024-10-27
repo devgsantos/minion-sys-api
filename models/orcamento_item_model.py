@@ -29,6 +29,5 @@ class OrcamentoItemBaseModel(BaseModel):
     produto_id: Optional[int]
     quantidade_orcamento: int
 
-
     class Config:
         from_attributes = True
