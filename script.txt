@@ -1,43 +1,30 @@
 #Iniciar o venv
-source ./venv/bin/activate
+-m
 # Inicar script em background - dev
-nohup python /opt/python-projects/apis-minion-sys/main.py &
+nohup python /opt/apis/apis-minion-sys/main.py &
 # Printar logos em arquivo
 output.log &
 # Listar os serviços
-ps aux | grep ggpti
+ps aux | grep apis-minion-sys
 # Encerrar servico pelo ID
-kill PID id-do-servico
+kill -9 PID id-do-servico
 
 # Upload em docker
 docker build -f .dockerfile -t nome-da-imagem --build-arg variavel-customizada=14.214.12
 
 ### WEB APP ###
 # IP
-http://191.101.232.31:9091/
-# Configuração Apache
-/etc/httpd/conf/httpd.conf
-# Caminho dist
-/opt/python-projects/gpti-mobile-app/dist/ggpti-app/
+http://191.101.232.31:80/
+# Configuração Nginx
+/var/www <- adicionar pasta do app web -> /var/www/portal-minion-sys
+/var/www/html/index.html <- padrão
 # Excluir build atual
-rm -rf /var/www/ggpti-app/
-#Copiar para o apache
-cp -r /opt/python-projects/gpti-mobile-app/dist/ggpti-app/ /var/www/
-
-### WEB ADMIN ###
-# IP
-http://191.101.232.31:9092/
-# Configuração Apache
-/etc/httpd/conf/httpd.conf
-# Caminho dist
-/opt/python-projects/gpti-admin/dist/gpti-admin/
-# Excluir build atual
-rm -rf /var/www/gpti-admin/
-#Copiar para o apache
-cp -r /opt/python-projects/gpti-admin/dist/gpti-admin/ /var/www/
+rm -rf /var/www/portal-minion-sys/
+#Copiar para o Nginx
+cp -r /opt/shared/portal-minion-sys/ /var/www/portal-minion-sys
 
 # Reiniciar Serviço do Apache
-systemctl restart httpd.service
+systemctl restart nginx
 
 # Caminho do PGSQL CONFIG
 /var/lib/pgsql/14/data
@@ -45,7 +32,7 @@ systemctl restart httpd.service
 # Para automatizar a iniciação do backend criar um arquivo inicializar.sh com o seguinte comando
 #! /bin/bash
 
-pid_py=$(ps aux | grep '[m]eu-projeto/venv/bin/python main.py' | awk '{print $2}')
+pid_py=$(ps aux | grep '[a]pis-minion-sys/venv/bin/python main.py' | awk '{print $2}')
 
 if [ -z $pid_py ]
 then

@@ -21,17 +21,16 @@ class ProductUseCase:
 
 
     # USAR A SERIALIZAÇÃO DESTA FUNÇÃO COMO BASE PARA AS OUTRAS
-    def get_product_all(self):
+    def get_all_product(self):
         try:
-            user = self.functions.token_decript()
-            # companies = user.get('companies')
-            page = int(request.args.get('page')) if request.args.get('page') else 1
-            limit = int(request.args.get('limit')) if request.args.get('limit') else 10
-            companies_list = request.args.get('company').split(',')
-            companies = []
-            for company in companies_list:
-                companies.append(int(company))
-            products, total = self.operations.findMany(self.product_model, page, limit, empresa_id=companies)
+            search_term = request.args.get('termo_pesquisa') if request.args.get('termo_pesquisa') else None
+            page = int(request.args.get('pagina')) if request.args.get('pagina') else 1
+            limit = int(request.args.get('limite')) if request.args.get('limite') else 10
+            if search_term:
+                search_fields = ['titulo', 'descricao', 'sku', 'detalhes_opcionais']
+                products, total = self.operations.findManyByTerm(self.product_model, page, limit, search_term, search_fields, empresa_id=request.args.get('empresa_id'))
+            else:
+                products, total = self.operations.findMany(self.product_model, page, limit, empresa_id=request.args.get('empresa_id'))
             products_array = [ProdutoBaseModel.from_orm(product).dict() for product in products]
             # products_array = self.functions.instance_list_to_array(products)
 
@@ -56,6 +55,7 @@ class ProductUseCase:
                     'data': None,
                 }
             ), 500)
+
 
     def create_product(self):
         try:
@@ -110,6 +110,36 @@ class ProductUseCase:
                     'message': 'Produto alterado com sucesso.'
                 }
             ), 201)
+        except Exception as exc:
+            self.logger.log(message=str(exc), level='error')
+
+            return make_response(jsonify(
+                {
+                    'status': False,
+                    'message': str(exc),
+                    'data': None,
+                }
+            ), 500)
+
+    def virtual_delete_product(self):
+        try:
+            delete_product = self.operations.soft_delete(self.product_model, request.args.get('produto_id'), request.args.get('empresa_id'))
+            if delete_product:
+                return make_response(jsonify(
+                    {
+                        'status': True,
+                        'message': 'Produto excluído com sucesso.'
+                    }
+                ), 201)
+            else:
+                self.logger.log(message=f"Falha ao excluir produto.", level='error')
+
+                return make_response(jsonify(
+                    {
+                        'status': False,
+                        'message': 'Falha ao excluir produto.',
+                    }
+                ), 500)
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
 

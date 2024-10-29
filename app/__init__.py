@@ -26,7 +26,7 @@ engine = create_engine(
     pool_timeout=30,  # Tempo máximo de espera por uma conexão antes de lançar um erro
     pool_recycle=1800
 )
-Session = scoped_session(sessionmaker(bind=engine))
+Session = scoped_session(sessionmaker(bind=engine, autoflush=False, expire_on_commit=False))
 
 @app.before_request
 def before_request():
@@ -36,12 +36,13 @@ def before_request():
 def teardown_request(exception=None):
     db_session = getattr(request, 'db_session', None)
     if db_session is not None:
-        if exception:
-            db_session.rollback()
-        else:
-            db_session.commit()
-        db_session.close()
-        db_session.remove()
+        try:
+            if exception:
+                db_session.rollback()  # Desfaz alterações em caso de erro
+            else:
+                db_session.commit()  # Confirma alterações
+        finally:
+            db_session.remove()
 
 @app.after_request
 def after_request(request):

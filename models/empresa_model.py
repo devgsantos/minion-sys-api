@@ -39,7 +39,6 @@ class EmpresaBaseModel(BaseModel):
     empresa_id: int
     email: EmailStr
     nome: constr(max_length=500)
-    filial: int
     logradouro: constr(max_length=300)
     numero_endereco: constr(max_length=10)
     bairro: constr(max_length=100)
@@ -69,7 +68,6 @@ class EmpresaRequestModel(BaseModel):
     bairro: constr(max_length=100)
     cidade: constr(max_length=100)
     uf: constr(max_length=2)
-    filial: int
     telefone: str
     cpf: Optional[str]
     cnpj: Optional[str]

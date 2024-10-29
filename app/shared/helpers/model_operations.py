@@ -3,10 +3,12 @@ from datetime import datetime
 from typing import Type, List, Optional, Any, Dict, Tuple
 
 from flask import request
-from sqlalchemy import create_engine, func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import sessionmaker, scoped_session, joinedload
 from sqlalchemy.orm.exc import NoResultFound
 from contextlib import contextmanager
+
+from unicodedata import normalize
 
 from app.shared.singletons.logger import Logger
 from models.base import Base
@@ -18,6 +20,9 @@ class ModelOperations:
         self.Session = request.db_session
         self.logger = Logger()
 
+    def normalize_term(self, term: str) -> str:
+        """Remove acentos e retorna o termo normalizado."""
+        return normalize('NFKD', term).encode('ASCII', 'ignore').decode('utf-8').lower()
 
     # Context manager para gerenciar a sessão do SQLAlchemy
     @contextmanager
@@ -33,17 +38,15 @@ class ModelOperations:
         #     session.close()
 
     # Buscar todos os registros de um modelo
-    def findAll(self, model: Type[Base], page: int = 1, limit: int = 10,) -> List[Any]:
+    def findAll(self, model: Type[Base]) -> List[Any]:
         with self.session_scope() as session:
-            offset = (page - 1) * limit
 
             # Retorno o total de registros
             total_count = session.query(func.count(f'{getattr(model, "__tablename__", None)}_id')) \
                 .filter(model.data_exclusao.is_(None)).scalar()
 
             # Consulta para obter os resultados paginados
-            results = session.query(model).options(joinedload('*')).filter(model.data_exclusao.is_(None)).offset(
-                offset).limit(limit).all()
+            results = session.query(model).options(joinedload('*')).filter(model.data_exclusao.is_(None)).all()
 
             return results, total_count
 
@@ -51,9 +54,14 @@ class ModelOperations:
     def findOne(self, model: Type[Base], **kwargs) -> Optional[Any]:
         with self.session_scope() as session:
             try:
-                results = session.query(model).filter_by(**kwargs).one()
+                # Criar a query e filtrar por data_exclusao is None e outros filtros fornecidos
+                query = session.query(model).filter_by(**kwargs)
+                query = query.filter(model.data_exclusao.is_(None))  # Soft delete
 
-                return results
+                # Obter o resultado único
+                result = query.one()
+                return result
+
             except NoResultFound:
                 return None
 
@@ -64,6 +72,7 @@ class ModelOperations:
             try:
                 # Contar o total de registros com base nos filtros aplicados
                 query_count = session.query(func.count()).select_from(model)
+                query_count = query_count.filter(model.data_exclusao.is_(None))
 
                 for key, value in kwargs.items():
                     column = getattr(model, key, None)
@@ -79,6 +88,7 @@ class ModelOperations:
 
                 # Consulta para obter os resultados paginados
                 query_results = session.query(model)
+                query_results = query_results.filter(model.data_exclusao.is_(None))
 
                 for key, value in kwargs.items():
                     column = getattr(model, key, None)
@@ -87,6 +97,109 @@ class ModelOperations:
                             query_results = query_results.filter(column.in_(value))
                         else:
                             query_results = query_results.filter(column == value)
+
+                results = query_results.offset(offset).limit(limit).all()
+                return results, total_count
+            except NoResultFound:
+                return None, 0
+            except Exception as e:
+                print(f"Erro ao executar a consulta: {e}")
+                raise
+
+    def findManyNoffset(self, model: Type[Base], **kwargs) -> Tuple[Optional[List[Any]], int]:
+        with self.session_scope() as session:
+            try:
+                # Aplica o filtro de soft delete (data_exclusao IS NULL) automaticamente
+                query = session.query(model).filter(model.data_exclusao.is_(None))
+
+                # Aplica filtros dinâmicos nos campos do modelo
+                for key, value in kwargs.items():
+                    column = getattr(model, key, None)
+                    if column is not None:
+                        if isinstance(value, list):
+                            query = query.filter(column.in_(value))
+                        else:
+                            query = query.filter(column == value)
+                    else:
+                        raise ValueError(f"Campo '{key}' não encontrado no modelo.")
+
+                # Executa a contagem total de registros com base nos filtros
+                total_count = query.count()
+
+                # Obter todos os resultados filtrados
+                results = query.all()
+
+                return results, total_count
+
+            except NoResultFound:
+                return None, 0  # Se não encontrar resultados
+            except Exception as e:
+                print(f"Erro ao executar a consulta: {e}")
+                raise  # Levantar a exceção para tratamento externo
+
+    def findManyByTerm(
+            self,
+            model: Type[Base],
+            page: int = 1,
+            limit: int = 10,
+            search_term: Optional[str] = None,
+            search_fields: Optional[List[str]] = None,
+            **kwargs
+    ) -> Tuple[Optional[List[Any]], int]:
+        with self.session_scope() as session:
+            offset = (page - 1) * limit
+
+            try:
+                # Normaliza o termo de busca
+                normalized_term = self.normalize_term(search_term) if search_term else None
+
+                # Consulta para contar o total de registros
+                query_count = session.query(func.count()).select_from(model)
+                query_count = query_count.filter(model.data_exclusao.is_(None))
+
+                # Filtros exatos com kwargs
+                for key, value in kwargs.items():
+                    column = getattr(model, key, None)
+                    if column is not None:
+                        if isinstance(value, list):
+                            query_count = query_count.filter(column.in_(value))
+                        else:
+                            query_count = query_count.filter(column == value)
+                    else:
+                        raise ValueError(f"Campo '{key}' não encontrado no modelo.")
+
+                # Adiciona filtros LIKE com normalização
+                if normalized_term and search_fields:
+                    like_filters = [
+                        func.lower(func.unaccent(getattr(model, field))).ilike(f"%{normalized_term}%")
+                        for field in search_fields if hasattr(model, field)
+                    ]
+                    if like_filters:
+                        query_count = query_count.filter(or_(*like_filters))
+
+                total_count = query_count.scalar()
+
+                # Consulta para resultados paginados
+                query_results = session.query(model)
+                query_results = query_results.filter(model.data_exclusao.is_(None))
+
+                # Aplicar novamente os filtros exatos
+                for key, value in kwargs.items():
+                    column = getattr(model, key, None)
+                    if column is not None:
+                        if isinstance(value, list):
+                            query_results = query_results.filter(column.in_(value))
+                        else:
+                            query_results = query_results.filter(column == value)
+
+                # Adiciona filtros LIKE para resultados
+                if normalized_term and search_fields:
+                    like_filters = [
+                        func.lower(func.unaccent(getattr(model, field))).ilike(f"%{normalized_term}%")
+                        for field in search_fields if hasattr(model, field)
+                    ]
+                    if like_filters:
+                        query_results = query_results.filter(or_(*like_filters))
 
                 results = query_results.offset(offset).limit(limit).all()
                 return results, total_count
@@ -166,19 +279,40 @@ class ModelOperations:
     # Inserir um novo registro
     def insert(self, model: Type[Base], **kwargs) -> Any:
         with self.session_scope() as session:
-            if any(isinstance(value, list) for value in kwargs.values()):
+            try:
                 instances = []
-                for key, value in kwargs.items():
-                    if isinstance(value, list):
-                        for item in value:
-                            instance_kwargs = {k: v if k != key else item for k, v in kwargs.items() if not isinstance(v, list)}
-                            instances.append(model(**item))
-                session.add_all(instances)
-                return instances
-            else:
-                instance = model(**kwargs)
-                session.add(instance)
-                return instance
+
+                # Identificar listas em kwargs e garantir que todas tenham o mesmo tamanho
+                list_keys = [k for k, v in kwargs.items() if isinstance(v, list)]
+                if list_keys:
+                    # Verifica se todas as listas têm o mesmo tamanho
+                    list_length = len(kwargs[list_keys[0]])
+                    if not all(len(kwargs[key]) == list_length for key in list_keys):
+                        raise ValueError("Todas as listas devem ter o mesmo tamanho.")
+
+                    # Criar uma instância para cada conjunto de valores na mesma posição nas listas
+                    for i in range(list_length):
+                        instance_data = {
+                            k: (v[i] if isinstance(v, list) else v) for k, v in kwargs.items()
+                        }
+                        instances.append(model(**instance_data))
+
+                    # Inserção em massa das instâncias
+                    session.add_all(instances)
+                    session.commit()  # Confirma a transação
+                    return instances
+
+                else:
+                    # Inserção simples se não houver listas
+                    instance = model(**kwargs)
+                    session.add(instance)
+                    session.commit()  # Confirma a transação
+                    return instance
+
+            except Exception as e:
+                session.rollback()  # Reverter transação em caso de erro
+                print(f"Erro ao inserir: {e}")
+                raise
 
     # Atualizar um registro existente
     def update(self, model: Type[Base], instance_id: int, **kwargs) -> Optional[Any]:
@@ -223,53 +357,111 @@ class ModelOperations:
             session.commit()  # Faz o commit das alterações
             return instance
 
-    def merge_insert_if_not_exists(self, model: Type[Base], unique_fields: dict, **kwargs) -> Optional[Any]:
-        """
-        Função merge que verifica se uma combinação única de campos existe.
-        Se existir, atualiza o registro. Se não existir, insere um novo registro.
-
-        Parâmetros:
-        - model: O modelo SQLAlchemy da tabela
-        - unique_fields: Um dicionário contendo os campos únicos usados para identificar a instância
-        - kwargs: Os campos a serem atualizados ou inseridos
-
-        Retorno:
-        - A instância atualizada ou criada
-        """
+    def merge_insert_if_not_exists(self, model: Type[Base], unique_fields: Optional[dict] = None, **kwargs) -> Optional[
+        Any]:
         with self.session_scope() as session:
-            # Verifica se já existe uma instância com base nos campos únicos
-            instance = session.query(model).filter_by(**unique_fields).first()
+            try:
+                # Verifica se unique_fields foi passado; se não, cria uma nova instância diretamente
+                if not unique_fields:
+                    instance = model(**kwargs)
+                    session.add(instance)
+                    session.commit()
+                    return instance
 
-            if instance:
-                # Atualiza a instância existente com os novos valores
-                if kwargs:
+                # Se unique_fields foi fornecido, tenta encontrar a instância existente
+                query = session.query(model).filter_by(**unique_fields)
+                if hasattr(model, 'data_exclusao'):
+                    query = query.filter(model.data_exclusao.is_(None))  # Respeita soft delete
+
+                instance = query.first()
+
+                if instance:
+                    # Atualiza a instância existente com os novos valores
                     for key, value in kwargs.items():
                         setattr(instance, key, value)
 
-                # Verifica se o modelo tem a coluna 'data_atualizacao' e atualiza
-                if hasattr(instance, 'data_atualizacao'):
-                    setattr(instance, 'data_atualizacao', datetime.now())
-            else:
-                # Cria uma nova instância caso não exista
-                instance = model(**{**unique_fields, **kwargs})
+                    # Atualiza o campo 'data_atualizacao', se existir
+                    if hasattr(instance, 'data_atualizacao'):
+                        setattr(instance, 'data_atualizacao', datetime.utcnow())
+                else:
+                    # Cria uma nova instância se não encontrada
+                    instance = model(**{**unique_fields, **kwargs})
+                    session.add(instance)
 
-                # Verifica se o modelo tem a coluna 'data_cadastro'
-                if hasattr(instance, 'data_cadastro'):
-                    setattr(instance, 'data_cadastro', datetime.now())
+                    # Define a 'data_cadastro', se existir
+                    if hasattr(instance, 'data_cadastro'):
+                        setattr(instance, 'data_cadastro', datetime.utcnow())
 
-                session.add(instance)
+                session.commit()  # Salva as mudanças
+                return instance
 
-            session.commit()  # Faz o commit após inserção ou atualização
-            return instance
+            except Exception as e:
+                session.rollback()  # Reverte a transação em caso de erro
+                print(f"Erro ao inserir ou atualizar registro: {e}")
+                raise
 
-    # Deletar um registro
-    def delete(self, model: Type[Base], id: int) -> bool:
+    # Deletar fisicamente um registro
+    def delete(self, model: Type[Base], primary_key_value: Any) -> bool:
         with self.session_scope() as session:
-            instance = session.query(model).get(id)
+            # Obtém o nome da chave primária dinamicamente
+            primary_key_column = next(iter(model.__mapper__.primary_key)).name
+
+            # Faz a consulta utilizando a chave primária
+            instance = session.query(model).filter_by(**{primary_key_column: primary_key_value}).first()
+
             if instance:
                 session.delete(instance)
+                session.commit()  # Confirma a exclusão
                 return True
+
             return False
+
+    def soft_delete_relational(self, model: Type[Base], primary_key_value: Any) -> Optional[Base]:
+        with self.session_scope() as session:
+            try:
+                # Obtém o nome da chave primária dinamicamente
+                primary_key_column = next(iter(model.__mapper__.primary_key)).name
+
+                # Faz a consulta utilizando a chave primária
+                instance = session.query(model).filter_by(**{primary_key_column: primary_key_value}).first()
+
+                if instance:
+                    # Verifica se a instância possui 'data_exclusao' e atualiza
+                    if hasattr(instance, 'data_exclusao'):
+                        setattr(instance, 'data_exclusao', datetime.utcnow())
+
+                    session.commit()  # Salva as mudanças
+                    return instance  # Retorna a instância alterada
+
+                return None  # Retorna None se a instância não for encontrada
+
+            except Exception as e:
+                session.rollback()  # Reverte a transação em caso de erro
+                print(f"Erro ao realizar soft delete: {e}")
+                raise
+
+    # Deletar virtualmente um registro
+    def soft_delete(self, model: Type[Base], instance_id: int, empresa_id: int) -> Optional[Any]:
+        with self.session_scope() as session:
+            # Identifica dinamicamente o nome da chave primária do modelo
+            primary_key = list(model.__mapper__.primary_key)[0].key  # Obtém o nome da chave primária
+
+            # Busca a instância usando filtros dinâmicos para instance_id e empresa_id
+            instance = (
+                session.query(model)
+                .filter(getattr(model, primary_key) == instance_id, model.empresa_id == empresa_id)
+                .first()
+            )
+
+            if instance:
+                # Verifica se a instância possui 'data_exclusao' e atualiza
+                if hasattr(instance, 'data_exclusao'):
+                    setattr(instance, 'data_exclusao', datetime.utcnow())
+
+                session.commit()  # Salva as mudanças
+                return instance  # Retorna a instância alterada
+
+            return None  # Retorna None se não encontrar a instância
 
     def model_to_dict(self, model_instance):
         return {c.name: getattr(model_instance, c.name) for c in model_instance.__table__.columns}

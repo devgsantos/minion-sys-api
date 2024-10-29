@@ -11,8 +11,8 @@ from models.orcamento_item_model import Base as Orcamento_itemBase, OrcamentoIte
 from models.orcamento_model import Base as OrcamentoBase, OrcamentoModel
 from models.pais_model import Base as PaisBase, PaisModel
 from models.produto_categorias_model import Base as ProdutoCategoriaBase, ProdutoCategoriaModel, ProdutoCategoriaRequestModel
-from models.produto_subcategorias_model import Base as ProdutoSubcategoriaBase, ProdutoSubcategoriaModel
-from models.produto_tipos_model import Base as Produto_tiposBase, ProdutoTipoModel
+from models.produto_subcategorias_model import Base as ProdutoSubcategoriaBase, ProdutoSubcategoriaModel, ProdutoSubcategoriaRequestModel
+from models.produto_tipos_model import Base as ProdutoTiposBase, ProdutoTipoModel, ProdutoTipoBaseModel, ProdutoTipoRequestModel
 from models.profissao_model import Base as ProfissaoBase, ProfissaoModel
 from models.usuario_model import Base as UsuarioBase, UsuarioModel, UsuarioRequestModel
 from models.login_empresa import Base as LoginEmpresaBase, LoginEmpresaModel
@@ -22,9 +22,9 @@ from models.permissao_model import Base as PermissaoBase, PermissaoModel
 from models.lead_funil_model import Base as LeadFunilBase, LeadFunilModel
 from models.rel_produto_produto_subcategoria_model import Base as RelProdutoProdutoSubcategoriaBase, RelProdutoProdutoSubcategoriaBaseModel
 from models.servico_model import Base as ServicoBase, ServicoModel, ServicoBaseModel, ServicoRequestModel
-from models.servico_tipos import Base as ServicoTipoBase, ServicoTipoModel, ServicoTipoBaseModel
+from models.servico_tipos import Base as ServicoTipoBase, ServicoTipoModel, ServicoTipoBaseModel, ServicoTipoRequestModel
 from models.rel_servico_produto import Base as RelServicoProdutoBase, RelServicoProdutoModel, RelProdutoBaseModel
-from models.orcamento_model import Base as OrcamentoBase, OrcamentoModel, OrcamentoBaseModel
+from models.orcamento_model import Base as OrcamentoBase, OrcamentoModel, OrcamentoBaseModel, OrcamentoRequestModel
 from models.orcamento_item_model import Base as OrcamentoItemBase, OrcamentoItemModel, OrcamentoItemBaseModel
 from models.orcamento_status_model import Base as OrcamentoStatusBase, OrcamentoStatusModel, OrcamentoStatusBaseModel
 from models.orcamento_tipo_model import Base as OrcamentoTipoBase, OrcamentoTipoModel, OrcamentoTipoBaseModel

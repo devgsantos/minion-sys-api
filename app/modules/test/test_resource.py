@@ -7,7 +7,6 @@ from app.modules.test.test_usecase import TestUseCase
 
 
 class TestResource(Resource):
-    @auth_decorator
-    @dto_decorator(TestModel)
+    # @dto_decorator(TestModel)
     def get(self):
         return TestUseCase().execute()

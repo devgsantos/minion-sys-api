@@ -19,20 +19,15 @@ class OrcamentoItemModel(Base, SoftDeleteQuery):
     servico_id = Column('servico_id', Integer, ForeignKey('servico.servico_id'))
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=False)
     data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), onupdate=func.now())
-    quantidade_orcamento = Column('quantidade_orcamento', Integer, nullable=False)
+    quantidade_orcamento = Column('quantidade_orcamento', Integer)
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
     produto = relationship('ProdutoModel')
 
 class OrcamentoItemBaseModel(BaseModel):
-    orcamento_id: Optional[int]
+    servico_id: Optional[int]
+    produto_id: Optional[int]
     quantidade_orcamento: int
-    finalizado: bool
-    data_cadastro: Optional[datetime]
-
-    @field_validator('data_cadastro')
-    def format_datetime(cls, value):
-        return format_datetime(value)
 
     class Config:
         from_attributes = True

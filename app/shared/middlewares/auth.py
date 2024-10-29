@@ -7,7 +7,6 @@ import os
 from app.shared.singletons.logger import Logger
 logger = Logger()
 
-
 def auth_decorator(func):
     try:
         @wraps(func)

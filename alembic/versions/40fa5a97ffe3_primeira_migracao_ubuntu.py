@@ -1,8 +1,8 @@
-"""primeira_migracao
+"""Primeira migracao Ubuntu
 
-Revision ID: 6ddb7f28841e
+Revision ID: 40fa5a97ffe3
 Revises: 
-Create Date: 2024-07-20 21:39:05.142440
+Create Date: 2024-10-11 20:38:19.831892
 
 """
 from typing import Sequence, Union
@@ -11,8 +11,9 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy import Inspector
 
+
 # revision identifiers, used by Alembic.
-revision: str = '6ddb7f28841e'
+revision: str = '40fa5a97ffe3'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -31,6 +32,35 @@ def upgrade() -> None:
     sa.Column('data_exclusao', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('empresa_categoria_id')
     )
+    op.create_table('estoque_tipo',
+    sa.Column('estoque_tipo_id', sa.Integer(), nullable=False),
+    sa.Column('titulo', sa.String(length=500), nullable=False),
+    sa.Column('descricao', sa.String(length=1000), nullable=True),
+    sa.Column('data_cadastro', sa.DateTime(), nullable=False),
+    sa.Column('data_atualizacao', sa.DateTime(), nullable=True),
+    sa.Column('data_exclusao', sa.DateTime(), nullable=True),
+    sa.PrimaryKeyConstraint('estoque_tipo_id')
+    )
+    op.create_table('lead_funil',
+    sa.Column('funil_id', sa.Integer(), nullable=False),
+    sa.Column('titulo', sa.String(length=300), nullable=False),
+    sa.Column('descricao', sa.String(length=500), nullable=True),
+    sa.Column('imagem', sa.String(length=300), nullable=True),
+    sa.Column('data_cadastro', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
+    sa.Column('data_exclusao', sa.DateTime(), nullable=True),
+    sa.PrimaryKeyConstraint('funil_id')
+    )
+    op.create_table('login',
+    sa.Column('login_id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('email', sa.String(length=200), nullable=False),
+    sa.Column('senha', sa.String(length=200), nullable=False),
+    sa.Column('codigo_confirmacao', sa.String(length=6), nullable=True),
+    sa.Column('token', sa.String(length=1000), nullable=True),
+    sa.Column('ultimo_login', sa.DateTime(), nullable=True),
+    sa.Column('data_cadastro', sa.DateTime(), nullable=False),
+    sa.Column('data_exclusao', sa.DateTime(), nullable=True),
+    sa.PrimaryKeyConstraint('login_id')
+    )
     op.create_table('pais',
     sa.Column('pais_id', sa.Integer(), nullable=False),
     sa.Column('nome', sa.String(length=300), nullable=False),
@@ -44,7 +74,21 @@ def upgrade() -> None:
     sa.Column('titulo', sa.String(length=255), nullable=False),
     sa.Column('apelido', sa.String(length=100), nullable=False),
     sa.Column('descricao', sa.String(length=500), nullable=True),
+    sa.Column('data_exclusao', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('permissao_id')
+    )
+    op.create_table('produto_categoria',
+    sa.Column('produto_categoria_id', sa.Integer(), nullable=False),
+    sa.Column('titulo', sa.String(length=300), nullable=False),
+    sa.Column('descricao', sa.String(length=500), nullable=True),
+    sa.Column('sigla', sa.String(length=3), nullable=False),
+    sa.Column('imagem', sa.String(length=300), nullable=True),
+    sa.Column('data_cadastro', sa.DateTime(), nullable=True),
+    sa.Column('data_atualizacao', sa.DateTime(), nullable=True),
+    sa.Column('responsavel_cadastro_id', sa.Integer(), nullable=True),
+    sa.Column('status', sa.Boolean(), nullable=True),
+    sa.Column('data_exclusao', sa.DateTime(), nullable=True),
+    sa.PrimaryKeyConstraint('produto_categoria_id')
     )
     op.create_table('produto_tipo',
     sa.Column('produto_tipo_id', sa.Integer(), nullable=False),
@@ -53,9 +97,8 @@ def upgrade() -> None:
     sa.Column('imagem', sa.String(length=300), nullable=True),
     sa.Column('data_cadastro', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.Column('data_atualizacao', sa.DateTime(), nullable=True),
-    sa.Column('responsavel_cadastro', sa.String(length=100), nullable=False),
+    sa.Column('responsavel_cadastro_id', sa.Integer(), nullable=True),
     sa.Column('status', sa.Boolean(), nullable=False),
-    sa.Column('delet', sa.Boolean(), nullable=False),
     sa.Column('data_exclusao', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('produto_tipo_id')
     )
@@ -64,6 +107,7 @@ def upgrade() -> None:
     sa.Column('titulo', sa.String(length=300), nullable=False),
     sa.Column('descricao', sa.String(length=500), nullable=True),
     sa.Column('imagem', sa.String(length=300), nullable=True),
+    sa.Column('data_cadastro', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.Column('data_exclusao', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('profissao_id')
     )
@@ -84,10 +128,36 @@ def upgrade() -> None:
     sa.Column('responsavel_cadastro', sa.String(), nullable=True),
     sa.Column('data_cadastro', sa.DateTime(), nullable=False),
     sa.Column('data_atualizacao', sa.DateTime(), nullable=True),
-    sa.Column('status', sa.Integer(), nullable=False),
     sa.Column('data_exclusao', sa.DateTime(), nullable=True),
+    sa.Column('lead_conversao', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['nacionalidade'], ['pais.pais_id'], ),
     sa.PrimaryKeyConstraint('cliente_id')
+    )
+    op.create_table('empresa',
+    sa.Column('empresa_id', sa.Integer(), nullable=False),
+    sa.Column('email', sa.String(length=200), nullable=False),
+    sa.Column('nome', sa.String(length=500), nullable=False),
+    sa.Column('logradouro', sa.String(length=300), nullable=False),
+    sa.Column('numero_endereco', sa.String(length=10), nullable=False),
+    sa.Column('bairro', sa.String(length=100), nullable=False),
+    sa.Column('cidade', sa.String(length=100), nullable=False),
+    sa.Column('uf', sa.String(length=2), nullable=False),
+    sa.Column('telefone', sa.String(), nullable=False),
+    sa.Column('cpf', sa.String(), nullable=True),
+    sa.Column('cnpj', sa.String(), nullable=True),
+    sa.Column('pais_id', sa.Integer(), nullable=False),
+    sa.Column('responsavel_cadastro_id', sa.Integer(), nullable=False),
+    sa.Column('empresa_categoria_id', sa.Integer(), nullable=False),
+    sa.Column('data_cadastro', sa.DateTime(), nullable=False),
+    sa.Column('data_atualizacao', sa.DateTime(), nullable=True),
+    sa.Column('status', sa.Boolean(), nullable=False),
+    sa.Column('data_exclusao', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['empresa_categoria_id'], ['empresa_categoria.empresa_categoria_id'], ),
+    sa.ForeignKeyConstraint(['pais_id'], ['pais.pais_id'], ),
+    sa.ForeignKeyConstraint(['responsavel_cadastro_id'], ['login.login_id'], ),
+    sa.PrimaryKeyConstraint('empresa_id'),
+    sa.UniqueConstraint('cnpj'),
+    sa.UniqueConstraint('cpf')
     )
     op.create_table('lead',
     sa.Column('lead_id', sa.Integer(), nullable=False),
@@ -113,6 +183,29 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['profissao_id'], ['profissao.profissao_id'], ),
     sa.PrimaryKeyConstraint('lead_id')
     )
+    op.create_table('login_permissao',
+    sa.Column('login_permissao_id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('login_id', sa.Integer(), nullable=False),
+    sa.Column('permissao_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['login_id'], ['login.login_id'], ),
+    sa.ForeignKeyConstraint(['permissao_id'], ['permissao.permissao_id'], ),
+    sa.PrimaryKeyConstraint('login_permissao_id')
+    )
+    op.create_table('produto_subcategoria',
+    sa.Column('produto_subcategoria_id', sa.Integer(), nullable=False),
+    sa.Column('titulo', sa.String(length=300), nullable=False),
+    sa.Column('descricao', sa.String(length=500), nullable=True),
+    sa.Column('imagem', sa.String(length=300), nullable=True),
+    sa.Column('sigla', sa.String(length=3), nullable=False),
+    sa.Column('data_cadastro', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
+    sa.Column('data_atualizacao', sa.DateTime(), nullable=True),
+    sa.Column('responsavel_cadastro_id', sa.Integer(), nullable=True),
+    sa.Column('produto_categoria_id', sa.Integer(), nullable=True),
+    sa.Column('status', sa.Boolean(), nullable=True),
+    sa.Column('data_exclusao', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['produto_categoria_id'], ['produto_categoria.produto_categoria_id'], ),
+    sa.PrimaryKeyConstraint('produto_subcategoria_id')
+    )
     op.create_table('usuario',
     sa.Column('usuario_id', sa.Integer(), nullable=False),
     sa.Column('email', sa.String(length=200), nullable=False),
@@ -123,6 +216,7 @@ def upgrade() -> None:
     sa.Column('cidade', sa.String(length=100), nullable=False),
     sa.Column('uf', sa.String(length=2), nullable=False),
     sa.Column('profissao_id', sa.Integer(), nullable=False),
+    sa.Column('login_id', sa.Integer(), nullable=False),
     sa.Column('telefone', sa.String(), nullable=False),
     sa.Column('cpf', sa.String(length=14), nullable=False),
     sa.Column('nacionalidade', sa.Integer(), nullable=False),
@@ -132,124 +226,59 @@ def upgrade() -> None:
     sa.Column('data_atualizacao', sa.DateTime(), nullable=True),
     sa.Column('status', sa.Boolean(), nullable=False),
     sa.Column('data_exclusao', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['login_id'], ['login.login_id'], ),
     sa.ForeignKeyConstraint(['nacionalidade'], ['pais.pais_id'], ),
     sa.ForeignKeyConstraint(['profissao_id'], ['profissao.profissao_id'], ),
-    sa.PrimaryKeyConstraint('usuario_id')
-    )
-    op.create_table('empresa',
-    sa.Column('empresa_id', sa.Integer(), nullable=False),
-    sa.Column('email', sa.String(length=200), nullable=False),
-    sa.Column('nome', sa.String(length=500), nullable=False),
-    sa.Column('logradouro', sa.String(length=300), nullable=False),
-    sa.Column('numero_endereco', sa.String(length=10), nullable=False),
-    sa.Column('bairro', sa.String(length=100), nullable=False),
-    sa.Column('cidade', sa.String(length=100), nullable=False),
-    sa.Column('uf', sa.String(length=2), nullable=False),
-    sa.Column('telefone', sa.String(), nullable=False),
-    sa.Column('cpf', sa.String(), nullable=True),
-    sa.Column('cnpj', sa.String(), nullable=True),
-    sa.Column('pais_id', sa.Integer(), nullable=False),
-    sa.Column('naturalidade', sa.String(length=100), nullable=False),
-    sa.Column('responsavel_cadastro_id', sa.Integer(), nullable=False),
-    sa.Column('empresa_categoria_id', sa.Integer(), nullable=False),
-    sa.Column('data_cadastro', sa.DateTime(), nullable=False),
-    sa.Column('data_atualizacao', sa.DateTime(), nullable=True),
-    sa.Column('status', sa.Boolean(), nullable=False),
-    sa.Column('data_exclusao', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['empresa_categoria_id'], ['empresa_categoria.empresa_categoria_id'], ),
-    sa.ForeignKeyConstraint(['pais_id'], ['pais.pais_id'], ),
-    sa.ForeignKeyConstraint(['responsavel_cadastro_id'], ['usuario.usuario_id'], ),
-    sa.PrimaryKeyConstraint('empresa_id')
-    )
-    op.create_table('login',
-    sa.Column('login_id', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('email', sa.String(length=200), nullable=False),
-    sa.Column('senha', sa.String(length=200), nullable=False),
-    sa.Column('codigo_confirmacao', sa.String(length=6), nullable=True),
-    sa.Column('token', sa.String(length=1000), nullable=True),
-    sa.Column('ultimo_login', sa.DateTime(), nullable=True),
-    sa.Column('data_cadastro', sa.DateTime(), nullable=False),
-    sa.Column('usuario_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['usuario_id'], ['usuario.usuario_id'], ),
-    sa.PrimaryKeyConstraint('login_id')
-    )
-    op.create_table('orcamento',
-    sa.Column('orcamento_id', sa.Integer(), nullable=False),
-    sa.Column('cliente_id', sa.Integer(), nullable=True),
-    sa.Column('data_cadastro', sa.DateTime(), nullable=False),
-    sa.Column('data_atualizacao', sa.DateTime(), nullable=True),
-    sa.Column('finalizado', sa.Boolean(), nullable=False),
-    sa.Column('delet', sa.Boolean(), nullable=False),
-    sa.Column('data_exclusao', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['cliente_id'], ['cliente.cliente_id'], ),
-    sa.PrimaryKeyConstraint('orcamento_id')
-    )
-    op.create_table('produto_categoria',
-    sa.Column('produto_categoria_id', sa.Integer(), nullable=False),
-    sa.Column('titulo', sa.String(length=300), nullable=True),
-    sa.Column('descricao', sa.String(length=500), nullable=True),
-    sa.Column('sigla', sa.String(length=3), nullable=True),
-    sa.Column('imagem', sa.String(length=300), nullable=True),
-    sa.Column('data_cadastro', sa.DateTime(), nullable=True),
-    sa.Column('data_atualizacao', sa.DateTime(), nullable=True),
-    sa.Column('responsavel_cadastro', sa.Integer(), nullable=True),
-    sa.Column('status', sa.Boolean(), nullable=True),
-    sa.Column('data_exclusao', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['responsavel_cadastro'], ['usuario.usuario_id'], ),
-    sa.PrimaryKeyConstraint('produto_categoria_id')
-    )
-    op.create_table('produto_subcategoria',
-    sa.Column('produto_subcategoria_id', sa.Integer(), nullable=False),
-    sa.Column('titulo', sa.String(length=300), nullable=True),
-    sa.Column('descricao', sa.String(length=500), nullable=True),
-    sa.Column('imagem', sa.String(length=300), nullable=True),
-    sa.Column('data_cadastro', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
-    sa.Column('data_atualizacao', sa.DateTime(), nullable=True),
-    sa.Column('responsavel_cadastro', sa.String(length=100), nullable=True),
-    sa.Column('status', sa.Boolean(), nullable=True),
-    sa.Column('data_exclusao', sa.DateTime(), nullable=True),
-    sa.Column('usuario_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['usuario_id'], ['usuario.usuario_id'], ),
-    sa.PrimaryKeyConstraint('produto_subcategoria_id')
-    )
-    op.create_table('fatura',
-    sa.Column('fatura_id', sa.Integer(), nullable=False),
-    sa.Column('orcamento_id', sa.Integer(), nullable=False),
-    sa.Column('cliente_id', sa.Integer(), nullable=False),
-    sa.Column('data_cadastro', sa.DateTime(), nullable=False),
-    sa.Column('status_entrega', sa.Integer(), nullable=False),
-    sa.Column('delet', sa.Boolean(), nullable=False),
-    sa.Column('data_exclusao', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['cliente_id'], ['cliente.cliente_id'], ),
-    sa.ForeignKeyConstraint(['orcamento_id'], ['orcamento.orcamento_id'], ),
-    sa.PrimaryKeyConstraint('fatura_id')
+    sa.PrimaryKeyConstraint('usuario_id'),
+    sa.UniqueConstraint('cpf'),
+    sa.UniqueConstraint('login_id')
     )
     op.create_table('login_empresa',
     sa.Column('login_empresa_id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('login_id', sa.Integer(), nullable=False),
     sa.Column('empresa_id', sa.Integer(), nullable=False),
     sa.Column('data_cadastro', sa.DateTime(), nullable=False),
+    sa.Column('data_exclusao', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['empresa_id'], ['empresa.empresa_id'], ),
     sa.ForeignKeyConstraint(['login_id'], ['login.login_id'], ),
     sa.PrimaryKeyConstraint('login_empresa_id')
     )
-    op.create_table('login_permissao',
-    sa.Column('login_permissao_id', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('login_id', sa.Integer(), nullable=False),
-    sa.Column('permissao_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['login_id'], ['login.login_id'], ),
-    sa.ForeignKeyConstraint(['permissao_id'], ['permissao.permissao_id'], ),
-    sa.PrimaryKeyConstraint('login_permissao_id')
+    op.create_table('orcamento_status',
+    sa.Column('orcamento_status_id', sa.Integer(), nullable=False),
+    sa.Column('titulo', sa.Integer(), nullable=True),
+    sa.Column('descricao', sa.String(length=1000), nullable=True),
+    sa.Column('empresa_id', sa.Integer(), nullable=True),
+    sa.Column('data_cadastro', sa.DateTime(), nullable=False),
+    sa.Column('data_atualizacao', sa.DateTime(), nullable=True),
+    sa.Column('data_exclusao', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['empresa_id'], ['empresa.empresa_id'], ),
+    sa.ForeignKeyConstraint(['titulo'], ['cliente.cliente_id'], ),
+    sa.PrimaryKeyConstraint('orcamento_status_id')
+    )
+    op.create_table('orcamento_tipo',
+    sa.Column('orcamento_tipo_id', sa.Integer(), nullable=False),
+    sa.Column('titulo', sa.String(length=300), nullable=False),
+    sa.Column('descricao', sa.String(length=500), nullable=True),
+    sa.Column('data_cadastro', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
+    sa.Column('data_atualizacao', sa.DateTime(), nullable=True),
+    sa.Column('responsavel_cadastro_id', sa.Integer(), nullable=True),
+    sa.Column('empresa_id', sa.Integer(), nullable=False),
+    sa.Column('status', sa.Boolean(), nullable=False),
+    sa.Column('data_exclusao', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['empresa_id'], ['empresa.empresa_id'], ),
+    sa.PrimaryKeyConstraint('orcamento_tipo_id')
     )
     op.create_table('produto',
     sa.Column('produto_id', sa.Integer(), nullable=False),
     sa.Column('titulo', sa.String(length=500), nullable=False),
-    sa.Column('preco', sa.Numeric(precision=10, scale=2), nullable=False),
+    sa.Column('sku', sa.String(length=13), nullable=True),
+    sa.Column('preco_venda', sa.Numeric(precision=10, scale=2), nullable=False),
+    sa.Column('preco_custo', sa.Numeric(precision=10, scale=2), nullable=False),
     sa.Column('descricao', sa.String(length=1000), nullable=True),
     sa.Column('imagem', sa.String(length=300), nullable=True),
     sa.Column('data_cadastro', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.Column('data_atualizacao', sa.DateTime(), nullable=True),
-    sa.Column('responsavel_cadastro', sa.String(length=300), nullable=True),
+    sa.Column('responsavel_cadastro_id', sa.Integer(), nullable=True),
     sa.Column('detalhes_opcionais', sa.String(length=500), nullable=True),
     sa.Column('status', sa.Boolean(), nullable=False),
     sa.Column('data_exclusao', sa.DateTime(), nullable=True),
@@ -263,15 +292,111 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['produto_tipo_id'], ['produto_tipo.produto_tipo_id'], ),
     sa.PrimaryKeyConstraint('produto_id')
     )
+    op.create_table('servico_tipo',
+    sa.Column('servico_tipo_id', sa.Integer(), nullable=False),
+    sa.Column('titulo', sa.String(length=300), nullable=False),
+    sa.Column('descricao', sa.String(length=500), nullable=True),
+    sa.Column('data_cadastro', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
+    sa.Column('data_atualizacao', sa.DateTime(), nullable=True),
+    sa.Column('responsavel_cadastro_id', sa.Integer(), nullable=True),
+    sa.Column('empresa_id', sa.Integer(), nullable=False),
+    sa.Column('status', sa.Boolean(), nullable=False),
+    sa.Column('data_exclusao', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['empresa_id'], ['empresa.empresa_id'], ),
+    sa.PrimaryKeyConstraint('servico_tipo_id')
+    )
     op.create_table('estoque',
     sa.Column('estoque_id', sa.Integer(), nullable=False),
     sa.Column('produto_id', sa.Integer(), nullable=False),
+    sa.Column('estoque_tipo_id', sa.Integer(), nullable=False),
     sa.Column('quantidade_disponivel', sa.Integer(), nullable=False),
     sa.Column('data_cadastro', sa.DateTime(), nullable=False),
     sa.Column('data_atualizacao', sa.DateTime(), nullable=True),
     sa.Column('data_exclusao', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['estoque_tipo_id'], ['estoque_tipo.estoque_tipo_id'], ),
     sa.ForeignKeyConstraint(['produto_id'], ['produto.produto_id'], ),
     sa.PrimaryKeyConstraint('estoque_id')
+    )
+    op.create_table('orcamento',
+    sa.Column('orcamento_id', sa.Integer(), nullable=False),
+    sa.Column('cliente_id', sa.Integer(), nullable=True),
+    sa.Column('empresa_id', sa.Integer(), nullable=True),
+    sa.Column('valor', sa.Numeric(precision=10, scale=2), nullable=False),
+    sa.Column('desconto', sa.Numeric(precision=10, scale=2), nullable=False),
+    sa.Column('data_cadastro', sa.DateTime(), nullable=False),
+    sa.Column('data_atualizacao', sa.DateTime(), nullable=True),
+    sa.Column('orcamento_status_id', sa.Integer(), nullable=True),
+    sa.Column('orcamento_tipo_id', sa.Integer(), nullable=True),
+    sa.Column('data_exclusao', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['cliente_id'], ['cliente.cliente_id'], ),
+    sa.ForeignKeyConstraint(['empresa_id'], ['empresa.empresa_id'], ),
+    sa.ForeignKeyConstraint(['orcamento_status_id'], ['orcamento_status.orcamento_status_id'], ),
+    sa.ForeignKeyConstraint(['orcamento_tipo_id'], ['orcamento_tipo.orcamento_tipo_id'], ),
+    sa.PrimaryKeyConstraint('orcamento_id')
+    )
+    op.create_table('rel_produto_produto_subcategoria',
+    sa.Column('rel_produto_produto_subcategoria_id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('produto_id', sa.Integer(), nullable=False),
+    sa.Column('produto_subcategoria_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['produto_id'], ['produto.produto_id'], ),
+    sa.ForeignKeyConstraint(['produto_subcategoria_id'], ['produto_subcategoria.produto_subcategoria_id'], ),
+    sa.PrimaryKeyConstraint('rel_produto_produto_subcategoria_id')
+    )
+    op.create_table('servico',
+    sa.Column('servico_id', sa.Integer(), nullable=False),
+    sa.Column('titulo', sa.String(length=500), nullable=False),
+    sa.Column('preco_mao_de_obra', sa.Numeric(precision=10, scale=2), nullable=False),
+    sa.Column('descricao', sa.String(length=1000), nullable=True),
+    sa.Column('imagem', sa.String(length=300), nullable=True),
+    sa.Column('data_cadastro', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
+    sa.Column('data_atualizacao', sa.DateTime(), nullable=True),
+    sa.Column('previsao_entrega', sa.DateTime(), nullable=True),
+    sa.Column('responsavel_cadastro_id', sa.Integer(), nullable=True),
+    sa.Column('detalhes_opcionais', sa.String(length=500), nullable=True),
+    sa.Column('status', sa.Boolean(), nullable=False),
+    sa.Column('aprovado', sa.Boolean(), nullable=True),
+    sa.Column('data_exclusao', sa.DateTime(), nullable=True),
+    sa.Column('empresa_id', sa.Integer(), nullable=False),
+    sa.Column('servico_tipo_id', sa.Integer(), nullable=False),
+    sa.Column('cliente_solicitante_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['cliente_solicitante_id'], ['cliente.cliente_id'], ),
+    sa.ForeignKeyConstraint(['empresa_id'], ['empresa.empresa_id'], ),
+    sa.ForeignKeyConstraint(['servico_tipo_id'], ['servico_tipo.servico_tipo_id'], ),
+    sa.PrimaryKeyConstraint('servico_id')
+    )
+    op.create_table('fatura',
+    sa.Column('fatura_id', sa.Integer(), nullable=False),
+    sa.Column('orcamento_id', sa.Integer(), nullable=False),
+    sa.Column('cliente_id', sa.Integer(), nullable=False),
+    sa.Column('data_cadastro', sa.DateTime(), nullable=False),
+    sa.Column('status_entrega', sa.Integer(), nullable=False),
+    sa.Column('delet', sa.Boolean(), nullable=False),
+    sa.Column('data_exclusao', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['cliente_id'], ['cliente.cliente_id'], ),
+    sa.ForeignKeyConstraint(['orcamento_id'], ['orcamento.orcamento_id'], ),
+    sa.PrimaryKeyConstraint('fatura_id')
+    )
+    op.create_table('orcamento_item',
+    sa.Column('orcamento_item_id', sa.Integer(), nullable=False),
+    sa.Column('orcamento_id', sa.Integer(), nullable=True),
+    sa.Column('produto_id', sa.Integer(), nullable=True),
+    sa.Column('servico_id', sa.Integer(), nullable=True),
+    sa.Column('data_cadastro', sa.DateTime(), nullable=False),
+    sa.Column('data_atualizacao', sa.DateTime(), nullable=True),
+    sa.Column('quantidade_orcamento', sa.Integer(), nullable=False),
+    sa.Column('data_exclusao', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['orcamento_id'], ['orcamento.orcamento_id'], ),
+    sa.ForeignKeyConstraint(['produto_id'], ['produto.produto_id'], ),
+    sa.ForeignKeyConstraint(['servico_id'], ['servico.servico_id'], ),
+    sa.PrimaryKeyConstraint('orcamento_item_id')
+    )
+    op.create_table('rel_servico_produto',
+    sa.Column('rel_servico_produto_id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('servico_id', sa.Integer(), nullable=False),
+    sa.Column('produto_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['produto_id'], ['produto.produto_id'], ),
+    sa.ForeignKeyConstraint(['servico_id'], ['servico.servico_id'], ),
+    sa.PrimaryKeyConstraint('rel_servico_produto_id')
     )
     op.create_table('fatura_item',
     sa.Column('fatura_item_id', sa.Integer(), nullable=False),
@@ -284,20 +409,6 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['fatura_id'], ['fatura.fatura_id'], ),
     sa.ForeignKeyConstraint(['produto_id'], ['produto.produto_id'], ),
     sa.PrimaryKeyConstraint('fatura_item_id')
-    )
-    op.create_table('orcamento_item',
-    sa.Column('orcamento_item_id', sa.Integer(), nullable=False),
-    sa.Column('orcamento_id', sa.Integer(), nullable=True),
-    sa.Column('produto_id', sa.Integer(), nullable=True),
-    sa.Column('data_cadastro', sa.DateTime(), nullable=False),
-    sa.Column('data_atualizacao', sa.DateTime(), nullable=True),
-    sa.Column('quantidade_orcamento', sa.Integer(), nullable=False),
-    sa.Column('finalizado', sa.Boolean(), nullable=False),
-    sa.Column('delet', sa.Boolean(), nullable=False),
-    sa.Column('data_exclusao', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['orcamento_id'], ['orcamento.orcamento_id'], ),
-    sa.ForeignKeyConstraint(['produto_id'], ['produto.produto_id'], ),
-    sa.PrimaryKeyConstraint('orcamento_item_id')
     )
 
     bind = op.get_bind()
@@ -313,18 +424,17 @@ def upgrade() -> None:
             if column['name'] == 'data_cadastro' and isinstance(column['type'], sa.types.DateTime):
                 # Use SQL direto para alterar a coluna e adicionar CURRENT_TIMESTAMP como valor padrão
                 op.execute(f"""
-                           ALTER TABLE {table}
-                           ALTER COLUMN data_cadastro
-                           SET DEFAULT CURRENT_TIMESTAMP;
-                       """)
+                              ALTER TABLE {table}
+                              ALTER COLUMN data_cadastro
+                              SET DEFAULT CURRENT_TIMESTAMP;
+                          """)
             if column['name'] == 'status' and isinstance(column['type'], sa.types.Boolean):
                 # Use SQL direto para alterar a coluna e adicionar CURRENT_TIMESTAMP como valor padrão
                 op.execute(f"""
-                           ALTER TABLE {table}
-                           ALTER COLUMN status
-                           SET DEFAULT true;
-                       """)
-
+                              ALTER TABLE {table}
+                              ALTER COLUMN status
+                              SET DEFAULT true;
+                          """)
 
     op.execute(
         "INSERT INTO pais (nome,codigo_area,sigla) VALUES ('Afghanistan','+93','AF'), ('Åland Islands','+358','AX'), ('Albania','+355','AL'), ('Algeria','+213','DZ'), ('American Samoa','+1684','AS'), ('Andorra','+376','AD'), ('Angola','+244','AO'), ('Anguilla','+1264','AI'), ('Antarctica','+672','AQ'), ('Antigua and Barbuda','+1268','AG'), ('Argentina','+54','AR'), ('Armenia','+374','AM'), ('Aruba','+297','AW'), ('Australia','+61','AU'), ('Austria','+43','AT'), ('Azerbaijan','+994','AZ'), ('Bahamas','+1242','BS'), ('Bahrain','+973','BH'), ('Bangladesh','+880','BD'), ('Barbados','+1246','BB'), ('Belarus','+375','BY'), ('Belgium','+32','BE'), ('Belize','+501','BZ'), ('Benin','+229','BJ'), ('Bermuda','+1441','BM'), ('Bhutan','+975','BT'), ('Bolivia, Plurinational State of bolivia','+591','BO'), ('Bosnia and Herzegovina','+387','BA'), ('Botswana','+267','BW'), ('Bouvet Island','+47','BV'), ('Brazil','+55','BR'), ('British Indian Ocean Territory','+246','IO'), ('Brunei Darussalam','+673','BN'), ('Bulgaria','+359','BG'), ('Burkina Faso','+226','BF'), ('Burundi','+257','BI'), ('Cambodia','+855','KH'), ('Cameroon','+237','CM'), ('Canada','+1','CA'), ('Cape Verde','+238','CV'), ('Cayman Islands','+ 345','KY'), ('Central African Republic','+236','CF'), ('Chad','+235','TD'), ('Chile','+56','CL'), ('China','+86','CN'), ('Christmas Island','+61','CX'), ('Cocos (Keeling) Islands','+61','CC'), ('Colombia','+57','CO'), ('Comoros','+269','KM'), ('Congo','+242','CG'), ('Congo, The Democratic Republic of the Congo','+243','CD'), ('Cook Islands','+682','CK'), ('Costa Rica','+506','CR'), ('Cote dIvoire','+225','CI'), ('Croatia','+385','HR'), ('Cuba','+53','CU'), ('Cyprus','+357','CY'), ('Czech Republic','+420','CZ'), ('Denmark','+45','DK'), ('Djibouti','+253','DJ'), ('Dominica','+1767','DM'), ('Dominican Republic','+1849','DO'), ('Ecuador','+593','EC'), ('Egypt','+20','EG'), ('El Salvador','+503','SV'), ('Equatorial Guinea','+240','GQ'), ('Eritrea','+291','ER'), ('Estonia','+372','EE'), ('Ethiopia','+251','ET'), ('Falkland Islands (Malvinas)','+500','FK'), ('Faroe Islands','+298','FO'), ('Fiji','+679','FJ'), ('Finland','+358','FI'), ('France','+33','FR'), ('French Guiana','+594','GF'), ('French Polynesia','+689','PF'), ('French Southern Territories','+262','TF'), ('Gabon','+241','GA'), ('Gambia','+220','GM'), ('Georgia','+995','GE'), ('Germany','+49','DE'), ('Ghana','+233','GH'), ('Gibraltar','+350','GI'), ('Greece','+30','GR'), ('Greenland','+299','GL'), ('Grenada','+1473','GD'), ('Guadeloupe','+590','GP'), ('Guam','+1671','GU'), ('Guatemala','+502','GT'), ('Guernsey','+44','GG'), ('Guinea','+224','GN'), ('Guinea-Bissau','+245','GW'), ('Guyana','+592','GY'), ('Haiti','+509','HT'), ('Heard Island and Mcdonald Islands','+0','HM'), ('Holy See (Vatican City State)','+379','VA'), ('Honduras','+504','HN'), ('Hong Kong','+852','HK'), ('Hungary','+36','HU'), ('Iceland','+354','IS'), ('India','+91','IN'), ('Indonesia','+62','ID'), ('Iran, Islamic Republic of Persian Gulf','+98','IR'), ('Iraq','+964','IQ'), ('Ireland','+353','IE'), ('Isle of Man','+44','IM'), ('Israel','+972','IL'), ('Italy','+39','IT'), ('Jamaica','+1876','JM'), ('Japan','+81','JP'), ('Jersey','+44','JE'), ('Jordan','+962','JO'), ('Kazakhstan','+7','KZ'), ('Kenya','+254','KE'), ('Kiribati','+686','KI'), ('Korea, Democratic Peoples Republic of Korea','+850','KP'), ('Korea, Republic of South Korea','+82','KR'), ('Kosovo','+383','XK'), ('Kuwait','+965','KW'), ('Kyrgyzstan','+996','KG'), ('Laos','+856','LA'), ('Latvia','+371','LV'), ('Lebanon','+961','LB'), ('Lesotho','+266','LS'), ('Liberia','+231','LR'), ('Libyan Arab Jamahiriya','+218','LY'), ('Liechtenstein','+423','LI'), ('Lithuania','+370','LT'), ('Luxembourg','+352','LU'), ('Macao','+853','MO'), ('Macedonia','+389','MK'), ('Madagascar','+261','MG'), ('Malawi','+265','MW'), ('Malaysia','+60','MY'), ('Maldives','+960','MV'), ('Mali','+223','ML'), ('Malta','+356','MT'), ('Marshall Islands','+692','MH'), ('Martinique','+596','MQ'), ('Mauritania','+222','MR'), ('Mauritius','+230','MU'), ('Mayotte','+262','YT'), ('Mexico','+52','MX'), ('Micronesia, Federated States of Micronesia','+691','FM'), ('Moldova','+373','MD'), ('Monaco','+377','MC'), ('Mongolia','+976','MN'), ('Montenegro','+382','ME'), ('Montserrat','+1664','MS'), ('Morocco','+212','MA'), ('Mozambique','+258','MZ'), ('Myanmar','+95','MM'), ('Namibia','+264','NA'), ('Nauru','+674','NR'), ('Nepal','+977','NP'), ('Netherlands','+31','NL'), ('Netherlands Antilles','+599','AN'), ('New Caledonia','+687','NC'), ('New Zealand','+64','NZ'), ('Nicaragua','+505','NI'), ('Niger','+227','NE'), ('Nigeria','+234','NG'), ('Niue','+683','NU'), ('Norfolk Island','+672','NF'), ('Northern Mariana Islands','+1670','MP'), ('Norway','+47','NO'), ('Oman','+968','OM'), ('Pakistan','+92','PK'), ('Palau','+680','PW'), ('Palestinian Territory, Occupied','+970','PS'), ('Panama','+507','PA'), ('Papua New Guinea','+675','PG'), ('Paraguay','+595','PY'), ('Peru','+51','PE'), ('Philippines','+63','PH'), ('Pitcairn','+64','PN'), ('Poland','+48','PL'), ('Portugal','+351','PT'), ('Puerto Rico','+1939','PR'), ('Qatar','+974','QA'), ('Romania','+40','RO'), ('Russia','+7','RU'), ('Rwanda','+250','RW'), ('Reunion','+262','RE'), ('Saint Barthelemy','+590','BL'), ('Saint Helena, Ascension and Tristan Da Cunha','+290','SH'), ('Saint Kitts and Nevis','+1869','KN'), ('Saint Lucia','+1758','LC'), ('Saint Martin','+590','MF'), ('Saint Pierre and Miquelon','+508','PM'), ('Saint Vincent and the Grenadines','+1784','VC'), ('Samoa','+685','WS'), ('San Marino','+378','SM'), ('Sao Tome and Principe','+239','ST'), ('Saudi Arabia','+966','SA'), ('Senegal','+221','SN'), ('Serbia','+381','RS'), ('Seychelles','+248','SC'), ('Sierra Leone','+232','SL'), ('Singapore','+65','SG')")
@@ -338,34 +448,84 @@ def upgrade() -> None:
         "INSERT INTO produto_categoria (titulo, sigla) VALUES ('Eletrônicos', 'ELE'),('Eletrodomésticos', 'EDE'),('Roupas', 'ROU'),('Calçados', 'CAL'),('Acessórios', 'ACE'),('Móveis', 'MOV'),('Alimentos', 'ALI'),('Bebidas', 'BEB'),('Livros', 'LIV'),('Brinquedos', 'BRI'),('Ferramentas', 'FER'),('Papelaria', 'PAP'),('Automotivo', 'AUT'),('Informática', 'INF'),('Beleza', 'BEL'),('Higiene', 'HIG'),('Saúde', 'SAU'),('Esportes', 'ESP'),('Fitness', 'FIT'),('Jardinagem', 'JAR'),('Pet Shop', 'PET'),('Decoração', 'DEC'),('Utilidades Domésticas', 'UDI'),('Perfumaria', 'PER'),('Cama, Mesa e Banho', 'CMB'),('Iluminação', 'ILU'),('Relógios', 'REL'),('Óculos', 'OCL'),('Brinquedos Educativos', 'BRE'),('Suplementos', 'SUP'),('Musical', 'MUS'),('Instrumentos Musicais', 'IMU'),('Jóias', 'JOI'),('Semi-jóias', 'SEJ'),('Bijuterias', 'BIJ'),('Artigos de Festa', 'ADF'),('Artigos de Cozinha', 'ADC'),('Camping', 'CAM'),('Piscina', 'PIS'),('Churrasco', 'CHU'),('Bicicletas', 'BIC'),('Motocicletas', 'MOT'),('Pneus', 'PNE'),('Peças Automotivas', 'PEA'),('Eletrônicos de Consumo', 'EDC'),('Eletroportáteis', 'EPO'),('Utensílios de Cozinha', 'UDC'),('Artigos Esportivos', 'AES'),('Roupas de Academia', 'RAC'),('Moda Infantil', 'MIN'),('Moda Feminina', 'MOF'),('Moda Masculina', 'MOM'),('Moda Praia', 'MOP'),('Moda Íntima', 'MOI'),('Calçados Esportivos', 'CAE'),('Calçados Casuais', 'CAC'),('Sandálias', 'SAN'),('Botas', 'BOT'),('Tênis', 'TEN'),('Sapatilhas', 'SAP'),('Cintos', 'CIN'),('Bolsas', 'BOL'),('Mochilas', 'MOC'),('Malas de Viagem', 'MDV'),('Produtos Naturais', 'PNA'),('Produtos Orgânicos', 'POR'),('Mercearia', 'MER'),('Produtos de Limpeza', 'PLI'),('Produtos de Beleza', 'PBE'),('Fraldas', 'FRA'),('Brinquedos de Montar', 'BDM'),('Jogos de Tabuleiro', 'JOT'),('Videogames', 'VID'),('Consoles', 'CON'),('Smartphones', 'SMA'),('Tablets', 'TAB'),('Computadores', 'COM'),('Notebooks', 'NOT'),('Impressoras', 'IMP'),('Monitores', 'MON'),('Componentes de PC', 'CPC'),('Redes e Wi-Fi', 'RWF'),('Áudio e Vídeo', 'AEV'),('TVs', 'TVS'),('Home Theater', 'HOM'),('Câmeras', 'CAM'),('Filmadoras', 'FIL'),('Drones', 'DRO'),('Acessórios para Celulares', 'APC'),('Acessórios para Computadores', 'ACC'),('Relógios Inteligentes', 'REI'),('Segurança Eletrônica', 'SEL'),('Equipamentos de Escritório', 'EDE'),('Móveis de Escritório', 'MDE'),('Papelaria Escolar', 'PAE'),('Brinquedos para Bebês', 'BPB'),('Roupa de Cama', 'ROC'),('Banho e Higiene', 'BAH')")
     op.execute(
         "INSERT INTO permissao (titulo, apelido, descricao) VALUES ('Administrador', 'admin', 'Tem acesso total a todos os recursos e operações.'),('Usuário', 'user', 'Pode acessar e modificar seus próprios dados.'),('Gerente', 'manager', 'Pode gerenciar contas de usuários e supervisionar operações.'),('Convidado', 'guest', 'Pode visualizar recursos limitados sem direitos de modificação.'),('Moderador', 'moderator', 'Pode gerenciar conteúdo e interações de usuários.'),('Editor', 'editor', 'Pode criar e editar conteúdo.'),('Visualizador', 'viewer', 'Pode visualizar conteúdo, mas não pode fazer alterações.'),('Suporte', 'support', 'Pode fornecer suporte técnico e resolver problemas.'),('Desenvolvedor', 'developer', 'Tem acesso a ferramentas e recursos de desenvolvimento.'),('Auditor', 'auditor', 'Pode visualizar logs e trilhas de auditoria para conformidade.'),('Vendedor', 'vend', 'Pode criar, visualizar e editar orçamentos e finalizar transações de venda.'),('Comprador', 'comp', 'Pode criar, visualizar e editar transações de compra e estoque.')")
-    op.execute("INSERT INTO produto_subcategoria (produto_categoria_id , titulo, sigla, data_cadastro, responsavel_cadastro_id) VALUES (1, 'Celulares', 'CEL', CURRENT_TIMESTAMP, 1),(1, 'Televisores', 'TVS', CURRENT_TIMESTAMP, 1),(1, 'Computadores', 'PCs', CURRENT_TIMESTAMP, 1),(1, 'Tablets', 'TAB', CURRENT_TIMESTAMP, 1),(1, 'Câmeras', 'CAM', CURRENT_TIMESTAMP, 1),(1, 'Fones de Ouvido', 'FON', CURRENT_TIMESTAMP, 1),(1, 'Impressoras', 'IMP', CURRENT_TIMESTAMP, 1),(1, 'Monitores', 'MON', CURRENT_TIMESTAMP, 1),(1, 'Smartwatches', 'SWT', CURRENT_TIMESTAMP, 1),(1, 'Consoles', 'CON', CURRENT_TIMESTAMP, 1)")
-    op.execute("INSERT INTO produto_subcategoria (produto_categoria_id , titulo, sigla, data_cadastro, responsavel_cadastro_id) VALUES(2, 'Geladeiras', 'GEL', CURRENT_TIMESTAMP, 1),(2, 'Fogões', 'FOG', CURRENT_TIMESTAMP, 1),(2, 'Máquinas de Lavar', 'MLV', CURRENT_TIMESTAMP, 1),(2, 'Micro-ondas', 'MIC', CURRENT_TIMESTAMP, 1),(2, 'Aspiradores', 'ASP', CURRENT_TIMESTAMP, 1),(2, 'Freezers', 'FRZ', CURRENT_TIMESTAMP, 1),(2, 'Liquidificadores', 'LIQ', CURRENT_TIMESTAMP, 1),(2, 'Fornos Elétricos', 'FEL', CURRENT_TIMESTAMP, 1),(2, 'Lava-louças', 'LLS', CURRENT_TIMESTAMP, 1),(2, 'Secadoras', 'SEC', CURRENT_TIMESTAMP, 1)")
-    op.execute("INSERT INTO produto_subcategoria (produto_categoria_id, titulo, sigla, data_cadastro, responsavel_cadastro_id) VALUES(103, 'Resistores', 'RES', CURRENT_TIMESTAMP, 1),(103, 'Capacitores', 'CAP', CURRENT_TIMESTAMP, 1),(103, 'Indutores', 'IND', CURRENT_TIMESTAMP, 1),(103, 'Transistores', 'TRA', CURRENT_TIMESTAMP, 1),(103, 'Diodos', 'DIO', CURRENT_TIMESTAMP, 1),(103, 'Circuitos Integrados', 'CI', CURRENT_TIMESTAMP, 1),(103, 'Relés', 'REL', CURRENT_TIMESTAMP, 1),(103, 'Cristais Osciladores', 'OSC', CURRENT_TIMESTAMP, 1),(103, 'LEDs', 'LED', CURRENT_TIMESTAMP, 1),(103, 'Sensores', 'SEN', CURRENT_TIMESTAMP, 1)")
-    op.execute("INSERT INTO produto_subcategoria (produto_categoria_id , titulo, sigla, data_cadastro, responsavel_cadastro_id) VALUES(103, 'Transformadores', 'TRA', CURRENT_TIMESTAMP, 1),(103, 'Resistores Variáveis', 'RVA', CURRENT_TIMESTAMP, 1),(103, 'Potenciômetros', 'POT', CURRENT_TIMESTAMP, 1),(103, 'Chaves', 'CHA', CURRENT_TIMESTAMP, 1),(103, 'Conectores', 'CON', CURRENT_TIMESTAMP, 1),(103, 'Placas de Circuito Impresso', 'PCI', CURRENT_TIMESTAMP, 1),(103, 'Bobinas', 'BOB', CURRENT_TIMESTAMP, 1),(103, 'Relógios de Cristal', 'RCR', CURRENT_TIMESTAMP, 1),(103, 'Fusíveis', 'FUS', CURRENT_TIMESTAMP, 1),(103, 'Filtros', 'FIL', CURRENT_TIMESTAMP, 1)")
-    op.execute("INSERT INTO produto_subcategoria (produto_categoria_id , titulo, sigla, data_cadastro, responsavel_cadastro_id) VALUES(103, 'Termistores', 'TER', CURRENT_TIMESTAMP, 1),(103, 'Varistores', 'VAR', CURRENT_TIMESTAMP, 1),(103, 'Memórias', 'MEM', CURRENT_TIMESTAMP, 1),(103, 'Microcontroladores', 'MIC', CURRENT_TIMESTAMP, 1),(103, 'Osciladores', 'OSC', CURRENT_TIMESTAMP, 1),(103, 'Amplificadores Operacionais', 'AOP', CURRENT_TIMESTAMP, 1),(103, 'Moduladores', 'MOD', CURRENT_TIMESTAMP, 1),(103, 'Demoduladores', 'DEM', CURRENT_TIMESTAMP, 1),(103, 'Multiplexadores', 'MUX', CURRENT_TIMESTAMP, 1),(103, 'Demultiplexadores', 'DMX', CURRENT_TIMESTAMP, 1)")
+
+    # ADICIONAR op.execute às queries abaixo
+    # INSERT
+    # INTO
+    # produto_subcategoria(titulo, sigla, data_cadastro, responsavel_cadastro_id)
+    # VALUES('Celulares', 'CEL', CURRENT_TIMESTAMP, 1), ('Televisores', 'TVS', CURRENT_TIMESTAMP, 1), (
+    # 'Computadores', 'PCs', CURRENT_TIMESTAMP, 1), ('Tablets', 'TAB', CURRENT_TIMESTAMP, 1), (
+    # 'Câmeras', 'CAM', CURRENT_TIMESTAMP, 1), ('Fones de Ouvido', 'FON', CURRENT_TIMESTAMP, 1), (
+    # 'Impressoras', 'IMP', CURRENT_TIMESTAMP, 1), ('Monitores', 'MON', CURRENT_TIMESTAMP, 1), (
+    # 'Smartwatches', 'SWT', CURRENT_TIMESTAMP, 1), ('Consoles', 'CON', CURRENT_TIMESTAMP, 1)
+    #
+    # INSERT
+    # INTO
+    # produto_subcategoria(titulo, sigla, data_cadastro, responsavel_cadastro_id)
+    # VALUES('Geladeiras', 'GEL', CURRENT_TIMESTAMP, 1), ('Fogões', 'FOG', CURRENT_TIMESTAMP, 1), (
+    # 'Máquinas de Lavar', 'MLV', CURRENT_TIMESTAMP, 1), ('Micro-ondas', 'MIC', CURRENT_TIMESTAMP, 1), (
+    # 'Aspiradores', 'ASP', CURRENT_TIMESTAMP, 1), ('Freezers', 'FRZ', CURRENT_TIMESTAMP, 1), (
+    # 'Liquidificadores', 'LIQ', CURRENT_TIMESTAMP, 1), ('Fornos Elétricos', 'FEL', CURRENT_TIMESTAMP, 1), (
+    # 'Lava-louças', 'LLS', CURRENT_TIMESTAMP, 1), ('Secadoras', 'SEC', CURRENT_TIMESTAMP, 1)
+    #
+    # INSERT
+    # INTO
+    # produto_subcategoria(titulo, sigla, data_cadastro, responsavel_cadastro_id)
+    # VALUES('Resistores', 'RES', CURRENT_TIMESTAMP, 1), ('Capacitores', 'CAP', CURRENT_TIMESTAMP, 1), (
+    # 'Indutores', 'IND', CURRENT_TIMESTAMP, 1), ('Transistores', 'TRA', CURRENT_TIMESTAMP, 1), (
+    # 'Diodos', 'DIO', CURRENT_TIMESTAMP, 1), ('Circuitos Integrados', 'CI', CURRENT_TIMESTAMP, 1), (
+    # 'Relés', 'REL', CURRENT_TIMESTAMP, 1), ('Cristais Osciladores', 'OSC', CURRENT_TIMESTAMP, 1), (
+    # 'LEDs', 'LED', CURRENT_TIMESTAMP, 1), ('Sensores', 'SEN', CURRENT_TIMESTAMP, 1)
+    #
+    # INSERT
+    # INTO
+    # produto_subcategoria(titulo, sigla, data_cadastro, responsavel_cadastro_id)
+    # VALUES('Transformadores', 'TRA', CURRENT_TIMESTAMP, 1), ('Resistores Variáveis', 'RVA', CURRENT_TIMESTAMP, 1), (
+    # 'Potenciômetros', 'POT', CURRENT_TIMESTAMP, 1), ('Chaves', 'CHA', CURRENT_TIMESTAMP, 1), (
+    # 'Conectores', 'CON', CURRENT_TIMESTAMP, 1), ('Placas de Circuito Impresso', 'PCI', CURRENT_TIMESTAMP, 1), (
+    # 'Bobinas', 'BOB', CURRENT_TIMESTAMP, 1), ('Relógios de Cristal', 'RCR', CURRENT_TIMESTAMP, 1), (
+    # 'Fusíveis', 'FUS', CURRENT_TIMESTAMP, 1), ('Filtros', 'FIL', CURRENT_TIMESTAMP, 1)
+    #
+    # INSERT
+    # INTO
+    # produto_subcategoria(titulo, sigla, data_cadastro, responsavel_cadastro_id)
+    # VALUES('Termistores', 'TER', CURRENT_TIMESTAMP, 1), ('Varistores', 'VAR', CURRENT_TIMESTAMP, 1), (
+    # 'Memórias', 'MEM', CURRENT_TIMESTAMP, 1), ('Microcontroladores', 'MIC', CURRENT_TIMESTAMP, 1), (
+    # 'Osciladores', 'OSC', CURRENT_TIMESTAMP, 1), ('Amplificadores Operacionais', 'AOP', CURRENT_TIMESTAMP, 1), (
+    # 'Moduladores', 'MOD', CURRENT_TIMESTAMP, 1), ('Demoduladores', 'DEM', CURRENT_TIMESTAMP, 1), (
+    # 'Multiplexadores', 'MUX', CURRENT_TIMESTAMP, 1), ('Demultiplexadores', 'DMX', CURRENT_TIMESTAMP, 1)
+
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
-    op.drop_table('orcamento_item')
     op.drop_table('fatura_item')
-    op.drop_table('estoque')
-    op.drop_table('produto')
-    op.drop_table('login_permissao')
-    op.drop_table('login_empresa')
+    op.drop_table('rel_servico_produto')
+    op.drop_table('orcamento_item')
     op.drop_table('fatura')
-    op.drop_table('produto_subcategoria')
-    op.drop_table('produto_categoria')
+    op.drop_table('servico')
+    op.drop_table('rel_produto_produto_subcategoria')
     op.drop_table('orcamento')
-    op.drop_table('login')
-    op.drop_table('empresa')
+    op.drop_table('estoque')
+    op.drop_table('servico_tipo')
+    op.drop_table('produto')
+    op.drop_table('orcamento_tipo')
+    op.drop_table('orcamento_status')
+    op.drop_table('login_empresa')
     op.drop_table('usuario')
+    op.drop_table('produto_subcategoria')
+    op.drop_table('login_permissao')
     op.drop_table('lead')
+    op.drop_table('empresa')
     op.drop_table('cliente')
     op.drop_table('profissao')
     op.drop_table('produto_tipo')
+    op.drop_table('produto_categoria')
     op.drop_table('permissao')
     op.drop_table('pais')
+    op.drop_table('login')
+    op.drop_table('lead_funil')
+    op.drop_table('estoque_tipo')
     op.drop_table('empresa_categoria')
     # ### end Alembic commands ###

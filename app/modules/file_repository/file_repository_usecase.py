@@ -10,8 +10,9 @@ class FileRepositoryUseCase:
     def __init__(self):
         self.logger = Logger()
 
-    def file_upload(self):
+    def product_image(self):
         try:
+            file_type = 'produtos'
             # Verificar se o arquivo foi enviado
             if 'file' not in request.files or 'company_id' not in request.form or 'type' not in request.form or 'file_name' not in request.form:
                 return make_response(
@@ -24,10 +25,10 @@ class FileRepositoryUseCase:
                 )
 
             # Recuperar dados do form-data
-            file = request.files['file']
-            company_id = request.form['company_id']
-            file_type = request.form['type']
-            file_name = request.form['file_name']
+            # file_name deve ser SKU + _ + PRODUTO_ID
+            file = request.files['arquivo']
+            company_id = request.form['empresa_id']
+            file_name = request.form['nome_arquivo']
 
             if file.filename == '':
                 return make_response(
@@ -46,8 +47,6 @@ class FileRepositoryUseCase:
             else:
                 folder = os.getenv('uploads')
                 company_folder = os.path.join(folder, company_id)
-
-
 
             if not os.path.exists(company_folder):
                 os.makedirs(company_folder)

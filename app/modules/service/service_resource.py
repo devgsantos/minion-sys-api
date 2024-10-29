@@ -1,6 +1,7 @@
 from flask_restful import Resource
 
 from app.modules.service.service_usecase import ServiceUseCase
+from app.shared.middlewares.user_company_validator import user_company_validator
 from app.shared.middlewares.auth import auth_decorator
 from app.shared.middlewares.dto import dto_decorator
 from models import ServicoRequestModel
@@ -10,9 +11,9 @@ class ServiceResource(Resource):
 
     @auth_decorator
     def get(self, action=None):
-        if action == 'by_id':
+        if action == 'por_id':
             return ServiceUseCase().get_service_by_id()
-        if action == 'all':
+        if action == 'todos':
             return ServiceUseCase().get_service_all()
 
     @auth_decorator
@@ -24,3 +25,8 @@ class ServiceResource(Resource):
     @dto_decorator(ServicoRequestModel)
     def put(self):
         return ServiceUseCase().update_service()
+
+    @auth_decorator
+    @user_company_validator
+    def delete(self):
+        return ServiceUseCase().virtual_delete_service()
