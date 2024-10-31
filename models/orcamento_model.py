@@ -26,10 +26,12 @@ class OrcamentoModel(Base, SoftDeleteQuery):
     data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), onupdate=func.now())
     responsavel_cadastro_id = Column('responsavel_cadastro_id', Integer)
     orcamento_status_id = Column('orcamento_status_id', Integer, ForeignKey('orcamento_status.orcamento_status_id'))
+    venda_id = Column('venda_id', Integer, ForeignKey('venda.venda_id'), nullable=True)
     orcamento_tipo_id = Column('orcamento_tipo_id', Integer)
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
     cliente = relationship('ClienteModel')
+    venda = relationship('VendaModel')
     empresa = relationship('EmpresaModel')
     orcamento_status = relationship('OrcamentoStatusModel')
     orcamento_itens = relationship(
