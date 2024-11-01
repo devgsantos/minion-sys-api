@@ -16,7 +16,6 @@ class ServicoTipoModel(Base, SoftDeleteQuery):
     data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), onupdate=func.now())
     responsavel_cadastro_id = Column('responsavel_cadastro_id', Integer)
     empresa_id = Column('empresa_id', Integer, ForeignKey('empresa.empresa_id'), nullable=False)
-    status = Column('status', Boolean, nullable=False, default=True)
     data_exclusao = Column('data_exclusao', DateTime)
 
 class ServicoTipoBaseModel(BaseModel):
@@ -27,7 +26,6 @@ class ServicoTipoBaseModel(BaseModel):
     data_cadastro: datetime
     data_atualizacao: Optional[datetime]
     responsavel_cadastro_id: int
-    status: bool
     data_exclusao: Optional[datetime]
 
     @field_validator('data_cadastro', 'data_atualizacao', 'data_exclusao')
