@@ -1,14 +1,14 @@
 from datetime import datetime
 
 from pydantic import BaseModel, field_validator
-from sqlalchemy import Column, func,  Integer, ForeignKey, Boolean, DateTime
-from sqlalchemy.orm import relationship, sessionmaker, scoped_session
+from sqlalchemy import Column, func,  Integer, ForeignKey, DateTime
+from sqlalchemy.orm import relationship
 
 from models.base import Base
 from models.soft_delete import SoftDeleteQuery
 from typing import Optional
 from app.shared.helpers.validators import format_datetime
-from .venda_status_model import VendaStatusModel
+from models.venda_status_model import VendaStatusBaseModel
 
 
 class VendaModel(Base, SoftDeleteQuery):
@@ -22,7 +22,7 @@ class VendaModel(Base, SoftDeleteQuery):
     data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), onupdate=func.now())
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True)
 
-    orcamento = relationship("OrcamentoModel", back_populates="venda")
+    orcamento = relationship("OrcamentoModel")
     venda_status = relationship('VendaStatusModel')
     empresa = relationship('EmpresaModel')
 
@@ -34,7 +34,7 @@ class VendaBaseModel(BaseModel):
     data_cadastro: datetime
     data_atualizacao: Optional[datetime]
 
-    venda_status: Optional[VendaStatusModel]
+    venda_status: Optional[VendaStatusBaseModel]
 
     @field_validator('data_cadastro', 'data_atualizacao')
     def format_datetime(cls, value):
