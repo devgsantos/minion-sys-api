@@ -25,7 +25,7 @@ class ProductSubcategoryUseCase:
                                                                  search_fields,
                                                                  empresa_id=request.args.get('empresa_id'))
             else:
-                subcategories, total = self.operations.findAll(self.product_subcategory_model, page, limit)
+                subcategories, total = self.operations.findMany(self.product_subcategory_model, page, limit)
             subcategories_array = self.functions.instance_list_to_array(subcategories)
 
             return make_response(jsonify(
