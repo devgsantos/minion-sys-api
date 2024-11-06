@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from pydantic import BaseModel, field_validator
-from sqlalchemy import Column, func,  Integer, ForeignKey, DateTime
+from sqlalchemy import Column, func, Integer, ForeignKey, DateTime, Numeric, Boolean
 from sqlalchemy.orm import relationship
 
 from models import OrcamentoBaseModel
@@ -17,6 +17,8 @@ class VendaModel(Base, SoftDeleteQuery):
     venda_id = Column('venda_id', Integer, primary_key=True)
     venda_status_id = Column('venda_status_id', Integer, ForeignKey('venda_status.venda_status_id'))
     orcamento_id = Column('orcamento_id', Integer, ForeignKey('orcamento.orcamento_id'), nullable=False)
+    valor = Column('valor', Numeric(precision=10, scale=2), nullable=False, default=0)
+    gera_ordem_servico = Column('gera_ordem_servico', Boolean, nullable=False, default=False)
     empresa_id = Column('empresa_id', Integer, ForeignKey('empresa.empresa_id'), nullable=False)
     responsavel_cadastro_id = Column('responsavel_cadastro_id', Integer)
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=False)
@@ -49,6 +51,7 @@ class VendaRequestBaseModel(BaseModel):
     orcamento_id: int
     empresa_id: int
     venda_status_id: Optional[int]
+    gera_ordem_servico: bool = False
 
     class Config:
         from_attributes = True
