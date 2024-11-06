@@ -7,6 +7,7 @@ from datetime import datetime
 
 from app.shared.helpers.validators import format_datetime
 from models.base import Base
+from . import ClienteServicoBaseModel
 from .orcamento_status_model import OrcamentoStatusBaseModel
 from .orcamento_item_model import OrcamentoItemBaseModel
 from .soft_delete import SoftDeleteQuery
@@ -54,6 +55,8 @@ class OrcamentoBaseModel(BaseModel):
 
     orcamento_itens: List[OrcamentoItemBaseModel]
     orcamento_status: OrcamentoStatusBaseModel
+    venda_id: Optional[int]
+    cliente: ClienteServicoBaseModel
 
     @field_validator('data_cadastro', 'data_atualizacao', 'data_exclusao')
     def format_datetime(cls, value):
