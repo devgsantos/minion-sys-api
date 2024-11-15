@@ -56,8 +56,8 @@ class BudgetUseCase:
             request.json['responsavel_cadastro_id'] = user.get('login_id')
 
             # Separar produtos e serviços do orçamento
-            products_items = [item for item in request.json.get('orcamento_itens', []) if 'produto_id' in item]
-            services_items = [item for item in request.json.get('orcamento_itens', []) if 'servico_id' in item]
+            products_items = [item for item in request.json.get('orcamento_itens', []) if item['tipo'] == 'produto']
+            services_items = [item for item in request.json.get('orcamento_itens', []) if item['tipo'] == 'servico']
 
             # Calcula o valor do orçamento
             budget_value = self.calculate_items_value(products_items, services_items)
