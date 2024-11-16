@@ -1,3 +1,4 @@
+import math
 from datetime import datetime
 from typing import Optional
 from flask import request, jsonify, make_response
@@ -31,7 +32,8 @@ class SalesUseCase:
                         'result': sales_array,
                         'page': page,
                         'limit': limit,
-                        'total': total
+                        'total': total,
+                        'total_pages': math.ceil(total / limit)
                     }
                 }
             ), 201)

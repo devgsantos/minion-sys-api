@@ -1,3 +1,4 @@
+import math
 
 from flask import request, jsonify, make_response
 
@@ -36,7 +37,8 @@ class ProductSubcategoryUseCase:
                         'result': subcategories_array,
                         'page': page,
                         'limit': limit,
-                        'total': total
+                        'total': total,
+                        'total_pages': math.ceil(total / limit)
                     }
 
                 }
