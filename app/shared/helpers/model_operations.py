@@ -209,6 +209,95 @@ class ModelOperations:
                 print(f"Erro ao executar a consulta: {e}")
                 raise
 
+    def findManyByFields(
+            self,
+            model: Type[Base],
+            page: int = 1,
+            limit: int = 10,
+            search_term: Optional[str] = None,
+            search_fields: Optional[List[str]] = None,
+            **kwargs
+    ) -> Tuple[Optional[List[Any]], int]:
+        with self.session_scope() as session:
+            offset = (page - 1) * limit
+
+            try:
+                # Normaliza o termo de busca se necessário
+                normalized_term = self.normalize_term(search_term) if search_term else None
+
+                # Consulta para contar o total de registros
+                query_count = session.query(func.count()).select_from(model)
+                query_count = query_count.filter(model.data_exclusao.is_(None))
+
+                # Filtros exatos com kwargs
+                for key, value in kwargs.items():
+                    column = getattr(model, key, None)
+                    if column is not None:
+                        if isinstance(value, list):
+                            query_count = query_count.filter(column.in_(value))
+                        else:
+                            query_count = query_count.filter(column == value)
+                    else:
+                        raise ValueError(f"Campo '{key}' não encontrado no modelo.")
+
+                # Adiciona filtros de igualdade para os campos de busca
+                if normalized_term and search_fields:
+                    equality_filters = []
+                    for field in search_fields:
+                        if hasattr(model, field):
+                            attr = getattr(model, field)
+                            # Aplica 'unaccent' apenas se o tipo do campo for textual
+                            from sqlalchemy import String
+                            if isinstance(attr.property.columns[0].type, String):
+                                # Usando func.unaccent para garantir compatibilidade com acentos
+                                equality_filters.append(
+                                    func.lower(func.unaccent(attr)) == normalized_term
+                                )
+                            else:
+                                equality_filters.append(attr == normalized_term)
+                    if equality_filters:
+                        query_count = query_count.filter(or_(*equality_filters))
+
+                total_count = query_count.scalar()
+
+                # Consulta para resultados paginados
+                query_results = session.query(model)
+                query_results = query_results.filter(model.data_exclusao.is_(None))
+
+                # Aplicar novamente os filtros exatos
+                for key, value in kwargs.items():
+                    column = getattr(model, key, None)
+                    if column is not None:
+                        if isinstance(value, list):
+                            query_results = query_results.filter(column.in_(value))
+                        else:
+                            query_results = query_results.filter(column == value)
+
+                # Aplicar filtros de igualdade nos resultados
+                if normalized_term and search_fields:
+                    equality_filters = []
+                    for field in search_fields:
+                        if hasattr(model, field):
+                            attr = getattr(model, field)
+                            # Aplicando unaccent somente em campos textuais
+                            from sqlalchemy import String
+                            if isinstance(attr.property.columns[0].type, String):
+                                equality_filters.append(
+                                    func.lower(func.unaccent(attr)) == normalized_term
+                                )
+                            else:
+                                equality_filters.append(attr == normalized_term)
+                    if equality_filters:
+                        query_results = query_results.filter(or_(*equality_filters))
+
+                results = query_results.offset(offset).limit(limit).all()
+                return results, total_count
+            except NoResultFound:
+                return None, 0
+            except Exception as e:
+                print(f"Erro ao executar a consulta: {e}")
+                raise
+
     # def findRelated(self, model: Type[Base], joins: List[Type[Base]], offset: int = 0, limit: int = 10, **kwargs) -> List[Any]:
     #     with self.session_scope() as session:
     #         query = session.query(model)

@@ -78,7 +78,7 @@ class SalesUseCase:
             # Prepara os dados da venda com base no orçamento
             sale_data = self.convert_budget_to_sale(budget)
             sale_data['responsavel_cadastro_id'] = user.get('login_id')
-            sale_data['gera_ordem_servico'] = True if request.json['gera_ordem_servico'] == True else sale_data['gera_ordem_servico'] = False
+            sale_data['gera_ordem_servico'] = True if request.json['gera_ordem_servico'] == True else False
             unique_fields = {'venda_id': venda_id} if venda_id else {}
 
             # Cria ou atualiza a venda

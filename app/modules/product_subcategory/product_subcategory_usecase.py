@@ -6,6 +6,7 @@ from app.shared.helpers.functions import Functions
 from app.shared.helpers.model_operations import ModelOperations
 from app.shared.singletons.logger import Logger
 from models import ProdutoSubcategoriaModel
+from models.produto_subcategorias_model import ProdutoSubcategoriaBaseModel
 
 
 class ProductSubcategoryUseCase:
@@ -18,6 +19,7 @@ class ProductSubcategoryUseCase:
     def get_product_subcategory_all(self):
         try:
             search_term = request.args.get('termo_pesquisa') if request.args.get('termo_pesquisa') else None
+            category_id = request.args.get('por_categoria') if request.args.get('por_categoria') else None
             page = int(request.args.get('pagina'))
             limit = int(request.args.get('limite'))
             if search_term:
@@ -25,9 +27,61 @@ class ProductSubcategoryUseCase:
                 subcategories, total = self.operations.findManyByTerm(self.product_subcategory_model, page, limit, search_term,
                                                                  search_fields,
                                                                  empresa_id=request.args.get('empresa_id'))
+            elif category_id:
+                search_fields = ['produto_categoria_id']
+                subcategories, total = self.operations.findManyByTerm(self.product_subcategory_model, page, limit,
+                                                                      category_id,
+                                                                      search_fields,
+                                                                      empresa_id=request.args.get('empresa_id'))
             else:
                 subcategories, total = self.operations.findMany(self.product_subcategory_model, page, limit)
             subcategories_array = self.functions.instance_list_to_array(subcategories)
+
+            return make_response(jsonify(
+                {
+                    'status': True,
+                    'message': 'Subcategorias carregadas com sucesso.',
+                    'data': {
+                        'result': subcategories_array,
+                        'page': page,
+                        'limit': limit,
+                        'total': total,
+                        'total_pages': math.ceil(total / limit)
+                    }
+
+                }
+            ), 201)
+        except Exception as exc:
+            return make_response(jsonify(
+                {
+                    'status': False,
+                    'message': str(exc),
+                    'data': None,
+                }
+            ), 500)
+
+    def get_product_subcategory_by_category(self):
+        try:
+            category_id = request.args.get('categoria_id') if request.args.get('categoria_id') else None
+            page = int(request.args.get('pagina'))
+            limit = int(request.args.get('limite'))
+            if category_id:
+                search_fields = ['produto_categoria_id']
+                subcategories, total = self.operations.findManyByFields(self.product_subcategory_model, page, limit,
+                                                                      category_id,
+                                                                      search_fields,
+                                                                      empresa_id=request.args.get('empresa_id'))
+            else:
+                return make_response(jsonify(
+                    {
+                        'status': False,
+                        'message': 'Forneça o id da cartegoria desejada',
+                        'data': None,
+                    }
+                ), 500)
+
+            # subcategories_array = self.functions.instance_list_to_array(subcategories)
+            subcategories_array = [ProdutoSubcategoriaBaseModel.from_orm(subcategory).dict() for subcategory in subcategories]
 
             return make_response(jsonify(
                 {

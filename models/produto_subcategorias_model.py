@@ -31,6 +31,7 @@ class ProdutoSubcategoriaModel(Base, SoftDeleteQuery):
 
 class ProdutoSubcategoriaBaseModel(BaseModel):
     produto_subcategoria_id: int
+    produto_categoria_id: int
     titulo: Optional[constr(max_length=300)]
     descricao: Optional[constr(max_length=500)]
     imagem: Optional[str]
