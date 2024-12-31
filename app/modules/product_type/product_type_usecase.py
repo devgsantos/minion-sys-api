@@ -1,3 +1,4 @@
+import math
 
 from flask import request, jsonify, make_response
 
@@ -25,7 +26,7 @@ class ProductTypeUseCase:
                                                                  search_fields,
                                                                  empresa_id=request.args.get('empresa_id'))
             else:
-                types, total = self.operations.findAll(self.product_type_model, page, limit)
+                types, total = self.operations.findMany(self.product_type_model, page, limit)
             types_array = self.functions.instance_list_to_array(types)
 
             return make_response(jsonify(
@@ -36,7 +37,8 @@ class ProductTypeUseCase:
                         'result': types_array,
                         'page': page,
                         'limit': limit,
-                        'total': total
+                        'total': total,
+                        'total_pages': math.ceil(total / limit)
                     }
 
                 }

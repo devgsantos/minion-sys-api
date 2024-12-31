@@ -1,3 +1,4 @@
+import math
 from typing import Optional
 
 from flask import request, jsonify, make_response
@@ -35,7 +36,8 @@ class BudgetUseCase:
                         'result': budgets_array,
                         'page': page,
                         'limit': limit,
-                        'total': total
+                        'total': total,
+                        'total_pages': math.ceil(total / limit)
                     }
 
                 }
@@ -56,8 +58,8 @@ class BudgetUseCase:
             request.json['responsavel_cadastro_id'] = user.get('login_id')
 
             # Separar produtos e serviços do orçamento
-            products_items = [item for item in request.json.get('orcamento_itens', []) if 'produto_id' in item]
-            services_items = [item for item in request.json.get('orcamento_itens', []) if 'servico_id' in item]
+            products_items = [item for item in request.json.get('orcamento_itens', []) if item['tipo'] == 'produto']
+            services_items = [item for item in request.json.get('orcamento_itens', []) if item['tipo'] == 'servico']
 
             # Calcula o valor do orçamento
             budget_value = self.calculate_items_value(products_items, services_items)
@@ -127,6 +129,8 @@ class BudgetUseCase:
                     quantidade_orcamento=item['quantidade_orcamento']
                 )
 
+            budget_value = self.calculate_items_value(products_items, services_items)
+
             # Retorna uma resposta de sucesso
             return make_response(jsonify(
                 {
@@ -145,6 +149,34 @@ class BudgetUseCase:
                     'data': None,
                 }
             ), 500)
+
+    def calculate_items_value(self, products_items, services_items):
+        try:
+            total_value = 0
+
+            # Calcula o valor total dos produtos
+            for item in products_items:
+                produto = self.operations.findOne(self.product_model, produto_id=item['produto_id'])
+                if not produto:
+                    raise ValueError(f"Produto ID {item['produto_id']} não encontrado.")
+                preco_venda = produto.preco_venda
+                quantidade = item['quantidade_orcamento']
+                total_value += preco_venda * quantidade
+
+            # Calcula o valor total dos serviços
+            for item in services_items:
+                servico = self.operations.findOne(self.service_model, servico_id=item['servico_id'])
+                if not servico:
+                    raise ValueError(f"Serviço ID {item['servico_id']} não encontrado.")
+                preco_mao_de_obra = servico.preco_mao_de_obra
+                quantidade = item['quantidade_orcamento']
+                total_value += preco_mao_de_obra * quantidade
+
+            return total_value
+
+        except Exception as exc:
+            self.logger.log(message=f"Erro ao calcular o valor do orçamento: {str(exc)}", level='error')
+            raise
 
     # LEGADO
     def create_budget(self):

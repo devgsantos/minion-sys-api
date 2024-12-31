@@ -15,6 +15,8 @@ class ProductSubcategoryResource(Resource):
             return ProductSubcategoryUseCase().get_product_subcategory_by_id()
         if action == 'todos':
             return ProductSubcategoryUseCase().get_product_subcategory_all()
+        if action == 'por_categoria':
+            return ProductSubcategoryUseCase().get_product_subcategory_by_category()
 
     @auth_decorator
     @dto_decorator(ProdutoSubcategoriaRequestModel)

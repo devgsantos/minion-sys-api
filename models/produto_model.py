@@ -12,7 +12,6 @@ from .produto_subcategorias_model import ProdutoSubcategoriaBaseModel
 from .produto_tipos_model import ProdutoTipoBaseModel
 from .soft_delete import SoftDeleteQuery
 from app.shared.helpers.validators import format_datetime
-from .datetime_fortaleza_local import fortaleza_now
 
 
 class ProdutoModel(Base, SoftDeleteQuery):

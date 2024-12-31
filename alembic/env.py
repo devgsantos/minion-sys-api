@@ -36,6 +36,7 @@ from models.login_model import LoginModel
 from models.login_permissao_model import LoginPermissaoModel
 from models.login_empresa import LoginEmpresaModel
 from models.permissao_model import PermissaoModel
+from models.venda_model import VendaModel
 
 context.config.set_main_option('render_as_batch', 'True')
 

@@ -19,7 +19,7 @@ class Logger(metaclass=Singleton):
         month_names = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto',
                        'setembro', 'outubro', 'novembro', 'dezembro']
 
-        return month_names[month_index]
+        return month_names[month_index - 1]
 
     def update_log_handler(self):
         current_date = datetime.now()

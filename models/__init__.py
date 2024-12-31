@@ -28,3 +28,5 @@ from models.orcamento_model import Base as OrcamentoBase, OrcamentoModel, Orcame
 from models.orcamento_item_model import Base as OrcamentoItemBase, OrcamentoItemModel, OrcamentoItemBaseModel
 from models.orcamento_status_model import Base as OrcamentoStatusBase, OrcamentoStatusModel, OrcamentoStatusBaseModel
 from models.orcamento_tipo_model import Base as OrcamentoTipoBase, OrcamentoTipoModel, OrcamentoTipoBaseModel
+from models.venda_model import Base as VendaBase, VendaModel, VendaBaseModel
+from models.venda_status_model import Base as VendaStatusBase, VendaStatusModel, VendaStatusBaseModel

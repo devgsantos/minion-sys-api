@@ -1,4 +1,4 @@
-from sqlalchemy import Column, func, Integer, ForeignKey, DateTime, Numeric, String
+from sqlalchemy import Column, func, Integer, ForeignKey, DateTime, Numeric, String, Boolean
 from sqlalchemy.orm import relationship
 from pydantic import BaseModel, field_validator, model_validator, Field, constr
 from typing import Optional, List, Union
@@ -7,6 +7,8 @@ from datetime import datetime
 
 from app.shared.helpers.validators import format_datetime
 from models.base import Base
+from . import ClienteServicoBaseModel
+from .orcamento_status_model import OrcamentoStatusBaseModel
 from .orcamento_item_model import OrcamentoItemBaseModel
 from .soft_delete import SoftDeleteQuery
 
@@ -26,10 +28,13 @@ class OrcamentoModel(Base, SoftDeleteQuery):
     data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), onupdate=func.now())
     responsavel_cadastro_id = Column('responsavel_cadastro_id', Integer)
     orcamento_status_id = Column('orcamento_status_id', Integer, ForeignKey('orcamento_status.orcamento_status_id'))
+    venda_id = Column('venda_id', Integer, ForeignKey('venda.venda_id'), nullable=True)
     orcamento_tipo_id = Column('orcamento_tipo_id', Integer)
+    data_aprovacao_reprovacao = Column('data_aprovacao', DateTime(timezone=False), nullable=True, default=None)
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
     cliente = relationship('ClienteModel')
+    venda = relationship('VendaModel', foreign_keys=[venda_id])
     empresa = relationship('EmpresaModel')
     orcamento_status = relationship('OrcamentoStatusModel')
     orcamento_itens = relationship(
@@ -49,6 +54,9 @@ class OrcamentoBaseModel(BaseModel):
     data_exclusao: Optional[datetime]
 
     orcamento_itens: List[OrcamentoItemBaseModel]
+    orcamento_status: OrcamentoStatusBaseModel
+    venda_id: Optional[int]
+    cliente: ClienteServicoBaseModel
 
     @field_validator('data_cadastro', 'data_atualizacao', 'data_exclusao')
     def format_datetime(cls, value):

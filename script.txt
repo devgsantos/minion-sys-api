@@ -1,6 +1,7 @@
 #Iniciar o venv
 -m
 # Inicar script em background - dev
+source ./venv/bin/activate
 nohup python /opt/apis/apis-minion-sys/main.py &
 # Printar logos em arquivo
 output.log &
