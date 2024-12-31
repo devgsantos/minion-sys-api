@@ -12,27 +12,25 @@ def user_company_validator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             try:
-                company_from_json = None
-                if request.method in ['POST', 'PUT']:
-                    company_from_json = request.json.get('empresa_id') if request.json else None
-                    company_from_link = request.args.get('empresa_id') if request.args.get('empresa_id') else None
-                    if company_from_json == None or company_from_link == None:
-                        return {
-                            'status': False,
-                            'message': 'Forneça o empresa_id.',
-                            'result': None,
-                            'code': 400
-                        }
-                else:
-                    company_from_link = request.args.get('empresa_id') if request.args.get('empresa_id') else None
-                    if company_from_link == None:
-                        return {
-                            'status': False,
-                            'message': 'Forneça o empresa_id.',
-                            'result': None,
-                            'code': 400
-                        }
-                request_company = int(company_from_json or company_from_link) or None
+                company_id = None
+
+                # Verifica se o Content-Type é application/json e tenta obter o 'empresa_id' do corpo JSON
+                if request.content_type == 'application/json':
+                    company_id = request.json.get('empresa_id')
+
+                # Caso não seja JSON ou 'empresa_id' não esteja no JSON, tenta obter de outros métodos
+                if not company_id:
+                    company_id = request.args.get('empresa_id') or request.form.get('empresa_id')
+
+                if not company_id:
+                    return {
+                        'status': False,
+                        'message': 'Forneça o empresa_id.',
+                        'result': None,
+                        'code': 400
+                    }
+
+                request_company = int(company_id)
                 token = request.headers.get('x-auth-token')
                 decoded_token_info = jwt.decode(token, os.environ.get('JWT_SECRET'), algorithms=['HS256'])
                 if request_company in decoded_token_info['companies']:
@@ -49,7 +47,7 @@ def user_company_validator(func):
                         'code': 401
                     }
             except Exception as exc:
-                logger.log(message='Falha ao validar empresa.', level='error')
+                logger.log(message=f'Falha ao validar empresa. {exc}', level='error')
 
                 return {
                     'status': False,
