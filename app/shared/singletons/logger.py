@@ -1,13 +1,12 @@
+from flask import request
+
 import os
 import logging
 from datetime import datetime
 from logging.handlers import TimedRotatingFileHandler
-import locale
 
 from app.shared.helpers.singleton import Singleton
 
-# Configurando o locale para português do Brasil
-locale.setlocale(locale.LC_TIME, 'pt_BR.utf8')
 
 class Logger(metaclass=Singleton):
     def __init__(self):
@@ -15,14 +14,17 @@ class Logger(metaclass=Singleton):
         self.logger.setLevel(logging.DEBUG)
         self.update_log_handler()
 
-    def get_log_month_directory_name(self, current_date):
-        # Usando strftime para obter o nome do mês diretamente
-        return current_date.strftime('%B').lower()
+    @staticmethod
+    def get_log_month_directory_name(month_index):
+        month_names = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto',
+                       'setembro', 'outubro', 'novembro', 'dezembro']
+
+        return month_names[month_index + 1]
 
     def update_log_handler(self):
         current_date = datetime.now()
         log_directory = os.path.join('app', 'logs', str(current_date.year),
-                                     self.get_log_month_directory_name(current_date), str(current_date.day))
+                                     self.get_log_month_directory_name(month_index=current_date.month), str(current_date.day))
         os.makedirs(log_directory, exist_ok=True)
         log_path = os.path.join(log_directory, 'info.log')
 
