@@ -9,6 +9,7 @@ output.log &
 ps aux | grep apis-minion-sys
 # Encerrar servico pelo ID
 kill -9 PID id-do-servico
+sudo netstat -tuln | grep :9086
 
 # Upload em docker
 docker build -f .dockerfile -t nome-da-imagem --build-arg variavel-customizada=14.214.12
