@@ -13,6 +13,7 @@ from app.modules.product_type.product_type_resource import ProductTypeResource
 from app.modules.sales.sales_resource import SalesResource
 from app.modules.service.service_resource import ServiceResource
 from app.modules.service_type.service_type_resource import ServiceTypeResource
+from app.modules.stock.stock_type_resource import StockTypeResource
 from app.modules.test.test_resource import TestResource
 from app.modules.user.user_resource import UserResource
 
@@ -54,6 +55,9 @@ api.add_resource(ServiceResource, '/servico', '/servico/<string:action>')
 
 # SERVICE TYPE
 api.add_resource(ServiceTypeResource, '/servico-tipo', '/servico-tipo/<string:action>')
+
+# STOCK TYPE
+api.add_resource(StockTypeResource, '/estoque-tipo', '/estoque-tipo/<string:action>')
 
 # BUDGET
 api.add_resource(BudgetResource, '/orcamento', '/orcamento/<string:action>')
