@@ -20,9 +20,14 @@ class FileRepositoryUseCase:
     def get_available_filename(self, directory):
         # Esta função agora gera o nome do arquivo apenas com números sequenciais
         counter = 1
+        if int(os.getenv('LIMITE_GLOBAL_IMAGENS_PRODUTO')) == 1:
+            return f"{counter}.png"
         while os.path.exists(os.path.join(directory, f"{counter}.png")):
             counter += 1
-        return f"{counter}.png"
+        if counter > int(os.getenv('LIMITE_GLOBAL_IMAGENS_PRODUTO')):
+            return False
+        else:
+            return f"{counter}.png"
 
 
     def product_image(self):
@@ -68,13 +73,20 @@ class FileRepositoryUseCase:
                     product_subfolder = file.filename.rsplit('.', 1)[0]
                     product_folder = os.path.join(company_folder, product_subfolder)
                     os.makedirs(product_folder, exist_ok=True)
-                    file_name = self.get_available_filename(product_folder)
-                    file_path = os.path.join(product_folder, file_name)
+                    file_order = self.get_available_filename(product_folder)
+                    if file_order == False:
+                        return make_response(jsonify(
+                            {
+                                "status": False,
+                                "message": "Este produto já possui o limite de imagens cadastradas. Por favor apague ou substitua uma das imagens."
+                            }
+                        ), 304)
+                    file_path = os.path.join(product_folder, file_order)
                     img = Image.open(file)
                     img.save(file_path, 'png')
 
                     try:
-                        image_update = {'imagem': os.path.join(product_subfolder, file_name).replace('\\','/')}
+                        image_update = {'imagem': os.path.join(product_subfolder, file_order).replace('\\','/')}
                         self.operations.update(self.product_model, file_name.split('_')[1], **image_update)
                     except Exception as exc:
                         self.logger.log(message=str(exc), level='error')
@@ -87,7 +99,7 @@ class FileRepositoryUseCase:
             else:
                 file.save(file_path)
 
-            return make_response(jsonify({"status": True, "message": "Arquivo salvo com sucesso.", "file_path": file_path}), 200)
+            return make_response(jsonify({"status": True, "message": "Arquivo salvo com sucesso.", "file_path": os.path.join(product_subfolder, file_order)}), 200)
 
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
