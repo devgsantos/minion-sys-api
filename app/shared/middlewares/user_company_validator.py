@@ -16,11 +16,11 @@ def user_company_validator(func):
 
                 # Verifica se o Content-Type é application/json e tenta obter o 'empresa_id' do corpo JSON
                 if request.content_type == 'application/json':
-                    company_id = request.json.get('empresa_id')
+                    company_id = int(request.json.get('empresa_id'))
 
                 # Caso não seja JSON ou 'empresa_id' não esteja no JSON, tenta obter de outros métodos
                 if not company_id:
-                    company_id = request.args.get('empresa_id') or request.form.get('empresa_id')
+                    company_id = int(request.args.get('empresa_id') or request.form.get('empresa_id'))
 
                 if not company_id:
                     return {

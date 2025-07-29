@@ -48,18 +48,15 @@ def teardown_request(exception=None):
 def after_request(request):
     if isinstance(request, flask.wrappers.Response):
         if request.mimetype == 'application/json':
-            content = gzip.compress(flask.json.dumps(request.json).encode('utf8'))
-
-            response = flask.make_response(content)
-
-            response.headers = {
-                "Content-Type": 'application/json',
-                "Content-Encoding": 'gzip',
-                "Content-length": len(content),
-            }
-
-            Logger().log(message=request.response[0], level='info' if response.status_code < 300 else 'error')
-
+            # Usa o corpo da resposta original
+            raw_data = request.get_data()
+            content = gzip.compress(raw_data)
+            response = flask.make_response(content, request.status_code)
+            response.headers = dict(request.headers)
+            response.headers["Content-Type"] = 'application/json'
+            response.headers["Content-Encoding"] = 'gzip'
+            # Remove Content-Length antigo, se existir, para evitar duplicidade
+            response.headers.pop("Content-Length", None)
+            Logger().log(message=raw_data, level='info' if response.status_code < 300 else 'error')
             return response
-
     return request

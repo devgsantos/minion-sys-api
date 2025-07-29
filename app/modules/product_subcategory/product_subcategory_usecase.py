@@ -37,28 +37,23 @@ class ProductSubcategoryUseCase:
                 subcategories, total = self.operations.findMany(self.product_subcategory_model, page, limit)
             subcategories_array = self.functions.instance_list_to_array(subcategories)
 
-            return make_response(jsonify(
-                {
-                    'status': True,
-                    'message': 'Subcategorias carregadas com sucesso.',
-                    'data': {
-                        'result': subcategories_array,
-                        'page': page,
-                        'limit': limit,
-                        'total': total,
-                        'total_pages': math.ceil(total / limit)
-                    }
-
+            return {
+                'status': True,
+                'message': 'Subcategorias carregadas com sucesso.',
+                'data': {
+                    'result': subcategories_array,
+                    'page': page,
+                    'limit': limit,
+                    'total': total,
+                    'total_pages': math.ceil(total / limit)
                 }
-            ), 201)
+            }, 201
         except Exception as exc:
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     def get_product_subcategory_by_category(self):
         try:
@@ -72,39 +67,32 @@ class ProductSubcategoryUseCase:
                                                                       search_fields,
                                                                       empresa_id=request.args.get('empresa_id'))
             else:
-                return make_response(jsonify(
-                    {
-                        'status': False,
-                        'message': 'Forneça o id da cartegoria desejada',
-                        'data': None,
-                    }
-                ), 500)
+                return {
+                    'status': False,
+                    'message': 'Forneça o id da cartegoria desejada',
+                    'data': None,
+                }, 500
 
             # subcategories_array = self.functions.instance_list_to_array(subcategories)
             subcategories_array = [ProdutoSubcategoriaBaseModel.from_orm(subcategory).dict() for subcategory in subcategories]
 
-            return make_response(jsonify(
-                {
-                    'status': True,
-                    'message': 'Subcategorias carregadas com sucesso.',
-                    'data': {
-                        'result': subcategories_array,
-                        'page': page,
-                        'limit': limit,
-                        'total': total,
-                        'total_pages': math.ceil(total / limit)
-                    }
-
+            return {
+                'status': True,
+                'message': 'Subcategorias carregadas com sucesso.',
+                'data': {
+                    'result': subcategories_array,
+                    'page': page,
+                    'limit': limit,
+                    'total': total,
+                    'total_pages': math.ceil(total / limit)
                 }
-            ), 201)
+            }, 201
         except Exception as exc:
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     def get_product_subcategory_by_id(self):
         print('by id')
@@ -115,20 +103,16 @@ class ProductSubcategoryUseCase:
             request.json['responsavel_cadastro_id'] = user.get('login_id')
             request.json['sigla'] = self.functions.gerar_sigla(request.json['titulo'])
             self.operations.insert(self.product_subcategory_model, **request.json)
-            return make_response(jsonify(
-                {
-                    'status': True,
-                    'message': 'Subcategoria de produtos criada com sucesso.'
-                }
-            ), 201)
+            return {
+                'status': True,
+                'message': 'Subcategoria de produtos criada com sucesso.'
+            }, 201
         except Exception as exc:
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     def update_product_subcategory(self):
         try:
@@ -136,56 +120,42 @@ class ProductSubcategoryUseCase:
             request.json['responsavel_cadastro_id'] = user.get('login_id')
             update_subcategory = self.operations.update(self.product_subcategory_model, request.json['produto_subcategoria_id'], **request.json)
             if update_subcategory:
-                return make_response(jsonify(
-                    {
-                        'status': True,
-                        'message': 'Subcategoria de produtos alterada com sucesso.'
-                    }
-                ), 201)
+                return {
+                    'status': True,
+                    'message': 'Subcategoria de produtos alterada com sucesso.'
+                }, 201
             else:
-                return make_response(jsonify(
-                    {
-                        'status': True,
-                        'message': 'Nenhuma subcategoria de produtos alterada.'
-                    }
-                ), 204)
+                return {
+                    'status': True,
+                    'message': 'Nenhuma subcategoria de produtos alterada.'
+                }, 204
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
-
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     def virtual_delete_product_subcategory(self):
         try:
             delete_product_subcategory = self.operations.soft_delete(self.product_subcategory_model, request.args.get('produto_subcategoria_id'), request.args.get('empresa_id'))
             if delete_product_subcategory:
-                return make_response(jsonify(
-                    {
-                        'status': True,
-                        'message': 'Subcategoria de produtos excluída com sucesso.'
-                    }
-                ), 201)
+                return {
+                    'status': True,
+                    'message': 'Subcategoria de produtos excluída com sucesso.'
+                }, 201
             else:
                 self.logger.log(message=f"Falha ao excluir subcategoria de produtos.", level='error')
 
-                return make_response(jsonify(
-                    {
-                        'status': False,
-                        'message': 'Falha ao excluir categoria de produtos.',
-                    }
-                ), 500)
+                return {
+                    'status': False,
+                    'message': 'Falha ao excluir categoria de produtos.',
+                }, 500
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
-
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500

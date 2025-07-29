@@ -24,27 +24,23 @@ class SalesUseCase:
             sales, total = self.operations.findMany(self.sales_model, page, limit, empresa_id=request.args.get('empresa_id'))
             sales_array = [VendaBaseModel.from_orm(sale).dict() for sale in sales]
 
-            return make_response(jsonify(
-                {
-                    'status': True,
-                    'message': 'Vendas carregadas com sucesso.',
-                    'data': {
-                        'result': sales_array,
-                        'page': page,
-                        'limit': limit,
-                        'total': total,
-                        'total_pages': math.ceil(total / limit)
-                    }
+            return {
+                'status': True,
+                'message': 'Vendas carregadas com sucesso.',
+                'data': {
+                    'result': sales_array,
+                    'page': page,
+                    'limit': limit,
+                    'total': total,
+                    'total_pages': math.ceil(total / limit)
                 }
-            ), 201)
+            }, 201
         except Exception as exc:
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     def save_sale(self, venda_id: Optional[int] = None):
         try:
@@ -57,20 +53,16 @@ class SalesUseCase:
 
             # Verifica o status do orçamento
             if budget.orcamento_status_id == 4:
-                return make_response(jsonify(
-                    {
-                        'status': False,
-                        'message': 'Operação não permitida: o orçamento já foi reprovado.'
-                    }
-                ), 403)
+                return {
+                    'status': False,
+                    'message': 'Operação não permitida: o orçamento já foi reprovado.'
+                }, 403
 
             if budget.orcamento_status_id == 3:
-                return make_response(jsonify(
-                    {
-                        'status': False,
-                        'message': 'Operação não permitida: o orçamento já foi aprovado.'
-                    }
-                ), 403)
+                return {
+                    'status': False,
+                    'message': 'Operação não permitida: o orçamento já foi aprovado.'
+                }, 403
 
             # Pega dados de itens de orçamento para conversão em venda
             budget_items, _ = self.operations.findMany(self.budget_item_model, orcamento_id=budget_id)
@@ -93,51 +85,41 @@ class SalesUseCase:
                 venda_id=result.venda_id
             )
 
-            return make_response(jsonify(
-                {
-                    'status': True,
-                    'message': 'Venda salva com sucesso e orçamento atualizado.',
-                    'data': VendaBaseModel.from_orm(result).dict()
-                }
-            ), 200 if venda_id else 201)
+            return {
+                'status': True,
+                'message': 'Venda salva com sucesso e orçamento atualizado.',
+                'data': VendaBaseModel.from_orm(result).dict()
+            }, 200 if venda_id else 201
 
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     def virtual_delete_sale(self):
         try:
             delete_sale = self.operations.soft_delete(self.sales_model, request.args.get('venda_id'), request.args.get('empresa_id'))
             if delete_sale:
-                return make_response(jsonify(
-                    {
-                        'status': True,
-                        'message': 'Venda excluída com sucesso.'
-                    }
-                ), 201)
+                return {
+                    'status': True,
+                    'message': 'Venda excluída com sucesso.'
+                }, 201
             else:
                 self.logger.log(message="Falha ao excluir venda.", level='error')
-                return make_response(jsonify(
-                    {
-                        'status': False,
-                        'message': 'Falha ao excluir venda.',
-                    }
-                ), 500)
+                return {
+                    'status': False,
+                    'message': 'Falha ao excluir venda.',
+                }, 500
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     def convert_budget_to_sale(self, budget):
         # Converte os dados do orçamento para os dados da venda

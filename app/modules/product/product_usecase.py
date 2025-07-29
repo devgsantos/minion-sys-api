@@ -1,6 +1,7 @@
 import math
+import requests
 
-from flask import request, jsonify, make_response
+from flask import request
 
 from app.shared.helpers.functions import Functions
 from app.shared.helpers.model_operations import ModelOperations
@@ -35,28 +36,23 @@ class ProductUseCase:
             products_array = [ProdutoBaseModel.from_orm(product).dict() for product in products]
             # products_array = self.functions.instance_list_to_array(products)
 
-            return make_response(jsonify(
-                {
-                    'status': True,
-                    'message': 'Produtos carregados com sucesso.',
-                    'data': {
-                        'result': products_array,
-                        'page': page,
-                        'limit': limit,
-                        'total': total,
-                        'total_pages': math.ceil(total / limit)
-                    }
-
+            return {
+                'status': True,
+                'message': 'Produtos carregados com sucesso.',
+                'data': {
+                    'result': products_array,
+                    'page': page,
+                    'limit': limit,
+                    'total': total,
+                    'total_pages': math.ceil(total / limit)
                 }
-            ), 201)
+            }, 201
         except Exception as exc:
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
 
     def create_product(self):
@@ -73,22 +69,17 @@ class ProductUseCase:
                         "quantidade_disponivel": param['quantidade_disponivel']
                     }
                     self.operations.insert(self.stock_model, **insert_data)
-            return make_response(jsonify(
-                {
-                    'status': True,
-                    'message': 'Produto criado com sucesso.'
-                }
-            ), 201)
+            return {
+                'status': True,
+                'message': 'Produto criado com sucesso.'
+            }, 201
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
-
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     def update_product(self):
         try:
@@ -106,49 +97,76 @@ class ProductUseCase:
                         "quantidade_disponivel": param['quantidade_disponivel']
                     }
                     self.operations.merge_insert_if_not_exists(self.stock_model, unique_fields=unique_data, **data_to_update)
-            return make_response(jsonify(
-                {
-                    'status': True,
-                    'message': 'Produto alterado com sucesso.'
-                }
-            ), 201)
+            return {
+                'status': True,
+                'message': 'Produto alterado com sucesso.'
+            }, 201
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
-
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     def virtual_delete_product(self):
         try:
             delete_product = self.operations.soft_delete(self.product_model, request.args.get('produto_id'), request.args.get('empresa_id'))
             if delete_product:
-                return make_response(jsonify(
-                    {
-                        'status': True,
-                        'message': 'Produto excluído com sucesso.'
-                    }
-                ), 201)
+                return {
+                    'status': True,
+                    'message': 'Produto excluído com sucesso.'
+                }, 201
             else:
                 self.logger.log(message=f"Falha ao excluir produto.", level='error')
 
-                return make_response(jsonify(
-                    {
-                        'status': False,
-                        'message': 'Falha ao excluir produto.',
-                    }
-                ), 500)
+                return {
+                    'status': False,
+                    'message': 'Falha ao excluir produto.',
+                }, 500
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
+    def search_new_by_ean(self):
+        try:
+            url = f"https://world.openfoodfacts.org/api/v0/product/{request.args.get('ean') }.json"
+            response = requests.get(url, timeout=5)
+            if response.status_code != 200:
+                return {
+                    "status": False,
+                    "message": "Erro ao acessar a API externa.",
+                    "result": None
+                }, 502
+
+            data = response.json()
+            product = data.get("product", {})
+            if not product:
+                return {
+                    "status": False,
+                    "message": "Produto não encontrado na base externa.",
+                    "result": None
+                }, 404
+
+            return {
+                "status": True,
+                "message": "Produto encontrado.",
+                "result": {
+                    "titulo": product.get("product_name", "").strip(),
+                    "descricao": product.get("ingredients_text", "").strip(),
+                    "marca": product.get("brands", "").strip(),
+                    "imagem": product.get("image_url", "").strip(),
+                    "categorias": product.get("categories", "").strip()
                 }
-            ), 500)
+            }, 200
+
+        except Exception as e:
+            return {
+                "status": False,
+                "message": f"Erro inesperado: {str(e)}",
+                "result": None
+            }, 500

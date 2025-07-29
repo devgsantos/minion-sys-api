@@ -13,32 +13,28 @@ def dto_decorator(model):
             try:
                 model(**request.json)
                 logger.log(message='Dados externos verificados com sucesso!')
-
-                return func(*args, **kwargs)
-
+                result = func(*args, **kwargs)
+                # Se o módulo retornar uma tupla (dict, status), respeite o status
+                if isinstance(result, tuple) and len(result) == 2 and isinstance(result[1], int):
+                    return result
+                # Caso contrário, retorne status 200
+                return result, 200
             except ValidationError as exc:
                 messages = []
-
                 for error in exc.errors():
                     messages.append(f"{error.get('loc')[0]} -> {error.get('msg')}")
-
                 logger.log(message=' || '.join(messages), level='error')
-
                 return {
                     'status': False,
                     'message': ' || '.join(messages),
                     'result': None,
-                    'code': 500
-                }
-
+                }, 400
             except Exception as exc:
                 logger.log(message=str(exc), level='error')
-
                 return {
                     'status': False,
                     'message': str(exc),
                     'result': None,
-                    'code': 500
-                }
+                }, 500
         return wrapper
     return decorator

@@ -29,28 +29,23 @@ class ServiceTypeUseCase:
                 types, total = self.operations.findAll(self.service_type_model, page, limit)
             types_array = self.functions.instance_list_to_array(types)
 
-            return make_response(jsonify(
-                {
-                    'status': True,
-                    'message': 'Tipos de serviços carregadas com sucesso.',
-                    'data': {
-                        'result': types_array,
-                        'page': page,
-                        'limit': limit,
-                        'total': total,
-                        'total_pages': math.ceil(total / limit)
-                    }
-
+            return {
+                'status': True,
+                'message': 'Tipos de serviços carregadas com sucesso.',
+                'data': {
+                    'result': types_array,
+                    'page': page,
+                    'limit': limit,
+                    'total': total,
+                    'total_pages': math.ceil(total / limit)
                 }
-            ), 201)
+            }, 201
         except Exception as exc:
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     def get_service_type_by_id(self):
         print('by id')
@@ -60,20 +55,16 @@ class ServiceTypeUseCase:
             user = self.functions.token_decript()
             request.json['responsavel_cadastro_id'] = user.get('login_id')
             self.operations.insert(self.service_type_model, **request.json)
-            return make_response(jsonify(
-                {
-                    'status': True,
-                    'message': 'Tipo de serviço criado com sucesso.'
-                }
-            ), 201)
+            return {
+                'status': True,
+                'message': 'Tipo de serviço criado com sucesso.'
+            }, 201
         except Exception as exc:
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     def update_service_type(self):
         try:
@@ -81,56 +72,41 @@ class ServiceTypeUseCase:
             request.json['responsavel_cadastro_id'] = user.get('login_id')
             update_type = self.operations.update(self.service_type_model, request.json['servico_tipo_id'], **request.json)
             if update_type:
-                return make_response(jsonify(
-                    {
-                        'status': True,
-                        'message': 'Tipos de serviço alterado com sucesso.'
-                    }
-                ), 201)
+                return {
+                    'status': True,
+                    'message': 'Tipos de serviço alterado com sucesso.'
+                }, 201
             else:
-                return make_response(jsonify(
-                    {
-                        'status': True,
-                        'message': 'Nenhum tipo de serviço alterada.'
-                    }
-                ), 204)
+                return {
+                    'status': True,
+                    'message': 'Nenhum tipo de serviço alterada.'
+                }, 204
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
-
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     def virtual_delete_service_type(self):
         try:
             delete_type = self.operations.soft_delete(self.service_type_model, request.args.get('servico_tipo_id'), request.args.get('empresa_id'))
             if delete_type:
-                return make_response(jsonify(
-                    {
-                        'status': True,
-                        'message': 'Tipo de serviço excluído com sucesso.'
-                    }
-                ), 201)
+                return {
+                    'status': True,
+                    'message': 'Tipo de serviço excluído com sucesso.'
+                }, 201
             else:
                 self.logger.log(message=f"Falha ao excluir tipo de produto.", level='error')
-
-                return make_response(jsonify(
-                    {
-                        'status': False,
-                        'message': 'Falha ao excluir tipo de produto.',
-                    }
-                ), 500)
+                return {
+                    'status': False,
+                    'message': 'Falha ao excluir tipo de produto.',
+                }, 500
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
-
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500

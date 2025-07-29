@@ -30,28 +30,23 @@ class ProductCategoryUseCase:
                 categories, total = self.operations.findMany(self.product_category_model, page, limit)
             categories_array = self.functions.instance_list_to_array(categories)
 
-            return make_response(jsonify(
-                {
-                    'status': True,
-                    'message': 'Categorias carregadas com sucesso.',
-                    'data': {
-                        'result': categories_array,
-                        'page': page,
-                        'limit': limit,
-                        'total': total,
-                        'total_pages': math.ceil(total / limit)
-                    }
-
+            return {
+                'status': True,
+                'message': 'Categorias carregadas com sucesso.',
+                'data': {
+                    'result': categories_array,
+                    'page': page,
+                    'limit': limit,
+                    'total': total,
+                    'total_pages': math.ceil(total / limit)
                 }
-            ), 201)
+            }, 201
         except Exception as exc:
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     def get_product_category_by_id(self):
         print('by id')
@@ -62,20 +57,16 @@ class ProductCategoryUseCase:
             request.json['responsavel_cadastro_id'] = user.get('login_id')
             request.json['sigla'] = self.functions.gerar_sigla(request.json['titulo'])
             self.operations.insert(self.product_category_model, **request.json)
-            return make_response(jsonify(
-                {
-                    'status': True,
-                    'message': 'Categoria de produtos criada com sucesso.'
-                }
-            ), 201)
+            return {
+                'status': True,
+                'message': 'Categoria de produtos criada com sucesso.'
+            }, 201
         except Exception as exc:
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     def update_product_category(self):
         try:
@@ -83,56 +74,42 @@ class ProductCategoryUseCase:
             request.json['responsavel_cadastro_id'] = user.get('login_id')
             update_category = self.operations.update(self.product_category_model, request.json['produto_categoria_id'], **request.json)
             if update_category:
-                return make_response(jsonify(
-                    {
-                        'status': True,
-                        'message': 'Categoria de produtos alterada com sucesso.'
-                    }
-                ), 201)
+                return {
+                    'status': True,
+                    'message': 'Categoria de produtos alterada com sucesso.'
+                }, 201
             else:
-                return make_response(jsonify(
-                    {
-                        'status': True,
-                        'message': 'Nenhuma categoria de produtos alterada.'
-                    }
-                ), 204)
+                return {
+                    'status': True,
+                    'message': 'Nenhuma categoria de produtos alterada.'
+                }, 204
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
-
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     def virtual_delete_product_category(self):
         try:
             delete_product_category = self.operations.soft_delete(self.product_category_model, request.args.get('produto_categoria_id'), request.args.get('empresa_id'))
             if delete_product_category:
-                return make_response(jsonify(
-                    {
-                        'status': True,
-                        'message': 'Categoria de produtos excluída com sucesso.'
-                    }
-                ), 201)
+                return {
+                    'status': True,
+                    'message': 'Categoria de produtos excluída com sucesso.'
+                }, 201
             else:
                 self.logger.log(message=f"Falha ao excluir categoria de produtos.", level='error')
 
-                return make_response(jsonify(
-                    {
-                        'status': False,
-                        'message': 'Falha ao excluir categoria de produtos.',
-                    }
-                ), 500)
+                return {
+                    'status': False,
+                    'message': 'Falha ao excluir categoria de produtos.',
+                }, 500
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
-
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
