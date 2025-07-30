@@ -11,6 +11,8 @@ from . import ClienteServicoBaseModel
 from .orcamento_status_model import OrcamentoStatusBaseModel
 from .orcamento_item_model import OrcamentoItemBaseModel
 from .soft_delete import SoftDeleteQuery
+from app.shared.singletons.logger import Logger
+
 
 
 
@@ -29,7 +31,6 @@ class OrcamentoModel(Base, SoftDeleteQuery):
     responsavel_cadastro_id = Column('responsavel_cadastro_id', Integer)
     orcamento_status_id = Column('orcamento_status_id', Integer, ForeignKey('orcamento_status.orcamento_status_id'))
     venda_id = Column('venda_id', Integer, ForeignKey('venda.venda_id'), nullable=True)
-    orcamento_tipo_id = Column('orcamento_tipo_id', Integer)
     data_aprovacao_reprovacao = Column('data_aprovacao', DateTime(timezone=False), nullable=True, default=None)
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
 
@@ -73,23 +74,39 @@ class ServicoItemOrcamentoModel(BaseModel):
     servico_id: int
     quantidade_orcamento: int
 
+class OrcamentoItensRequest(BaseModel):
+    tipo: str
+    item_id: int
+    quantidade_orcamento: int
+
 class OrcamentoRequestModel(BaseModel):
+    orcamento_id: Optional[int] = None
     cliente_id: int
     desconto: float
     empresa_id: int
     descricao: Optional[constr(max_length=1000)]
     observacoes: Optional[constr(max_length=1000)]
     orcamento_status_id: int
-    orcamento_itens: List[Union[Optional[ProdutoItemOrcamentoModel], Optional[ServicoItemOrcamentoModel]]]
+    venda_id: Optional[int] = None
+    orcamento_itens: List[
+            Union[
+                ProdutoItemOrcamentoModel,
+                ServicoItemOrcamentoModel,
+                OrcamentoItensRequest
+            ]
+        ]
+        
 
     @model_validator(mode='before')
     def validate_items(cls, values):
         itens = values.get('orcamento_itens')
         if not itens or not isinstance(itens, list):
+            Logger().log(message="O campo 'orcamento_itens' é obrigatório e deve ser uma lista.", level='error')
             raise ValueError("O campo 'orcamento_itens' é obrigatório e deve ser uma lista.")
 
         for item in itens:
-            if not ('produto_id' in item or 'servico_id' in item):
-                raise ValueError("Cada item deve ter 'produto_id' ou 'servico_id'.")
+            if not ('produto_id' in item or 'servico_id' in item or ('item_id' in item and 'tipo' in item)):
+                Logger().log(message="Cada item deve ter 'produto_id' ou 'servico_id' ou especificar o 'tipo'.", level='error')
+                raise ValueError("Cada item deve ter 'produto_id' ou 'servico_id' ou especificar o 'tipo'.")
 
         return values

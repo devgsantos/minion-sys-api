@@ -53,8 +53,10 @@ class BudgetUseCase:
             request.json['responsavel_cadastro_id'] = user.get('login_id')
 
             # Separar produtos e serviços do orçamento
-            products_items = [item for item in request.json.get('orcamento_itens', []) if item['tipo'] == 'produto']
-            services_items = [item for item in request.json.get('orcamento_itens', []) if item['tipo'] == 'servico']
+            request_itens = request.json.get('orcamento_itens', [])
+            normalized_itens = self.normalize_orcamento_itens(request_itens)
+            products_items = [item for item in normalized_itens if 'produto_id' in item]
+            services_items = [item for item in normalized_itens if 'servico_id' in item]
 
             # Calcula o valor do orçamento
             budget_value = self.calculate_items_value(products_items, services_items)
@@ -340,3 +342,22 @@ class BudgetUseCase:
             services, services_count = self.operations.findManyNoffset(self.service_model, servico_id=services_ids)
             services_value = sum(service.preco_mao_de_obra for service in services)
         return products_value + services_value
+    
+    def normalize_orcamento_itens(self, orcamento_itens):
+        result = []
+        for item in orcamento_itens:
+            if 'tipo' in item and 'item_id' in item:
+                if item['tipo'] == 'produto':
+                    result.append({
+                        'produto_id': item['item_id'],
+                        'quantidade_orcamento': item['quantidade_orcamento']
+                    })
+                elif item['tipo'] == 'servico':
+                    result.append({
+                        'servico_id': item['item_id'],
+                        'quantidade_orcamento': item['quantidade_orcamento']
+                    })
+            else:
+                result.append(item)
+        return result
+

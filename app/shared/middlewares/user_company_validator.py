@@ -14,21 +14,16 @@ def user_company_validator(func):
             try:
                 company_id = None
 
-                # Verifica se o Content-Type é application/json e tenta obter o 'empresa_id' do corpo JSON
-                if request.content_type == 'application/json':
-                    company_id = int(request.json.get('empresa_id'))
-
                 # Caso não seja JSON ou 'empresa_id' não esteja no JSON, tenta obter de outros métodos
                 if not company_id:
-                    company_id = int(request.args.get('empresa_id') or request.form.get('empresa_id'))
+                    company_id = int(request.args.get('empresa_id') or request.form.get('empresa_id') or request.json.get('empresa_id'))
 
                 if not company_id:
                     return {
                         'status': False,
                         'message': 'Forneça o empresa_id.',
                         'result': None,
-                        'code': 400
-                    }
+                    }, 400
 
                 request_company = int(company_id)
                 token = request.headers.get('x-auth-token')
@@ -38,28 +33,25 @@ def user_company_validator(func):
                     return func(*args, **kwargs)
 
                 else:
-                    logger.log(message=f"Você não tem permissão nesta empresa. -> login_id: {decoded_token_info['logib_id']} | empresa_id: {request_company}", level='error')
-
+                    logger.log(
+                        message=f"Você não tem permissão nesta empresa. -> login_id: {decoded_token_info.get('login_id')} | empresa_id: {request_company}",
+                        level='error'
+                    )
                     return {
                         'status': False,
                         'message': 'Você não tem permissão nesta empresa.',
                         'result': None,
-                        'code': 401
-                    }
+                    }, 401
+                
             except Exception as exc:
                 logger.log(message=f'Falha ao validar empresa. {exc}', level='error')
 
                 return {
                     'status': False,
                     'message': 'Falha ao validar empresa.',
-                    'result': None,
-                    'code': 400
-                }
-
-            logger.log(message=f'Usuario com permissão na empresa_id -> {request_company}', level='info')
-
-            return func(*args, **kwargs)
-
+                    'result': None
+                }, 400
+            
         return wrapper
 
     except Exception as exc:
@@ -69,5 +61,4 @@ def user_company_validator(func):
             'status': False,
             'message': str(exc),
             'result': None,
-            'code': 500
-        }
+        }, 500
