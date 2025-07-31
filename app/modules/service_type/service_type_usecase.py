@@ -5,7 +5,7 @@ from flask import request, jsonify, make_response
 from app.shared.helpers.functions import Functions
 from app.shared.helpers.model_operations import ModelOperations
 from app.shared.singletons.logger import Logger
-from models import ServicoTipoModel
+from models import ServicoTipoModel, ServicoTipoBaseModel
 
 
 class ServiceTypeUseCase:
@@ -26,8 +26,8 @@ class ServiceTypeUseCase:
                                                                  search_fields,
                                                                  empresa_id=request.args.get('empresa_id'))
             else:
-                types, total = self.operations.findAll(self.service_type_model, page, limit)
-            types_array = self.functions.instance_list_to_array(types)
+                types, total = self.operations.findMany(self.service_type_model, page, limit, empresa_id=request.args.get('empresa_id'))
+            types_array = [ServicoTipoBaseModel.from_orm(type).dict() for type in types]
 
             return {
                 'status': True,
