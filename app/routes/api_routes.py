@@ -3,6 +3,7 @@ from flask_restful import Api
 
 from app.modules.budget.budget_resource import BudgetResource
 from app.modules.company.company_resource import CompanyResource
+from app.modules.customer.customer_resource import CustomerResource
 from app.modules.file_repository.file_repository_resource import FileRepositoryResource
 from app.modules.login.login_resource import LoginResource
 from app.modules.permission.permission_resource import PermissionResource
@@ -11,6 +12,7 @@ from app.modules.product_category.product_category_resource import ProductCatego
 from app.modules.product_subcategory.product_subcategory_resource import ProductSubcategoryResource
 from app.modules.product_type.product_type_resource import ProductTypeResource
 from app.modules.sales.sales_resource import SalesResource
+from app.modules.sales_status.sales_status_resource import SalesStatusResource
 from app.modules.service.service_resource import ServiceResource
 from app.modules.service_type.service_type_resource import ServiceTypeResource
 from app.modules.stock.stock_type_resource import StockTypeResource
@@ -64,3 +66,9 @@ api.add_resource(BudgetResource, '/orcamento', '/orcamento/<string:action>')
 
 # SALES
 api.add_resource(SalesResource, '/venda', '/venda/<string:action>')
+
+# SALES STATUS
+api.add_resource(SalesStatusResource, '/venda-status', '/venda-status/<string:action>')
+
+# CUSTOMER
+api.add_resource(CustomerResource, '/cliente', '/cliente/<string:action>')

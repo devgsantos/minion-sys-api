@@ -27,6 +27,7 @@ class OrcamentoModel(Base, SoftDeleteQuery):
     valor = Column('valor', Numeric(precision=10, scale=2), nullable=False, default=0)
     desconto = Column('desconto', Numeric(precision=10, scale=2), nullable=False, default=0)
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=False)
+    data_entrega = Column('data_entrega', DateTime(timezone=False), nullable=True, default=None)
     data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), onupdate=func.now())
     responsavel_cadastro_id = Column('responsavel_cadastro_id', Integer)
     orcamento_status_id = Column('orcamento_status_id', Integer, ForeignKey('orcamento_status.orcamento_status_id'))
@@ -51,6 +52,9 @@ class OrcamentoBaseModel(BaseModel):
     descricao: Optional[constr(max_length=1000)]
     observacoes: Optional[constr(max_length=1000)]
     data_cadastro: datetime
+    data_entrega: Optional[datetime]
+    valor: float = Field(default=0, ge=0)
+    data_aprovacao_reprovacao: Optional[datetime]
     data_atualizacao: Optional[datetime]
     data_exclusao: Optional[datetime]
 
@@ -84,6 +88,7 @@ class OrcamentoRequestModel(BaseModel):
     cliente_id: int
     desconto: float
     empresa_id: int
+    data_entrega: Optional[datetime]
     descricao: Optional[constr(max_length=1000)]
     observacoes: Optional[constr(max_length=1000)]
     orcamento_status_id: int

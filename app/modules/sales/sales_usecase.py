@@ -7,6 +7,8 @@ from app.shared.helpers.functions import Functions
 from app.shared.helpers.model_operations import ModelOperations
 from app.shared.singletons.logger import Logger
 from models import VendaModel, OrcamentoModel, OrcamentoItemModel, VendaBaseModel
+from models import VendaStatusModel, VendaStatusBaseModel
+
 
 class SalesUseCase:
     def __init__(self):
@@ -16,6 +18,7 @@ class SalesUseCase:
         self.sales_model = VendaModel
         self.budget_model = OrcamentoModel
         self.budget_item_model = OrcamentoItemModel
+        self.sales_status_model = VendaStatusModel
 
     def get_all_sales(self):
         try:
@@ -113,6 +116,22 @@ class SalesUseCase:
                     'status': False,
                     'message': 'Falha ao excluir venda.',
                 }, 500
+        except Exception as exc:
+            self.logger.log(message=str(exc), level='error')
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
+
+    def get_all_sales_status(self):
+        try:
+            status_list = self.operations.findMany(self.sales_status_model)
+            return {
+                'status': True,
+                'message': 'Status de vendas carregados com sucesso.',
+                'data': [VendaStatusBaseModel.from_orm(status).dict() for status in status_list]
+            }, 200
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
             return {

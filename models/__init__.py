@@ -1,4 +1,4 @@
-from models.cliente_model import Base as ClienteBase, ClienteModel, ClienteServicoBaseModel
+from models.cliente_model import Base as ClienteBase, ClienteModel, ClienteServicoBaseModel, ClienteBaseModel, ClienteRequestModel
 from models.produto_model import Base as ProdutoBase, ProdutoModel, ProdutoRequestModel
 from models.empresa_model import Base as EmpresaBase, EmpresaModel, EmpresaRequestModel
 from models.empresa_categorias_model import Base as EmpresaCategoriaBase, EmpresaCategoriaModel
