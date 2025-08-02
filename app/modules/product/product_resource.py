@@ -18,8 +18,8 @@ class ProductResource(Resource):
             return ProductUseCase().get_by_id()
         elif action == 'todos':
             return ProductUseCase().get_all_product()
-        elif action == 'add-novo-produto':
-            return ProductUseCase().search_new_by_ean()
+        elif action == 'encontrar-novo-produto':
+            return ProductUseCase().search_by_ean_fallback()
 
     @auth_decorator
     @user_company_validator

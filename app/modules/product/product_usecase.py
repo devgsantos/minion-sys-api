@@ -1,13 +1,14 @@
 import math
 import requests
 
-from flask import request
+from flask import jsonify, request
 
 from app.shared.helpers.functions import Functions
 from app.shared.helpers.model_operations import ModelOperations
 from app.shared.singletons.logger import Logger
 from models import ProdutoModel, ProdutoCategoriaModel, ProdutoSubcategoriaModel, ProdutoTipoModel, EstoqueModel
 from models.produto_model import ProdutoBaseModel
+from app.shared.helpers.find_new_products import FindNewProducts
 
 
 class ProductUseCase:
@@ -20,6 +21,7 @@ class ProductUseCase:
         self.product_subcategory_model = ProdutoSubcategoriaModel
         self.product_type_model = ProdutoTipoModel
         self.stock_model = EstoqueModel
+        self.find_new_products = FindNewProducts()
 
 
     # USAR A SERIALIZAÇÃO DESTA FUNÇÃO COMO BASE PARA AS OUTRAS
@@ -46,7 +48,7 @@ class ProductUseCase:
                     'total': total,
                     'total_pages': math.ceil(total / limit)
                 }
-            }, 201
+            }, 200
         except Exception as exc:
             return {
                 'status': False,
@@ -131,6 +133,28 @@ class ProductUseCase:
                 'message': str(exc),
                 'data': None,
             }, 500
+        
+    def search_by_ean_fallback(self):
+        ean = request.args.get('ean')
+        if not ean:
+            return {
+                "status": False,
+                "message": "EAN não fornecido.",
+                "result": None
+            }, 400
+        produto = self.find_new_products.find_new_products_product_search_net(ean)
+        if not produto:
+            return {
+                "status": False,
+                "message": "Produto não encontrado.",
+                "result": None
+            }, 404
+
+        return {
+            "status": True,
+            "message": "Produto encontrado via fallback.",
+            "result": produto
+        }, 200
 
     def search_new_by_ean(self):
         try:
