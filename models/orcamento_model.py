@@ -88,7 +88,7 @@ class OrcamentoRequestModel(BaseModel):
     cliente_id: int
     desconto: float
     empresa_id: int
-    data_entrega: Optional[datetime]
+    data_entrega: Optional[datetime] = None
     descricao: Optional[constr(max_length=1000)]
     observacoes: Optional[constr(max_length=1000)]
     orcamento_status_id: int

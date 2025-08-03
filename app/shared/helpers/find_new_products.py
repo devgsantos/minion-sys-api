@@ -107,11 +107,13 @@ class FindNewProducts:
             a_tag = block.find("a")
 
 
-            # 2. Buscar imagem no Google e converter para base64
-            imagem_url, titulo_google = self.buscar_imagem_google(ean)
+            # 2. Buscar imagem no Bing ou Google e converter para base64
+           
+            imagem_url, titulo_bing = self.buscar_imagem_bing(ean)
 
             if not imagem_url:
-                imagem_url, titulo_bing = self.buscar_imagem_bing(ean)
+                imagem_url, titulo_google = self.buscar_imagem_google(ean)
+
 
             imagem_base64 = self.baixar_imagem_base64(imagem_url) if imagem_url else None
 
@@ -136,7 +138,9 @@ class FindNewProducts:
                 "data": None
             }, 500
 
-
+    # Ajustar o Google, pois às vezes não acha a classe da div de imagem
+    # grande. Adicionar verificação se a imagem existe na aba original se não
+    # buscar a imagem na aba ampliada.
     def buscar_imagem_google(self, termo: str) -> str | None:
         try:
             query = urllib.parse.quote(termo)

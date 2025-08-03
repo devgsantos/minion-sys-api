@@ -131,7 +131,8 @@ class BudgetUseCase:
             # Retorna uma resposta de sucesso
             return {
                 'status': True,
-                'message': 'Orçamento salvo com sucesso.'
+                'message': 'Orçamento salvo com sucesso.',
+                'data': OrcamentoBaseModel.from_orm(result).dict()
             }, 200 if orcamento_id else 201
 
         except Exception as exc:

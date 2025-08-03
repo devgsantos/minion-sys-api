@@ -5,7 +5,7 @@ from flask import request, jsonify, make_response
 from app.shared.helpers.functions import Functions
 from app.shared.helpers.model_operations import ModelOperations
 from app.shared.singletons.logger import Logger
-from models import ProdutoTipoModel
+from models import ProdutoTipoModel, ProdutoTipoBaseModel
 
 
 class ProductTypeUseCase:
@@ -27,7 +27,7 @@ class ProductTypeUseCase:
                                                                  empresa_id=request.args.get('empresa_id'))
             else:
                 types, total = self.operations.findMany(self.product_type_model, page, limit)
-            types_array = self.functions.instance_list_to_array(types)
+            types_array = [ProdutoTipoBaseModel.from_orm(product_type).dict() for product_type in types]
 
             return make_response(jsonify(
                 {
@@ -71,7 +71,6 @@ class ProductTypeUseCase:
                 {
                     'status': False,
                     'message': str(exc),
-                    'data': None,
                 }
             ), 500)
 
@@ -80,30 +79,34 @@ class ProductTypeUseCase:
             user = self.functions.token_decript()
             request.json['responsavel_cadastro_id'] = user.get('login_id')
             update_type = self.operations.update(self.product_type_model, request.json['produto_tipo_id'], **request.json)
+            update_dict = ProdutoTipoBaseModel.from_orm(update_type).dict() if update_type else None
             if update_type:
-                return make_response(jsonify(
+                return (
                     {
                         'status': True,
-                        'message': 'Tipos de produto alterado com sucesso.'
+                        'message': 'Tipos de produto alterado com sucesso.',
+                        'data': {
+                            'result': update_dict
+                        }
                     }
-                ), 201)
+                ), 201
             else:
-                return make_response(jsonify(
+                return (
                     {
                         'status': True,
                         'message': 'Nenhum tipo de produto alterada.'
                     }
-                ), 204)
+                ), 204
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
 
-            return make_response(jsonify(
+            return (
                 {
                     'status': False,
                     'message': str(exc),
                     'data': None,
                 }
-            ), 500)
+            ), 500
 
     def virtual_delete_product_type(self):
         try:
