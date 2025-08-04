@@ -23,11 +23,31 @@ class BudgetUseCase:
     # USAR A SERIALIZAÇÃO DESTA FUNÇÃO COMO BASE PARA AS OUTRAS
     def get_all_budget(self):
         try:
-            page = int(request.args.get('pagina')) if request.args.get('pagina') else 1
-            limit = int(request.args.get('limite')) if request.args.get('limite') else 10
-            budgets, total = self.operations.findMany(self.budget_model, page, limit, empresa_id=request.args.get('empresa_id'))
+            page = int(request.args.get('pagina', 1))
+            limit = int(request.args.get('limite', 10))
+            has_sale = request.args.get('venda')
+            
+            # Criar um dicionário de filtros base
+            filters = {'empresa_id': request.args.get('empresa_id')}
+            
+            # Adicionar filtro por cliente se existir
+            if request.args.get('cliente_id'):
+                filters['cliente_id'] = request.args.get('cliente_id')
+
+            # Executar a consulta com os filtros dinâmicos
+            budgets, total = self.operations.findMany(self.budget_model, page, limit, **filters)
+            
             budgets_array = [OrcamentoBaseModel.from_orm(budget).dict() for budget in budgets]
 
+            # Tratar o filtro de vendas
+            if has_sale:
+                if has_sale == 'true':
+                    # Orçamentos com venda (venda_id não é nulo)
+                    budgets_array = list(filter(lambda b: b['venda_id'] is not None, budgets_array))
+                elif has_sale == 'false':
+                    # Orçamentos sem venda (venda_id é nulo)
+                    budgets_array = list(filter(lambda b: b['venda_id'] is None, budgets_array))
+                    
             return {
                 'status': True,
                 'message': 'Orçamentos carregados com sucesso.',
@@ -38,7 +58,7 @@ class BudgetUseCase:
                     'total': total,
                     'total_pages': math.ceil(total / limit)
                 }
-            }, 201
+            }, 200
         except Exception as exc:
             return {
                 'status': False,
