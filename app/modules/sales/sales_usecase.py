@@ -54,14 +54,16 @@ class SalesUseCase:
             budget_id = request.json.get('orcamento_id')
             budget = self.operations.findOne(self.budget_model, orcamento_id=budget_id)
 
-            # Verifica o status do orçamento
-            if budget.orcamento_status_id == 4:
+            # Verifica o status do orçamento usando os enums
+            from app.shared.enums.budget_status_enum import BudgetStatusEnum
+            
+            if budget.orcamento_status_id == BudgetStatusEnum.REPROVADO.value:
                 return {
                     'status': False,
                     'message': 'Operação não permitida: o orçamento já foi reprovado.'
                 }, 403
 
-            if budget.orcamento_status_id == 3:
+            if budget.orcamento_status_id == BudgetStatusEnum.APROVADO.value:
                 return {
                     'status': False,
                     'message': 'Operação não permitida: o orçamento já foi aprovado.'
@@ -79,11 +81,13 @@ class SalesUseCase:
             # Cria ou atualiza a venda
             result = self.operations.merge_insert_if_not_exists(self.sales_model, unique_fields, **sale_data)
 
-            # Atualiza o orçamento para 'aprovado', status para 3, e define data_aprovacao
+            # Atualiza o orçamento para 'aprovado', usando o enum BudgetStatusEnum, e define data_aprovacao
+            from app.shared.enums.budget_status_enum import BudgetStatusEnum
+            
             self.operations.update(
                 self.budget_model,
                 {'orcamento_id': budget_id},
-                orcamento_status_id=3,
+                orcamento_status_id=BudgetStatusEnum.APROVADO.value,
                 data_aprovacao=datetime.now(),
                 venda_id=result.venda_id
             )
