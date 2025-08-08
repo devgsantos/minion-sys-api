@@ -5,7 +5,7 @@ from flask import request
 from app.shared.helpers.functions import Functions
 from app.shared.helpers.model_operations import ModelOperations
 from app.shared.singletons.logger import Logger
-from models import EstoqueModel, EstoqueBaseModel, ProdutoModel
+from models import EstoqueModel, EstoqueBaseModel, ProdutoModel, OrcamentoModel, OrcamentoItemModel
 
 
 class StockUseCase:
@@ -15,6 +15,8 @@ class StockUseCase:
         self.functions = Functions()
         self.stock_model = EstoqueModel
         self.product_model = ProdutoModel
+        self.budget_model = OrcamentoModel
+        self.budget_item_model = OrcamentoItemModel
 
     def get_stock_all(self):
         try:
@@ -218,29 +220,138 @@ class StockUseCase:
                 'message': str(exc),
                 'data': None,
             }, 500
+            
+    def check_budget_stock(self):
+        """
+        Endpoint para verificar se há estoque suficiente para todos os produtos de um orçamento.
+        
+        Parâmetros de requisição:
+        - orcamento_id: ID do orçamento a verificar
+        
+        Retorna:
+        - Lista de produtos com estoque insuficiente ou mensagem de sucesso se todos têm estoque
+        """
+        try:
+            budget_id = request.args.get('orcamento_id')
+            if not budget_id:
+                return {
+                    'status': False,
+                    'message': "O parâmetro 'orcamento_id' é obrigatório.",
+                    'data': None
+                }, 400
+            
+            # Verificar disponibilidade de estoque
+            resultado = self.check_stock_by_product(int(budget_id))
+            
+            # Se o orçamento não foi encontrado, retorna 404
+            if not resultado['status'] and resultado['message'] == 'Orçamento não encontrado.':
+                return resultado, 404
+                
+            # Qualquer outro resultado mantém o código 200
+            return resultado, 200
+                
+        except Exception as exc:
+            self.logger.log(message=str(exc), level='error')
+            return {
+                'status': False,
+                'message': f'Erro ao verificar estoque: {str(exc)}',
+                'data': None,
+            }, 500
 
 
-    def verificar_estoque_em_orcamento(self, budget_items: list[dict]) -> bool:
+    def check_stock_by_product(self, budget_id: int) -> dict:
         """
         Verifica se todos os produtos do orçamento possuem estoque suficiente.
+        Busca todos os produtos de uma vez para evitar múltiplas consultas ao banco.
 
-        :param budget_items: Lista de dicionários com 'produto_id' e 'quantidade'
-        :return: Lista de produtos com estoque insuficiente (vazia se tudo OK)
+        :param budget_id: ID do orçamento a verificar
+        :return: Dicionário com status, mensagem e dados (se aplicável)
         """
-        operations = ModelOperations()
-        produtos_insuficientes = []
-
-        for item in budget_items:
-            produto_id = item.get('produto_id')
-            quantidade_necessaria = item.get('quantidade')
-
-            estoque = operations.findOne(EstoqueModel, produto_id=produto_id)
-
-            if not estoque or estoque.quantidade_disponivel < quantidade_necessaria:
-                produtos_insuficientes.append({
-                    "produto_id": produto_id,
-                    "quantidade_necessaria": quantidade_necessaria,
-                    "quantidade_disponivel": estoque.quantidade_disponivel if estoque else 0
-                })
-
-        return produtos_insuficientes
+        try:
+            # Buscar o orçamento pelo ID
+            budget = self.budget_model.find_by_id(budget_id)
+            
+            if not budget:
+                return {
+                    'status': False,
+                    'message': 'Orçamento não encontrado.',
+                    'data': None
+                }
+            
+            # Verificar se o orçamento tem itens
+            if not budget.items or len(budget.items) == 0:
+                return {
+                    'status': True,
+                    'message': 'O orçamento não possui itens.',
+                    'data': None
+                }
+                
+            # Extrair todos os IDs de produtos do orçamento
+            produto_ids = [item.produto_id for item in budget.items if item.produto_id is not None]
+            
+            if not produto_ids:
+                return {
+                    'status': True,
+                    'message': 'O orçamento não possui produtos.',
+                    'data': None
+                }
+                
+            # Buscar todos os estoques relacionados a esses produtos em uma única consulta
+            estoques = []
+            for produto_id in produto_ids:
+                estoque_items = self.stock_model.find_by_produto_id(produto_id)
+                estoques.extend(estoque_items)
+            
+            # Criar um dicionário para acesso rápido ao estoque por produto_id
+            estoque_por_produto = {}
+            for estoque in estoques:
+                if estoque.produto_id in estoque_por_produto:
+                    # Se já existe um registro para esse produto, somamos a quantidade disponível
+                    estoque_por_produto[estoque.produto_id] += estoque.quantidade_disponivel
+                else:
+                    estoque_por_produto[estoque.produto_id] = estoque.quantidade_disponivel
+            
+            # Verificar se cada produto tem estoque suficiente
+            produtos_insuficientes = []
+            for item in budget.items:
+                if not item.produto_id:
+                    continue
+                    
+                quantidade_necessaria = item.quantidade or 0
+                quantidade_disponivel = estoque_por_produto.get(item.produto_id, 0)
+                
+                if quantidade_disponivel < quantidade_necessaria:
+                    # O produto já está relacionado no objeto do item
+                    nome_produto = item.produto.nome if hasattr(item, 'produto') and item.produto else f"Produto #{item.produto_id}"
+                    
+                    produtos_insuficientes.append({
+                        "produto_id": item.produto_id,
+                        "nome_produto": nome_produto,
+                        "quantidade_necessaria": quantidade_necessaria,
+                        "quantidade_disponivel": quantidade_disponivel
+                    })
+            
+            # Retorna o resultado formatado
+            if produtos_insuficientes:
+                return {
+                    'status': False,
+                    'message': 'Estoque insuficiente para alguns produtos do orçamento.',
+                    'data': {
+                        'produtos_insuficientes': produtos_insuficientes
+                    }
+                }
+            else:
+                return {
+                    'status': True,
+                    'message': 'Estoque disponível para todos os produtos do orçamento.',
+                    'data': None
+                }
+            
+        except Exception as exc:
+            self.logger.log(message=f"Erro ao verificar estoque em orçamento: {str(exc)}", level='error')
+            # Em caso de erro, retornamos um objeto de resposta formatado
+            return {
+                'status': False,
+                'message': f"Erro ao verificar disponibilidade de estoque: {str(exc)}",
+                'data': None
+            }

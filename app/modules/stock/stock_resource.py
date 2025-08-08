@@ -17,6 +17,8 @@ class StockResource(Resource):
             return StockUseCase().get_stock_by_product()
         if action == 'todos':
             return StockUseCase().get_stock_all()
+        if action == 'verificar_orcamento':
+            return StockUseCase().check_budget_stock()
 
     @auth_decorator
     @dto_decorator(EstoqueProdutoBaseModel)

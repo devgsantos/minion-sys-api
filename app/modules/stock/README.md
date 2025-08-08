@@ -97,6 +97,45 @@ Busca todos os registros de estoque associados a um produto específico.
 }
 ```
 
+### GET /estoque/verificar_orcamento
+Verifica se há estoque suficiente para todos os produtos de um orçamento.
+
+**Parâmetros:**
+- `orcamento_id` - ID do orçamento a verificar
+
+**Resposta (sucesso):**
+```json
+{
+  "status": true,
+  "message": "Estoque disponível para todos os produtos do orçamento.",
+  "data": null
+}
+```
+
+**Resposta (estoque insuficiente):**
+```json
+{
+  "status": false,
+  "message": "Estoque insuficiente para alguns produtos do orçamento.",
+  "data": {
+    "produtos_insuficientes": [
+      {
+        "produto_id": 1,
+        "nome_produto": "Monitor LED",
+        "quantidade_necessaria": 10,
+        "quantidade_disponivel": 5
+      },
+      {
+        "produto_id": 2,
+        "nome_produto": "Teclado",
+        "quantidade_necessaria": 8,
+        "quantidade_disponivel": 3
+      }
+    ]
+  }
+}
+```
+
 ### POST /estoque
 Cria um novo registro de estoque ou atualiza um existente se já houver um para o mesmo produto e tipo de estoque.
 
