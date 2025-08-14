@@ -30,7 +30,7 @@ class FileRepositoryUseCase:
             return f"{counter}.png"
 
 
-    def product_image(self):
+    def upload_product_image(self):
         try:
             # Verificar se o arquivo foi enviado
             if 'arquivo' not in request.files or 'tipo' not in request.form:

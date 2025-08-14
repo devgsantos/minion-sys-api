@@ -1,6 +1,6 @@
 from flask_restful import Resource
 
-from app.modules.stock.stock_type_usecase import StockTypeUseCase
+from app.modules.stock_type.stock_type_usecase import StockTypeUseCase
 from app.shared.middlewares.auth import auth_decorator
 from app.shared.middlewares.dto import dto_decorator
 from app.shared.middlewares.user_company_validator import user_company_validator
