@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict
 
 from pydantic import BaseModel, constr, field_validator
 from sqlalchemy import Column, func,  Integer, String, DateTime, Boolean, ForeignKey
@@ -51,7 +51,36 @@ class ProdutoCategoriaBaseModel(BaseModel):
 class ProdutoCategoriaRequestModel(BaseModel):
     titulo: constr(max_length=300)
     descricao: Optional[constr(max_length=500)]
-    imagem: Optional[str]
+    imagem: Optional[Dict[str, str]] = None
     sigla: str
     empresa_id: int
+
+    @field_validator('imagem')
+    def validate_imagem(cls, value):
+        if value is None:
+            return None
+        
+        # Verificar se é um dicionário válido
+        if not isinstance(value, dict):
+            raise ValueError('Campo imagem deve ser um objeto com as propriedades: tipo, arquivo')
+        
+        # Verificar se tem as chaves obrigatórias
+        required_keys = {'tipo', 'arquivo'}
+        if not all(key in value for key in required_keys):
+            missing_keys = required_keys - set(value.keys())
+            raise ValueError(f'Campos obrigatórios faltando em imagem: {missing_keys}')
+        
+        # Verificar se os valores são strings
+        for key, val in value.items():
+            if not isinstance(val, str):
+                raise ValueError(f'Campo {key} em imagem deve ser string')
+        
+        # Verificar se arquivo não está vazio
+        if not value['arquivo'].strip():
+            raise ValueError('Campo arquivo em imagem não pode estar vazio')
+        
+        return value
+
+    class Config:
+        from_attributes = True
 

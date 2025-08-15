@@ -9,4 +9,4 @@ class FileRepositoryResource(Resource):
     @auth_decorator
     @user_company_validator
     def post(self):
-        return FileRepositoryUseCase().upload_product_image()
+        return FileRepositoryUseCase().upload_image()

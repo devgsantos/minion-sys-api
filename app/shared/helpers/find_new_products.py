@@ -101,10 +101,8 @@ class FindNewProducts:
 
             soup = BeautifulSoup(response.text, 'html.parser')
             block = soup.find("div", class_="col-xs-12 col-md-7")
-            if not block:
-                return None
 
-            a_tag = block.find("a")
+            a_tag = block.find("a") if block else None
 
 
             # 2. Buscar imagem no Bing ou Google e converter para base64
@@ -117,7 +115,7 @@ class FindNewProducts:
 
             imagem_base64 = self.baixar_imagem_base64(imagem_url) if imagem_url else None
 
-            titulo = a_tag.text.strip() or titulo_google or titulo_bing
+            titulo = (a_tag.text.strip() if a_tag else '') or titulo_google or titulo_bing
 
             if not titulo or not imagem_base64:
                 return {
@@ -244,16 +242,18 @@ class FindNewProducts:
             )
 
             driver.get(url)
-            wait = WebDriverWait(driver, 10)
+            wait = WebDriverWait(driver, 15)
 
-            # Aguarda o primeiro bloco de imagem (a tag que abre o detalhe)
-            thumb = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "a.iusc")))
-            time.sleep(random.uniform(1.2, 2.2))
+            # Aguarda a página carregar completamente e o primeiro bloco de imagem estar clicável
+            thumb = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "a.iusc")))
 
             # Busca título alternativo (fallback) dentro do bloco
             titulo_fallback = ""
             try:
-                data_list = thumb.find_element(By.XPATH, ".//following-sibling::ul[contains(@class, 'b_dataList')]")
+                # Aguarda o elemento da lista estar presente antes de acessá-lo
+                data_list = wait.until(EC.presence_of_element_located(
+                    (By.XPATH, ".//following-sibling::ul[contains(@class, 'b_dataList')]")
+                ))
                 a_tag = data_list.find_element(By.TAG_NAME, "a")
                 titulo_fallback = a_tag.get_attribute("title") or a_tag.text.strip()
             except Exception:
@@ -264,15 +264,24 @@ class FindNewProducts:
             actions.key_down(Keys.CONTROL).click(thumb).key_up(Keys.CONTROL).perform()
             original_window = driver.current_window_handle
 
+            # Aguarda nova aba ser aberta
             wait.until(EC.number_of_windows_to_be(2))
+            
+            # Troca para a nova aba
             for handle in driver.window_handles:
                 if handle != original_window:
                     driver.switch_to.window(handle)
                     break
 
-            # Aguarda imagem grande
-            img = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "img.nofocus")))
+            # Aguarda a imagem grande estar visível e carregada
+            img = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "img.nofocus")))
+            
+            # Aguarda o src da imagem estar preenchido com uma URL válida
+            wait.until(lambda driver: img.get_attribute("src") and img.get_attribute("src").startswith("http"))
+            
             src = img.get_attribute("src")
+            titulo_fallback = titulo_fallback or img.get_attribute("alt") or img.get_attribute("title") or ""
+            
             driver.quit()
 
             if src and src.startswith("http"):
@@ -280,6 +289,10 @@ class FindNewProducts:
             return None, titulo_fallback
 
         except Exception as exc:
+            try:
+                driver.quit()
+            except:
+                pass
             self.logger.log(message=f"[Bing Image Error] {exc}", level='error')
             return None, ""
 

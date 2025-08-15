@@ -1,10 +1,11 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Union, Dict
 
 from _decimal import Decimal
 from pydantic import BaseModel, condecimal, constr, field_validator
 from sqlalchemy import Column, func,  Integer, String, Numeric, ForeignKey, DateTime, Boolean, Float
 from sqlalchemy.orm import relationship, scoped_session, sessionmaker
+from werkzeug.datastructures import FileStorage
 from models.base import Base
 from .estoque_model import EstoqueBaseModel, EstoqueProdutoBaseModel
 from .produto_categorias_model import ProdutoCategoriaBaseModel
@@ -18,7 +19,7 @@ class ProdutoModel(Base, SoftDeleteQuery):
     __tablename__ = 'produto'
     produto_id = Column('produto_id', Integer, primary_key=True)
     titulo = Column('titulo', String(500), nullable=False)
-    sku = Column('sku', String(13), nullable=True)
+    sku = Column('sku', String(13), nullable=True, unique=True)
     preco_venda = Column('preco_venda', Numeric(precision=10, scale=2), nullable=False, default=0)
     preco_custo = Column('preco_custo', Numeric(precision=10, scale=2), nullable=False, default=0)
     descricao = Column('descricao', String(1000), nullable=True)
@@ -73,7 +74,7 @@ class ProdutoBaseModel(BaseModel):
 class ProdutoRelBaseModel(BaseModel):
     produto_id: int
     titulo: constr(max_length=500)
-    sku: Optional[str]
+    sku: str
     preco_custo: float
     preco_venda: float
     descricao: Optional[constr(max_length=1000)]
@@ -89,16 +90,43 @@ class ProdutoRelBaseModel(BaseModel):
 
 class ProdutoRequestModel(BaseModel):
     titulo: constr(max_length=500)
+    sku: str
     preco_custo: float
     preco_venda: float
-    descricao: Optional[constr(max_length=1000)]
-    imagem: Optional[str]
-    detalhes_opcionais: Optional[constr(max_length=500)]
+    descricao: Optional[str] = None
+    imagem: Optional[Dict[str, str]] = None
+    detalhes_opcionais: Optional[str] = None
     produto_categoria_id: int
     produto_subcategoria_id: int
     produto_tipo_id: int
     empresa_id: int
-    estoque: Optional[List[EstoqueProdutoBaseModel]]
+    estoque: Optional[List[EstoqueProdutoBaseModel]] = None
+
+    @field_validator('imagem')
+    def validate_imagem(cls, value):
+        if value is None:
+            return None
+        
+        # Verificar se é um dicionário válido
+        if not isinstance(value, dict):
+            raise ValueError('Campo imagem deve ser um objeto com as propriedades: tipo, arquivo')
+        
+        # Verificar se tem as chaves obrigatórias
+        required_keys = {'tipo', 'arquivo'}
+        if not all(key in value for key in required_keys):
+            missing_keys = required_keys - set(value.keys())
+            raise ValueError(f'Campos obrigatórios faltando em imagem: {missing_keys}')
+        
+        # Verificar se os valores são strings
+        for key, val in value.items():
+            if not isinstance(val, str):
+                raise ValueError(f'Campo {key} em imagem deve ser string')
+        
+        # Verificar se arquivo não está vazio
+        if not value['arquivo'].strip():
+            raise ValueError('Campo arquivo em imagem não pode estar vazio')
+        
+        return value
 
     class Config:
         from_attributes = True
