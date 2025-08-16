@@ -23,40 +23,28 @@ class CompanyUseCase:
 
             if companies:
                 companies_array = self.functions.instance_list_to_array(companies)
-                return make_response(
-                    jsonify(
-                        {
-                            'status': True,
-                            'message': 'Todas as empresas carregadas com sucesso.',
-                            'data': {
-                                'result': companies_array,
-                                'page': page,
-                                'limit': limit,
-                                'total': total
-                            }
-                        }
-                    ), 200
-                )
-            else:
-                return make_response(
-                    jsonify(
-                        {
-                            'status': False,
-                            'message': 'Nenhuma empresa encontrada.',
-                            'data': None
-                        }
-                    ), 404
-                )
-        except Exception as exc:
-            return make_response(
-                jsonify(
-                    {
-                        'status': False,
-                        'message': str(exc),
-                        'data': None,
+                return {
+                    'status': True,
+                    'message': 'Todas as empresas carregadas com sucesso.',
+                    'data': {
+                        'result': companies_array,
+                        'page': page,
+                        'limit': limit,
+                        'total': total
                     }
-                ), 500
-            )
+                }, 200
+            else:
+                return {
+                    'status': False,
+                    'message': 'Nenhuma empresa encontrada.',
+                    'data': None
+                }, 404
+        except Exception as exc:
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     def get_company_by_user(self):
         try:
@@ -71,40 +59,28 @@ class CompanyUseCase:
 
             if companies:
                 companies_array = self.functions.instance_list_to_array(companies)
-                return make_response(
-                    jsonify(
-                        {
-                            'status': True,
-                            'message': 'Listagem de empresas carregada com sucesso.',
-                            'data': {
-                                'result': companies_array,
-                                'page': page,
-                                'limit': limit,
-                                'total': total
-                            }
-                        }
-                    ), 200
-                )
-            else:
-                return make_response(
-                    jsonify(
-                        {
-                            'status': False,
-                            'message': 'Sem empresas para listar.',
-                            'data': None
-                        }
-                    ), 404
-                )
-        except Exception as exc:
-            return make_response(
-                jsonify(
-                    {
-                        'status': False,
-                        'message': str(exc),
-                        'data': None,
+                return {
+                    'status': True,
+                    'message': 'Listagem de empresas carregada com sucesso.',
+                    'data': {
+                        'result': companies_array,
+                        'page': page,
+                        'limit': limit,
+                        'total': total
                     }
-                ), 500
-            )
+                }, 200
+            else:
+                return {
+                    'status': False,
+                    'message': 'Sem empresas para listar.',
+                    'data': None
+                }, 404
+        except Exception as exc:
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     def create_company(self):
         try:
@@ -112,24 +88,16 @@ class CompanyUseCase:
             request.json['responsavel_cadastro_id'] = user.get('login_id')
             inserted_company = self.operations.insert(self.empresa_model, **request.json)
             self.operations.insert(self.login_empresa_model, login_id=user.get('login_id'), empresa_id=inserted_company.empresa_id)
-            return make_response(
-                jsonify(
-                    {
-                        'status': True,
-                        'message': 'Empresa criada com sucesso.'
-                    }
-                ), 201
-            )
+            return {
+                'status': True,
+                'message': 'Empresa criada com sucesso.'
+            }, 201
         except Exception as exc:
-            return make_response(
-                jsonify(
-                    {
-                        'status': False,
-                        'message': str(exc),
-                        'data': None,
-                    }
-                ), 500
-            )
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     def update_company(self, empresa_id: int):
         try:
@@ -144,96 +112,60 @@ class CompanyUseCase:
             )
 
             if updated_company:
-                return make_response(
-                    jsonify(
-                        {
-                            'status': True,
-                            'message': 'Empresa atualizada com sucesso.'
-                        }
-                    ), 200
-                )
+                return {
+                    'status': True,
+                    'message': 'Empresa atualizada com sucesso.'
+                }, 200
             else:
-                return make_response(
-                    jsonify(
-                        {
-                            'status': False,
-                            'message': 'Empresa não encontrada.'
-                        }
-                    ), 404
-                )
+                return {
+                    'status': False,
+                    'message': 'Empresa não encontrada.'
+                }, 404
         except Exception as exc:
-            return make_response(
-                jsonify(
-                    {
-                        'status': False,
-                        'message': str(exc),
-                        'data': None,
-                    }
-                ), 500
-            )
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     def delete_company(self, empresa_id: int):
         try:
             deleted = self.operations.delete(self.empresa_model, empresa_id=empresa_id)
 
             if deleted:
-                return make_response(
-                    jsonify(
-                        {
-                            'status': True,
-                            'message': 'Empresa excluída com sucesso.'
-                        }
-                    ), 200
-                )
+                return {
+                    'status': True,
+                    'message': 'Empresa excluída com sucesso.'
+                }, 200
             else:
-                return make_response(
-                    jsonify(
-                        {
-                            'status': False,
-                            'message': 'Empresa não encontrada.'
-                        }
-                    ), 404
-                )
+                return {
+                    'status': False,
+                    'message': 'Empresa não encontrada.'
+                }, 404
         except Exception as exc:
-            return make_response(
-                jsonify(
-                    {
-                        'status': False,
-                        'message': str(exc),
-                        'data': None,
-                    }
-                ), 500
-            )
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     def soft_delete_company(self, empresa_id: int):
         try:
             soft_deleted = self.operations.soft_delete(self.empresa_model, empresa_id=empresa_id)
 
             if soft_deleted:
-                return make_response(
-                    jsonify(
-                        {
-                            'status': True,
-                            'message': 'Empresa excluída logicamente com sucesso.'
-                        }
-                    ), 200
-                )
+                return {
+                    'status': True,
+                    'message': 'Empresa excluída logicamente com sucesso.'
+                }, 200
             else:
-                return make_response(
-                    jsonify(
-                        {
-                            'status': False,
-                            'message': 'Empresa não encontrada.'
-                        }
-                    ), 404
-                )
+                return {
+                    'status': False,
+                    'message': 'Empresa não encontrada.'
+                }, 404
         except Exception as exc:
-            return make_response(
-                jsonify(
-                    {
-                        'status': False,
-                        'message': str(exc),
-                        'data': None,
-                    }
-                ), 500
-            )
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500

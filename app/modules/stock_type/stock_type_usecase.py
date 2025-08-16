@@ -29,8 +29,7 @@ class StockTypeUseCase:
                 types, total = self.operations.findMany(self.stock_type_model, page, limit)
             types_array = self.functions.instance_list_to_array(types)
 
-            return make_response(jsonify(
-                {
+            return {
                     'status': True,
                     'message': 'Tipos de produtos carregadas com sucesso.',
                     'data': {
@@ -41,8 +40,7 @@ class StockTypeUseCase:
                         'total_pages': math.ceil(total / limit)
                     }
 
-                }
-            ), 201)
+            }, 201
         except Exception as exc:
             return make_response(jsonify(
                 {

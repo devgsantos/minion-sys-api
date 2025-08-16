@@ -23,33 +23,48 @@ class BudgetUseCase:
     # USAR A SERIALIZAÇÃO DESTA FUNÇÃO COMO BASE PARA AS OUTRAS
     def get_all_budget(self):
         try:
-            page = int(request.args.get('pagina')) if request.args.get('pagina') else 1
-            limit = int(request.args.get('limite')) if request.args.get('limite') else 10
-            budgets, total = self.operations.findMany(self.budget_model, page, limit, empresa_id=request.args.get('empresa_id'))
+            page = int(request.args.get('pagina', 1))
+            limit = int(request.args.get('limite', 10))
+            has_sale = request.args.get('venda')
+            
+            # Criar um dicionário de filtros base
+            filters = {'empresa_id': request.args.get('empresa_id')}
+            
+            # Adicionar filtro por cliente se existir
+            if request.args.get('cliente_id'):
+                filters['cliente_id'] = request.args.get('cliente_id')
+
+            # Executar a consulta com os filtros dinâmicos
+            budgets, total = self.operations.findMany(self.budget_model, page, limit, **filters)
+            
             budgets_array = [OrcamentoBaseModel.from_orm(budget).dict() for budget in budgets]
 
-            return make_response(jsonify(
-                {
-                    'status': True,
-                    'message': 'Orçamentos carregados com sucesso.',
-                    'data': {
-                        'result': budgets_array,
-                        'page': page,
-                        'limit': limit,
-                        'total': total,
-                        'total_pages': math.ceil(total / limit)
-                    }
-
+            # Tratar o filtro de vendas
+            if has_sale:
+                if has_sale == 'true':
+                    # Orçamentos com venda (venda_id não é nulo)
+                    budgets_array = list(filter(lambda b: b['venda_id'] is not None, budgets_array))
+                elif has_sale == 'false':
+                    # Orçamentos sem venda (venda_id é nulo)
+                    budgets_array = list(filter(lambda b: b['venda_id'] is None, budgets_array))
+                    
+            return {
+                'status': True,
+                'message': 'Orçamentos carregados com sucesso.',
+                'data': {
+                    'result': budgets_array,
+                    'page': page,
+                    'limit': limit,
+                    'total': total,
+                    'total_pages': math.ceil(total / limit)
                 }
-            ), 201)
+            }, 200
         except Exception as exc:
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     def save_budget(self, orcamento_id: Optional[int] = None):
         try:
@@ -58,8 +73,10 @@ class BudgetUseCase:
             request.json['responsavel_cadastro_id'] = user.get('login_id')
 
             # Separar produtos e serviços do orçamento
-            products_items = [item for item in request.json.get('orcamento_itens', []) if item['tipo'] == 'produto']
-            services_items = [item for item in request.json.get('orcamento_itens', []) if item['tipo'] == 'servico']
+            request_itens = request.json.get('orcamento_itens', [])
+            normalized_itens = self.normalize_orcamento_itens(request_itens)
+            products_items = [item for item in normalized_itens if 'produto_id' in item]
+            services_items = [item for item in normalized_itens if 'servico_id' in item]
 
             # Calcula o valor do orçamento
             budget_value = self.calculate_items_value(products_items, services_items)
@@ -132,23 +149,20 @@ class BudgetUseCase:
             budget_value = self.calculate_items_value(products_items, services_items)
 
             # Retorna uma resposta de sucesso
-            return make_response(jsonify(
-                {
-                    'status': True,
-                    'message': 'Orçamento salvo com sucesso.'
-                }
-            ), 200 if orcamento_id else 201)
+            return {
+                'status': True,
+                'message': 'Orçamento salvo com sucesso.',
+                'data': OrcamentoBaseModel.from_orm(result).dict()
+            }, 200 if orcamento_id else 201
 
         except Exception as exc:
             # Loga e retorna uma resposta de erro
             self.logger.log(message=str(exc), level='error')
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     def calculate_items_value(self, products_items, services_items):
         try:
@@ -208,22 +222,17 @@ class BudgetUseCase:
                     'quantidade_orcamento': [item['quantidade_orcamento'] for item in services_items]  # Quantidades correspondentes
                 }
                 services_items_result = self.operations.insert(self.budget_item_model, **data_insert)
-            return make_response(jsonify(
-                {
-                    'status': True,
-                    'message': 'Orçamento criado com sucesso.'
-                }
-            ), 201)
+            return {
+                'status': True,
+                'message': 'Orçamento criado com sucesso.'
+            }, 201
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
-
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     # LEGADO
     def update_budget(self, orcamento_id: int):
@@ -292,23 +301,19 @@ class BudgetUseCase:
                 )
 
             # Retorna resposta de sucesso
-            return make_response(jsonify(
-                {
-                    'status': True,
-                    'message': 'Orçamento atualizado com sucesso.'
-                }
-            ), 200)
+            return {
+                'status': True,
+                'message': 'Orçamento atualizado com sucesso.'
+            }, 200
 
         except Exception as exc:
             # Loga e retorna uma resposta de erro
             self.logger.log(message=str(exc), level='error')
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
 
         except Exception as exc:
@@ -327,31 +332,24 @@ class BudgetUseCase:
         try:
             delete_budget = self.operations.soft_delete(self.budget_model, request.args.get('orcamento_id'), request.args.get('empresa_id'))
             if delete_budget:
-                return make_response(jsonify(
-                    {
-                        'status': True,
-                        'message': 'Orçamento excluído com sucesso.'
-                    }
-                ), 201)
+                return {
+                    'status': True,
+                    'message': 'Orçamento excluído com sucesso.'
+                }, 201
             else:
                 self.logger.log(message=f"Falha ao excluir orçamento.", level='error')
 
-                return make_response(jsonify(
-                    {
-                        'status': False,
-                        'message': 'Falha ao excluir orçamento.',
-                    }
-                ), 500)
+                return {
+                    'status': False,
+                    'message': 'Falha ao excluir orçamento.',
+                }, 500
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
-
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 
     def calculate_items_value(self, products_items, services_items):
         products_value = 0
@@ -365,3 +363,22 @@ class BudgetUseCase:
             services, services_count = self.operations.findManyNoffset(self.service_model, servico_id=services_ids)
             services_value = sum(service.preco_mao_de_obra for service in services)
         return products_value + services_value
+    
+    def normalize_orcamento_itens(self, orcamento_itens):
+        result = []
+        for item in orcamento_itens:
+            if 'tipo' in item and 'item_id' in item:
+                if item['tipo'] == 'produto':
+                    result.append({
+                        'produto_id': item['item_id'],
+                        'quantidade_orcamento': item['quantidade_orcamento']
+                    })
+                elif item['tipo'] == 'servico':
+                    result.append({
+                        'servico_id': item['item_id'],
+                        'quantidade_orcamento': item['quantidade_orcamento']
+                    })
+            else:
+                result.append(item)
+        return result
+

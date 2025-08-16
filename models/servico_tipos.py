@@ -22,7 +22,6 @@ class ServicoTipoBaseModel(BaseModel):
     servico_tipo_id: int
     titulo: constr(max_length=300)
     descricao: Optional[constr(max_length=500)]
-    imagem: Optional[str]
     data_cadastro: datetime
     data_atualizacao: Optional[datetime]
     responsavel_cadastro_id: int
@@ -36,6 +35,7 @@ class ServicoTipoBaseModel(BaseModel):
         from_attributes = True
 
 class ServicoTipoRequestModel(BaseModel):
+    servico_tipo_id: Optional[int] = None
     titulo: constr(max_length=300)
     descricao: Optional[constr(max_length=500)]
     empresa_id: int

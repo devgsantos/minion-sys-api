@@ -7,16 +7,19 @@ from app.shared.middlewares.auth import auth_decorator
 from app.shared.middlewares.user_company_validator import user_company_validator
 from app.shared.middlewares.dto import dto_decorator
 from models import ProdutoRequestModel
+from flask_restx import Resource
 
 class ProductResource(Resource):
 
     @auth_decorator
     @user_company_validator
     def get(self, action=None):
-        if action == 'por_id':
+        if action == 'por-id':
             return ProductUseCase().get_by_id()
         elif action == 'todos':
             return ProductUseCase().get_all_product()
+        elif action == 'encontrar-novo-produto':
+            return ProductUseCase().search_by_ean_fallback()
 
     @auth_decorator
     @user_company_validator

@@ -15,11 +15,19 @@ class SalesResource(Resource):
             return SalesUseCase().get_by_id()
         elif action == 'todos':
             return SalesUseCase().get_all_sales()
+        elif action == 'status':
+            return SalesUseCase().get_all_sales_status()
 
     @auth_decorator
     @user_company_validator
     @dto_decorator(VendaRequestBaseModel)
     def post(self):
+        return SalesUseCase().save_sale()
+    
+    @auth_decorator
+    @user_company_validator
+    @dto_decorator(VendaRequestBaseModel)
+    def put(self):
         return SalesUseCase().save_sale()
 
     @auth_decorator

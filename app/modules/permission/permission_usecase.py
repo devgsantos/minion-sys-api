@@ -22,28 +22,18 @@ class PermissionUseCase:
                 permissions.append({'login_id': request.json['login_id'], 'permissao_id':permission_id})
             insert_permissions = self.operations.insert(self.login_permission_model, permissions=permissions)
             if len(insert_permissions) > 0:
-                return make_response(
-                    jsonify({
-                        {
-                            'status': True,
-                            'message': 'Permissões atualizadas com sucesso.'
-                        }
-                    }), 200
-                )
+                return {
+                    'status': True,
+                    'message': 'Permissões atualizadas com sucesso.'
+                }, 200
             else:
-                return make_response(
-                    jsonify({
-                        {
-                            'status': False,
-                            'message': 'Nenhuma linha adicionada'
-                        }
-                    }), 204
-                )
-        except Exception as exc:
-            return jsonify(
-                {
+                return {
                     'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500
+                    'message': 'Nenhuma linha adicionada'
+                }, 204
+        except Exception as exc:
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500

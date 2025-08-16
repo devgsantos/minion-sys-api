@@ -4,7 +4,7 @@ from pydantic import BaseModel, constr, field_validator
 from sqlalchemy import Column, func,  Integer, String, Numeric, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from models.base import Base
-from typing import List, Optional
+from typing import List, Optional, Dict
 from app.shared.helpers.validators import format_datetime
 from .produto_categorias_model import ProdutoCategoriaBaseModel
 from .soft_delete import SoftDeleteQuery
@@ -27,7 +27,7 @@ class ProdutoSubcategoriaModel(Base, SoftDeleteQuery):
     status = Column('status', Boolean, default=True)
     data_exclusao = Column('data_exclusao', DateTime)
 
-    categoria = relationship('ProdutoCategoriaModel')
+    produto_categoria = relationship('ProdutoCategoriaModel')
 
 class ProdutoSubcategoriaBaseModel(BaseModel):
     produto_subcategoria_id: int
@@ -43,6 +43,9 @@ class ProdutoSubcategoriaBaseModel(BaseModel):
     status: Optional[bool]
     data_exclusao: Optional[datetime]
 
+    produto_categoria: Optional[ProdutoCategoriaBaseModel]
+
+
     @field_validator('data_cadastro', 'data_atualizacao', 'data_exclusao')
     def format_datetime(cls, value):
         return format_datetime(value)
@@ -53,8 +56,37 @@ class ProdutoSubcategoriaBaseModel(BaseModel):
 class ProdutoSubcategoriaRequestModel(BaseModel):
     titulo: constr(max_length=300)
     descricao: Optional[constr(max_length=500)]
-    imagem: Optional[str]
+    imagem: Optional[Dict[str, str]] = None
     sigla: str
     empresa_id: int
     produto_categoria_id: int
+
+    @field_validator('imagem')
+    def validate_imagem(cls, value):
+        if value is None:
+            return None
+        
+        # Verificar se é um dicionário válido
+        if not isinstance(value, dict):
+            raise ValueError('Campo imagem deve ser um objeto com as propriedades: tipo, arquivo')
+        
+        # Verificar se tem as chaves obrigatórias
+        required_keys = {'tipo', 'arquivo'}
+        if not all(key in value for key in required_keys):
+            missing_keys = required_keys - set(value.keys())
+            raise ValueError(f'Campos obrigatórios faltando em imagem: {missing_keys}')
+        
+        # Verificar se os valores são strings
+        for key, val in value.items():
+            if not isinstance(val, str):
+                raise ValueError(f'Campo {key} em imagem deve ser string')
+        
+        # Verificar se arquivo não está vazio
+        if not value['arquivo'].strip():
+            raise ValueError('Campo arquivo em imagem não pode estar vazio')
+        
+        return value
+
+    class Config:
+        from_attributes = True
 

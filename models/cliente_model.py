@@ -1,9 +1,10 @@
+from app.shared.helpers.validators import format_datetime
 from sqlalchemy import func, Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import sessionmaker, scoped_session, relationship
 from datetime import datetime
 
 from models.base import Base
-from pydantic import BaseModel, EmailStr, constr
+from pydantic import BaseModel, EmailStr, constr, field_validator
 from typing import Optional
 
 from models.soft_delete import SoftDeleteQuery
@@ -27,7 +28,8 @@ class ClienteModel(Base, SoftDeleteQuery):
     cnpj = Column('cnpj', String, nullable=True)
     pais_id = Column('nacionalidade', Integer, ForeignKey('pais.pais_id'), nullable=False)
     naturalidade = Column('naturalidade', String(100), nullable=False)
-    responsavel_cadastro = Column('responsavel_cadastro', String, nullable=True)
+    empresa_id = Column('empresa_id', Integer, ForeignKey('empresa.empresa_id'), nullable=False)
+    responsavel_cadastro_id = Column('responsavel_cadastro', Integer, ForeignKey('login.login_id'),nullable=True)
     data_cadastro = Column('data_cadastro', DateTime(timezone=False), default=func.now(), nullable=False)
     data_atualizacao = Column('data_atualizacao', DateTime(timezone=False), onupdate=func.now())
     data_exclusao = Column('data_exclusao', DateTime(timezone=False), nullable=True, default=None)
@@ -47,14 +49,18 @@ class ClienteBaseModel(BaseModel):
     telefone: str
     cpf: Optional[str]
     cnpj: Optional[str]
-    pais_id: Optional[PaisBaseModel]
+    pais_id: int
+    empresa_id: int
     naturalidade: constr(max_length=100)
-    responsavel_cadastro: Optional[str]
+    responsavel_cadastro_id: int
     data_cadastro: datetime
     data_atualizacao: Optional[datetime]
-    status: int
-    lead_conversao: Optional[int]
+    lead_id: Optional[int]
     data_exclusao: Optional[datetime]
+
+    @field_validator('data_cadastro', 'data_atualizacao', 'data_exclusao')
+    def format_datetime(cls, value):
+        return format_datetime(value)
 
     class Config:
         from_attributes = True
@@ -65,6 +71,25 @@ class ClienteServicoBaseModel(BaseModel):
     nome: constr(max_length=500)
     cpf: Optional[str]
     cnpj: Optional[str]
+
+    class Config:
+        from_attributes = True
+
+class ClienteRequestModel(BaseModel):
+    cliente_id: Optional[int]
+    email: EmailStr
+    nome: constr(max_length=500)
+    logradouro: constr(max_length=300)
+    numero_endereco: constr(max_length=10)
+    bairro: constr(max_length=100)
+    cidade: constr(max_length=100)
+    uf: constr(max_length=2)
+    telefone: str
+    cpf: Optional[str] = None
+    cnpj: Optional[str] = None
+    nacionalidade: int
+    naturalidade: constr(max_length=100)
+    empresa_id: int
 
     class Config:
         from_attributes = True
