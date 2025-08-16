@@ -203,6 +203,10 @@ class ProductSubcategoryUseCase:
             # Remover o ID dos dados de atualização para evitar duplicação
             subcategory_data = {key: value for key, value in data.items() if key != 'produto_subcategoria_id'}
             
+            # Verificar se subcategory_data é um dicionário válido
+            if not isinstance(subcategory_data, dict):
+                subcategory_data = {}
+            
             # Atualizar subcategoria
             update_subcategory = self.operations.update(self.product_subcategory_model, data['produto_subcategoria_id'], **subcategory_data)
             
@@ -233,7 +237,7 @@ class ProductSubcategoryUseCase:
                 # Verificar se o upload foi bem-sucedido
                 if upload_result.get('status'):
                     # Atualizar a subcategoria com o caminho da imagem
-                    self.operations.update(self.product_subcategory_model, data['produto_subcategoria_id'], imagem=upload_result.get('file_path', ''))
+                    update_subcategory = self.operations.update(self.product_subcategory_model, data['produto_subcategoria_id'], imagem=upload_result.get('file_path', ''))
                 else:
                     # Log do erro, mas não falha a atualização da subcategoria
                     self.logger.log(message=f"Erro no upload da imagem: {upload_result.get('message', 'Erro desconhecido')}", level='warning')

@@ -159,6 +159,10 @@ class ProductTypeUseCase:
             # Remover o ID dos dados de atualização para evitar duplicação
             type_data = {key: value for key, value in data.items() if key != 'produto_tipo_id'}
             
+            # Verificar se type_data é um dicionário válido
+            if not isinstance(type_data, dict):
+                type_data = {}
+            
             # Atualizar tipo de produto
             update_type = self.operations.update(self.product_type_model, data['produto_tipo_id'], **type_data)
             

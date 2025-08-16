@@ -157,6 +157,10 @@ class ProductCategoryUseCase:
             # Remover o ID dos dados de atualização para evitar duplicação
             category_data = {key: value for key, value in data.items() if key != 'produto_categoria_id'}
             
+            # Verificar se category_data é um dicionário válido
+            if not isinstance(category_data, dict):
+                category_data = {}
+            
             # Atualizar categoria
             update_category = self.operations.update(self.product_category_model, data['produto_categoria_id'], **category_data)
             
@@ -187,7 +191,7 @@ class ProductCategoryUseCase:
                 # Verificar se o upload foi bem-sucedido
                 if upload_result.get('status'):
                     # Atualizar a categoria com o caminho da imagem
-                    self.operations.update(self.product_category_model, data['produto_categoria_id'], imagem=upload_result.get('file_path', ''))
+                    update_category = self.operations.update(self.product_category_model, data['produto_categoria_id'], imagem=upload_result.get('file_path', ''))
                 else:
                     # Log do erro, mas não falha a atualização da categoria
                     self.logger.log(message=f"Erro no upload da imagem: {upload_result.get('message', 'Erro desconhecido')}", level='warning')

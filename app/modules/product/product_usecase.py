@@ -192,6 +192,7 @@ class ProductUseCase:
                     arquivo=image_data['arquivo'],
                     nome_arquivo=file_name,
                     empresa_id=str(data.get('empresa_id', '')),
+                    sku=data.get('sku', ''),  # Usar SKU do produto atualizado
                     produto_id=data['produto_id']  # Usar o ID do produto sendo atualizado
                 )
                 

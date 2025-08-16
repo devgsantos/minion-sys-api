@@ -107,7 +107,7 @@ class FileRepositoryUseCase:
             self.logger.log(message=str(exc), level='error')
             return make_response(jsonify({"status": False, "message": f"Falha ao salvar arquivo: {str(exc)}"}), 500)
 
-    def upload_image_str(self, tipo=None, arquivo=None, nome_arquivo=None, empresa_id=None, produto_id=None):
+    def upload_image_str(self, tipo=None, arquivo=None, nome_arquivo=None, empresa_id=None, sku=None, produto_id=None):
         try:
             # Usar parâmetros diretos ou dados do request
             file_type = tipo or (request.json and request.json.get('tipo'))
@@ -151,9 +151,28 @@ class FileRepositoryUseCase:
                 # Remove o prefixo data:image/xxx;base64,
                 base64_file = base64_file.split(',', 1)[1]
 
+            # Validar e limpar string base64
             try:
+                # Remover espaços em branco e quebras de linha
+                base64_file = base64_file.strip().replace(' ', '').replace('\n', '').replace('\r', '')
+                
+                # Verificar se contém apenas caracteres válidos de base64
+                import re
+                if not re.match(r'^[A-Za-z0-9+/]*={0,2}$', base64_file):
+                    raise ValueError("String contém caracteres inválidos para base64")
+                
+                # Verificar se o comprimento é válido (múltiplo de 4 após padding)
+                missing_padding = len(base64_file) % 4
+                if missing_padding:
+                    base64_file += '=' * (4 - missing_padding)
+                
                 # Decodificar base64
                 file_data = base64.b64decode(base64_file)
+                
+                # Verificar se os dados decodificados não estão vazios
+                if not file_data:
+                    raise ValueError("Dados decodificados estão vazios")
+                    
             except Exception as e:
                 result = {
                     'status': False,
@@ -179,7 +198,7 @@ class FileRepositoryUseCase:
 
             # Se produto_id foi fornecido, usar estrutura específica para produtos
             if produto_id and file_type == 'produto':
-                product_folder_name = f"produto_{produto_id}"
+                product_folder_name = f"{sku}_{produto_id}"
                 product_folder = os.path.join(company_folder, product_folder_name)
                 os.makedirs(product_folder, exist_ok=True)
                 

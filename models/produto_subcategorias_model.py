@@ -27,7 +27,7 @@ class ProdutoSubcategoriaModel(Base, SoftDeleteQuery):
     status = Column('status', Boolean, default=True)
     data_exclusao = Column('data_exclusao', DateTime)
 
-    categoria = relationship('ProdutoCategoriaModel')
+    produto_categoria = relationship('ProdutoCategoriaModel')
 
 class ProdutoSubcategoriaBaseModel(BaseModel):
     produto_subcategoria_id: int
@@ -42,6 +42,9 @@ class ProdutoSubcategoriaBaseModel(BaseModel):
     empresa_id: int
     status: Optional[bool]
     data_exclusao: Optional[datetime]
+
+    produto_categoria: Optional[ProdutoCategoriaBaseModel]
+
 
     @field_validator('data_cadastro', 'data_atualizacao', 'data_exclusao')
     def format_datetime(cls, value):
