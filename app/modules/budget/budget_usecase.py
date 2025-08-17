@@ -1,12 +1,14 @@
 import math
 from typing import Optional
+from datetime import datetime
 
 from flask import request, jsonify, make_response
+from sqlalchemy import func
 
 from app.shared.helpers.functions import Functions
 from app.shared.helpers.model_operations import ModelOperations
 from app.shared.singletons.logger import Logger
-from models import OrcamentoModel, OrcamentoItemModel, OrcamentoBaseModel, ProdutoModel, ServicoModel
+from models import OrcamentoModel, OrcamentoItemModel, OrcamentoBaseModel, ProdutoModel, ServicoModel, OrcamentoStatusModel, OrcamentoStatusBaseModel
 
 
 class BudgetUseCase:
@@ -15,13 +17,14 @@ class BudgetUseCase:
         self.operations = ModelOperations()
         self.functions = Functions()
         self.budget_model = OrcamentoModel
+        self.budget_status_model = OrcamentoStatusModel
         self.budget_item_model = OrcamentoItemModel
         self.product_model = ProdutoModel
         self.service_model = ServicoModel
 
 
     # USAR A SERIALIZAÇÃO DESTA FUNÇÃO COMO BASE PARA AS OUTRAS
-    def get_all_budget(self):
+    def get_all_budgets(self):
         try:
             page = int(request.args.get('pagina', 1))
             limit = int(request.args.get('limite', 10))
@@ -71,6 +74,20 @@ class BudgetUseCase:
             # Decodifica o token e define o responsável pela ação
             user = self.functions.token_decript()
             request.json['responsavel_cadastro_id'] = user.get('login_id')
+
+            # Verificar se é uma atualização e se o orçamento já está aprovado
+            if orcamento_id or request.json.get('orcamento_id'):
+                existing_budget_id = orcamento_id or request.json.get('orcamento_id')
+                existing_budget = self.operations.findOne(self.budget_model, orcamento_id=existing_budget_id)
+                
+                # Importar enum para verificar status
+                from app.shared.enums.budget_status_enum import BudgetStatusEnum
+                
+                if existing_budget and existing_budget.orcamento_status_id == BudgetStatusEnum.APROVADO.value:
+                    return {
+                        'status': False,
+                        'message': 'Operação não permitida: o orçamento já foi aprovado e não pode ser alterado.'
+                    }, 403
 
             # Separar produtos e serviços do orçamento
             request_itens = request.json.get('orcamento_itens', [])
@@ -147,6 +164,64 @@ class BudgetUseCase:
                 )
 
             budget_value = self.calculate_items_value(products_items, services_items)
+
+            # Verificar se o status do orçamento é APROVADO (1) para criar venda automaticamente
+            from app.shared.enums.budget_status_enum import BudgetStatusEnum
+            if request.json.get('orcamento_status_id') == BudgetStatusEnum.APROVADO.value:
+                # Verificar se já existe uma venda para este orçamento
+                from models import VendaModel
+                existing_sale = self.operations.findOne(VendaModel, orcamento_id=orcamento_id)
+                
+                if not existing_sale:
+                    # Criar venda automaticamente
+                    from app.modules.sales.sales_usecase import SalesUseCase
+                    sales_usecase = SalesUseCase()
+                    
+                    # Preparar dados para criação da venda
+                    sale_data = {
+                        'orcamento_id': orcamento_id,
+                        'empresa_id': result.empresa_id,
+                        'valor': budget_value,
+                        'gera_ordem_servico': False,  # Valor padrão
+                        'venda_status_id': 1  # Status padrão da venda
+                    }
+                    
+                    # Temporariamente substituir request.json para a criação da venda
+                    original_json = request.json
+                    request.json = sale_data
+                    
+                    try:
+                        # Criar a venda
+                        sale_result, sale_status = sales_usecase.save_sale()
+                        
+                        # Restaurar request.json original
+                        request.json = original_json
+                        
+                        if sale_result['status']:
+                            # Atualizar o orçamento com o ID da venda criada
+                            venda_id = sale_result['data']['venda_id']
+                            self.operations.update(
+                                self.budget_model,
+                                result.orcamento_id,
+                                venda_id=venda_id,
+                                data_aprovacao_reprovacao=func.now()
+                            )
+                            
+                            return {
+                                'status': True,
+                                'message': 'Orçamento salvo com sucesso e venda criada automaticamente.',
+                                'data': {
+                                    'orcamento': OrcamentoBaseModel.from_orm(result).dict(),
+                                    'venda': sale_result['data']
+                                }
+                            }, 200 if orcamento_id else 201
+                        else:
+                            # Se falhou em criar a venda, ainda retornar sucesso do orçamento
+                            self.logger.log(message=f"Erro ao criar venda automaticamente: {sale_result['message']}", level='warning')
+                    except Exception as e:
+                        # Restaurar request.json original em caso de erro
+                        request.json = original_json
+                        self.logger.log(message=f"Erro ao criar venda automaticamente: {str(e)}", level='warning')
 
             # Retorna uma resposta de sucesso
             return {
@@ -381,4 +456,20 @@ class BudgetUseCase:
             else:
                 result.append(item)
         return result
+    
+    def get_all_budget_status(self):
+        try:
+            status_list = self.operations.findAll(self.budget_status_model)
+            return {
+                'status': True,
+                'message': 'Status de orçamentos carregados com sucesso.',
+                'data': [OrcamentoStatusBaseModel.from_orm(status).dict() for status in status_list]
+            }, 200
+        except Exception as exc:
+            self.logger.log(message=str(exc), level='error')
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
 

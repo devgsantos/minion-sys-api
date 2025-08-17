@@ -54,6 +54,15 @@ class SalesUseCase:
             budget_id = request.json.get('orcamento_id')
             budget = self.operations.findOne(self.budget_model, orcamento_id=budget_id)
 
+            # Verifica se já existe uma venda associada ao orçamento
+            if budget_id:
+                existing_sale = self.operations.findOne(self.sales_model, orcamento_id=budget_id)
+                if existing_sale and not venda_id:
+                    return {
+                        'status': False,
+                        'message': f'Já existe uma venda (ID: {existing_sale.venda_id}) associada a este orçamento.'
+                    }, 409  # Conflict
+
             # Verifica o status do orçamento usando os enums
             from app.shared.enums.budget_status_enum import BudgetStatusEnum
             
@@ -63,7 +72,7 @@ class SalesUseCase:
                     'message': 'Operação não permitida: o orçamento já foi reprovado.'
                 }, 403
 
-            if budget.orcamento_status_id == BudgetStatusEnum.APROVADO.value:
+            if budget.orcamento_status_id == BudgetStatusEnum.APROVADO.value and not venda_id:
                 return {
                     'status': False,
                     'message': 'Operação não permitida: o orçamento já foi aprovado.'

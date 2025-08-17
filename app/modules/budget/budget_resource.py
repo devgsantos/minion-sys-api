@@ -14,7 +14,9 @@ class BudgetResource(Resource):
         if action == 'por_id':
             return BudgetUseCase().get_by_id()
         elif action == 'todos':
-            return BudgetUseCase().get_all_budget()
+            return BudgetUseCase().get_all_budgets()
+        elif action == 'listar-status':
+            return BudgetUseCase().get_all_budget_status()
 
     @auth_decorator
     @user_company_validator

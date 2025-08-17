@@ -54,6 +54,7 @@ class OrcamentoBaseModel(BaseModel):
     data_cadastro: datetime
     data_entrega: Optional[datetime]
     valor: float = Field(default=0, ge=0)
+    desconto: float = Field(default=0, ge=0)
     data_aprovacao_reprovacao: Optional[datetime]
     data_atualizacao: Optional[datetime]
     data_exclusao: Optional[datetime]
@@ -72,10 +73,12 @@ class OrcamentoBaseModel(BaseModel):
 
 class ProdutoItemOrcamentoModel(BaseModel):
     produto_id: int
+    titulo: str
     quantidade_orcamento: int
 
 class ServicoItemOrcamentoModel(BaseModel):
     servico_id: int
+    titulo: str
     quantidade_orcamento: int
 
 class OrcamentoItensRequest(BaseModel):
