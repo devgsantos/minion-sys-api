@@ -38,15 +38,22 @@ class ModelOperations:
         #     session.close()
 
     # Buscar todos os registros de um modelo
-    def findAll(self, model: Type[Base]) -> List[Any]:
+    def findAll(self, model: Type[Base], order_by: str = 'data_criacao') -> List[Any]:
         with self.session_scope() as session:
 
             # Retorno o total de registros
             total_count = session.query(func.count(f'{getattr(model, "__tablename__", None)}_id')) \
                 .filter(model.data_exclusao.is_(None)).scalar()
 
-            # Consulta para obter os resultados paginados
-            results = session.query(model).options(joinedload('*')).filter(model.data_exclusao.is_(None)).all()
+            # Consulta para obter os resultados ordenados
+            query = session.query(model).options(joinedload('*')).filter(model.data_exclusao.is_(None))
+            
+            # Aplicar ordenação - padrão: mais recente primeiro
+            if hasattr(model, order_by):
+                order_column = getattr(model, order_by)
+                query = query.order_by(order_column.desc())
+            
+            results = query.all()
 
             return results, total_count
 
@@ -65,7 +72,7 @@ class ModelOperations:
             except NoResultFound:
                 return None
 
-    def findMany(self, model: Type[Base], page: int = 1, limit: int = 10, **kwargs) -> Tuple[Optional[List[Any]], int]:
+    def findMany(self, model: Type[Base], page: int = 1, limit: int = 10, order_by: str = 'data_criacao', **kwargs) -> Tuple[Optional[List[Any]], int]:
         with self.session_scope() as session:
             offset = (page - 1) * limit
 
@@ -86,7 +93,7 @@ class ModelOperations:
 
                 total_count = query_count.scalar()  # Total de registros com base nos filtros aplicados
 
-                # Consulta para obter os resultados paginados
+                # Consulta para obter os resultados paginados e ordenados
                 query_results = session.query(model)
                 query_results = query_results.filter(model.data_exclusao.is_(None))
 
@@ -98,7 +105,13 @@ class ModelOperations:
                         else:
                             query_results = query_results.filter(column == value)
 
+                # Aplicar ordenação - padrão: mais recente primeiro
+                if hasattr(model, order_by):
+                    order_column = getattr(model, order_by)
+                    query_results = query_results.order_by(order_column.desc())
+
                 results = query_results.offset(offset).limit(limit).all()
+                return results, total_count
                 return results, total_count
             except NoResultFound:
                 return None, 0
@@ -106,7 +119,7 @@ class ModelOperations:
                 print(f"Erro ao executar a consulta: {e}")
                 raise
 
-    def findManyNoffset(self, model: Type[Base], **kwargs) -> Tuple[Optional[List[Any]], int]:
+    def findManyNoffset(self, model: Type[Base], order_by: str = 'data_criacao', **kwargs) -> Tuple[Optional[List[Any]], int]:
         with self.session_scope() as session:
             try:
                 # Aplica o filtro de soft delete (data_exclusao IS NULL) automaticamente
@@ -123,10 +136,15 @@ class ModelOperations:
                     else:
                         raise ValueError(f"Campo '{key}' não encontrado no modelo.")
 
+                # Aplicar ordenação - padrão: mais recente primeiro
+                if hasattr(model, order_by):
+                    order_column = getattr(model, order_by)
+                    query = query.order_by(order_column.desc())
+
                 # Executa a contagem total de registros com base nos filtros
                 total_count = query.count()
 
-                # Obter todos os resultados filtrados
+                # Obter todos os resultados filtrados e ordenados
                 results = query.all()
 
                 return results, total_count
@@ -144,6 +162,7 @@ class ModelOperations:
             limit: int = 10,
             search_term: Optional[str] = None,
             search_fields: Optional[List[str]] = None,
+            order_by: str = 'data_criacao',
             **kwargs
     ) -> Tuple[Optional[List[Any]], int]:
         with self.session_scope() as session:
@@ -179,7 +198,7 @@ class ModelOperations:
 
                 total_count = query_count.scalar()
 
-                # Consulta para resultados paginados
+                # Consulta para resultados paginados e ordenados
                 query_results = session.query(model)
                 query_results = query_results.filter(model.data_exclusao.is_(None))
 
@@ -201,7 +220,13 @@ class ModelOperations:
                     if like_filters:
                         query_results = query_results.filter(or_(*like_filters))
 
+                # Aplicar ordenação - padrão: mais recente primeiro
+                if hasattr(model, order_by):
+                    order_column = getattr(model, order_by)
+                    query_results = query_results.order_by(order_column.desc())
+
                 results = query_results.offset(offset).limit(limit).all()
+                return results, total_count
                 return results, total_count
             except NoResultFound:
                 return None, 0
@@ -216,6 +241,7 @@ class ModelOperations:
             limit: int = 10,
             search_term: Optional[str] = None,
             search_fields: Optional[List[str]] = None,
+            order_by: str = 'data_criacao',
             **kwargs
     ) -> Tuple[Optional[List[Any]], int]:
         with self.session_scope() as session:
@@ -260,7 +286,7 @@ class ModelOperations:
 
                 total_count = query_count.scalar()
 
-                # Consulta para resultados paginados
+                # Consulta para resultados paginados e ordenados
                 query_results = session.query(model)
                 query_results = query_results.filter(model.data_exclusao.is_(None))
 
@@ -290,7 +316,13 @@ class ModelOperations:
                     if equality_filters:
                         query_results = query_results.filter(or_(*equality_filters))
 
+                # Aplicar ordenação - padrão: mais recente primeiro
+                if hasattr(model, order_by):
+                    order_column = getattr(model, order_by)
+                    query_results = query_results.order_by(order_column.desc())
+
                 results = query_results.offset(offset).limit(limit).all()
+                return results, total_count
                 return results, total_count
             except NoResultFound:
                 return None, 0
