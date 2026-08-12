@@ -96,6 +96,8 @@ class ModelOperations:
                     if column is not None:
                         if isinstance(value, list):
                             query_count = query_count.filter(column.in_(value))
+                        elif isinstance(value, tuple) and value == ('is_not', None):
+                            query_count = query_count.filter(column.is_not(None))
                         else:
                             query_count = query_count.filter(column == value)
                     else:
@@ -112,6 +114,8 @@ class ModelOperations:
                     if column is not None:
                         if isinstance(value, list):
                             query_results = query_results.filter(column.in_(value))
+                        elif isinstance(value, tuple) and value == ('is_not', None):
+                            query_results = query_results.filter(column.is_not(None))
                         else:
                             query_results = query_results.filter(column == value)
 

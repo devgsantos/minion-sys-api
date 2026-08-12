@@ -6,6 +6,7 @@ from flask import request, jsonify, make_response
 from sqlalchemy import func
 
 from app.shared.helpers.functions import Functions
+from app.shared.helpers.http import InvalidPaginationError, parse_pagination
 from app.shared.helpers.model_operations import ModelOperations
 from app.shared.singletons.logger import Logger
 from models import ClienteModel, OrcamentoModel, OrcamentoItemModel, OrcamentoBaseModel, ProdutoModel, ServicoModel, OrcamentoStatusModel, OrcamentoStatusBaseModel
@@ -27,8 +28,7 @@ class BudgetUseCase:
     # USAR A SERIALIZAÇÃO DESTA FUNÇÃO COMO BASE PARA AS OUTRAS
     def get_all_budgets(self):
         try:
-            page = int(request.args.get('pagina', 1))
-            limit = int(request.args.get('limite', 10))
+            page, limit = parse_pagination(request.args)
             has_sale = request.args.get('venda')
             
             # Criar um dicionário de filtros base
@@ -38,20 +38,18 @@ class BudgetUseCase:
             if request.args.get('cliente_id'):
                 filters['cliente_id'] = request.args.get('cliente_id')
 
+            if has_sale == 'true':
+                filters['venda_id'] = ('is_not', None)
+            elif has_sale == 'false':
+                filters['venda_id'] = None
+            elif has_sale is not None:
+                raise ValueError("'venda' deve ser 'true' ou 'false'.")
+
             # Executar a consulta com os filtros dinâmicos
             budgets, total = self.operations.findMany(self.budget_model, page, limit, **filters)
             
             budgets_array = [OrcamentoBaseModel.from_orm(budget).dict() for budget in budgets]
 
-            # Tratar o filtro de vendas
-            if has_sale:
-                if has_sale == 'true':
-                    # Orçamentos com venda (venda_id não é nulo)
-                    budgets_array = list(filter(lambda b: b['venda_id'] is not None, budgets_array))
-                elif has_sale == 'false':
-                    # Orçamentos sem venda (venda_id é nulo)
-                    budgets_array = list(filter(lambda b: b['venda_id'] is None, budgets_array))
-                    
             return {
                 'status': True,
                 'message': 'Orçamentos carregados com sucesso.',
@@ -63,6 +61,12 @@ class BudgetUseCase:
                     'total_pages': math.ceil(total / limit)
                 }
             }, 200
+        except (InvalidPaginationError, ValueError) as exc:
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 400
         except Exception as exc:
             return {
                 'status': False,
@@ -443,14 +447,13 @@ class BudgetUseCase:
                 return {
                     'status': True,
                     'message': 'Orçamento excluído com sucesso.'
-                }, 201
+                }, 200
             else:
-                self.logger.log(message=f"Falha ao excluir orçamento.", level='error')
-
                 return {
                     'status': False,
-                    'message': 'Falha ao excluir orçamento.',
-                }, 500
+                    'message': 'Orçamento não encontrado.',
+                    'data': None,
+                }, 404
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
             return {

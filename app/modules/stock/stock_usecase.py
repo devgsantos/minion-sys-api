@@ -3,6 +3,7 @@ import math
 from flask import request
 
 from app.shared.helpers.functions import Functions
+from app.shared.helpers.http import InvalidPaginationError, parse_pagination
 from app.shared.helpers.model_operations import ModelOperations
 from app.shared.singletons.logger import Logger
 from models import EstoqueModel, EstoqueBaseModel, ProdutoModel, OrcamentoModel, OrcamentoItemModel
@@ -21,8 +22,7 @@ class StockUseCase:
     def get_stock_all(self):
         try:
             search_term = request.args.get('termo_pesquisa') if request.args.get('termo_pesquisa') else None
-            page = int(request.args.get('pagina')) if request.args.get('pagina') else 1
-            limit = int(request.args.get('limite')) if request.args.get('limite') else 10
+            page, limit = parse_pagination(request.args)
             
             stocks, total = self.operations.find_many_by_relation(
                 self.stock_model,
@@ -46,6 +46,12 @@ class StockUseCase:
                     'total_pages': math.ceil(total / limit)
                 }
             }, 200
+        except InvalidPaginationError as exc:
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 400
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
             return {
@@ -194,7 +200,7 @@ class StockUseCase:
                 return {
                     'status': False,
                     'message': 'Nenhuma alteração realizada no estoque.'
-                }, 304
+                }, 200
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
             return {

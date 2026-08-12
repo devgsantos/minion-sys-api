@@ -175,6 +175,12 @@ Formato frequente:
 }
 ```
 
+Listagens de clientes, estoque, orcamentos e vendas validam `pagina >= 1` e
+`1 <= limite <= 100`, retornando HTTP 400 para valores invalidos. Leituras e
+exclusoes bem-sucedidas retornam 200, criacoes retornam 201, recursos ausentes
+retornam 404 e conflitos de dominio retornam 409. O filtro de orcamentos com ou
+sem venda e aplicado no SQL antes da contagem e paginacao.
+
 Inconsistencias:
 
 - erros alternam `data` e `result`;
@@ -281,7 +287,7 @@ risco.
 python3 -m compileall -q app models main.py alembic
 ```
 
-Resultado: sucesso. A suite possui 29 testes unitarios e 3 testes de integracao
+Resultado: sucesso. A suite possui 33 testes unitarios e 3 testes de integracao
 PostgreSQL aprovados no CI. Estes validam commit conjunto, rollback por saldo
 insuficiente e duas conversoes concorrentes. Localmente eles permanecem opt-in
 por meio de `TEST_DATABASE_URL`.

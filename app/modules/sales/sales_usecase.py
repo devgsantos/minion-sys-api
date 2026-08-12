@@ -4,6 +4,7 @@ from typing import Optional
 from flask import request, jsonify, make_response
 
 from app.shared.helpers.functions import Functions
+from app.shared.helpers.http import InvalidPaginationError, parse_pagination
 from app.shared.helpers.model_operations import (
     InsufficientStockError,
     ModelOperations,
@@ -29,8 +30,7 @@ class SalesUseCase:
 
     def get_all_sales(self):
         try:
-            page = int(request.args.get('pagina')) if request.args.get('pagina') else 1
-            limit = int(request.args.get('limite')) if request.args.get('limite') else 10
+            page, limit = parse_pagination(request.args)
             sales, total = self.operations.findMany(self.sales_model, page, limit, empresa_id=request.company_id)
             sales_array = [VendaBaseModel.from_orm(sale).dict() for sale in sales]
 
@@ -44,7 +44,13 @@ class SalesUseCase:
                     'total': total,
                     'total_pages': math.ceil(total / limit)
                 }
-            }, 201
+            }, 200
+        except InvalidPaginationError as exc:
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 400
         except Exception as exc:
             return {
                 'status': False,
@@ -188,13 +194,13 @@ class SalesUseCase:
                 return {
                     'status': True,
                     'message': 'Venda excluída com sucesso.'
-                }, 201
+                }, 200
             else:
-                self.logger.log(message="Falha ao excluir venda.", level='error')
                 return {
                     'status': False,
-                    'message': 'Falha ao excluir venda.',
-                }, 500
+                    'message': 'Venda não encontrada.',
+                    'data': None,
+                }, 404
         except Exception as exc:
             self.logger.log(message=str(exc), level='error')
             return {
@@ -205,7 +211,7 @@ class SalesUseCase:
 
     def get_all_sales_status(self):
         try:
-            status_list = self.operations.findMany(self.sales_status_model)
+            status_list, _ = self.operations.findMany(self.sales_status_model)
             return {
                 'status': True,
                 'message': 'Status de vendas carregados com sucesso.',
