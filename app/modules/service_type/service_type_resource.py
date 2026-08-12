@@ -10,6 +10,7 @@ from models import ServicoTipoRequestModel
 class ServiceTypeResource(Resource):
 
     @auth_decorator
+    @user_company_validator
     def get(self, action=None):
         if action == 'por_id':
             return ServiceTypeUseCase().get_service_type_by_id()
@@ -17,6 +18,7 @@ class ServiceTypeResource(Resource):
             return ServiceTypeUseCase().get_service_type_all()
 
     @auth_decorator
+    @user_company_validator
     @dto_decorator(ServicoTipoRequestModel)
     def post(self):
         return ServiceTypeUseCase().create_service_type()

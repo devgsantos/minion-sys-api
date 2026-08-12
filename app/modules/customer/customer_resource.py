@@ -10,6 +10,7 @@ from models import ClienteRequestModel
 class CustomerResource(Resource):
 
     @auth_decorator
+    @user_company_validator
     def get(self, action=None):
         if action == 'por_id':
             return CustomerUseCase().get_customer_by_id()
@@ -17,11 +18,13 @@ class CustomerResource(Resource):
             return CustomerUseCase().get_customer_all()
 
     @auth_decorator
+    @user_company_validator
     @dto_decorator(ClienteRequestModel)
     def post(self):
         return CustomerUseCase().create_customer()
 
     @auth_decorator
+    @user_company_validator
     @dto_decorator(ClienteRequestModel)
     def put(self):
         return CustomerUseCase().update_customer()

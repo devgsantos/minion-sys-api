@@ -24,9 +24,9 @@ class ServiceTypeUseCase:
                 search_fields = ['titulo', 'descricao']
                 types, total = self.operations.findManyByTerm(self.service_type_model, page, limit, search_term,
                                                                  search_fields,
-                                                                 empresa_id=request.args.get('empresa_id'))
+                                                                 empresa_id=request.company_id)
             else:
-                types, total = self.operations.findMany(self.service_type_model, page, limit, empresa_id=request.args.get('empresa_id'))
+                types, total = self.operations.findMany(self.service_type_model, page, limit, empresa_id=request.company_id)
             types_array = [ServicoTipoBaseModel.from_orm(type).dict() for type in types]
 
             return {
@@ -53,6 +53,7 @@ class ServiceTypeUseCase:
     def create_service_type(self):
         try:
             user = self.functions.token_decript()
+            request.json['empresa_id'] = request.company_id
             request.json['responsavel_cadastro_id'] = user.get('login_id')
             self.operations.insert(self.service_type_model, **request.json)
             return {
@@ -69,6 +70,7 @@ class ServiceTypeUseCase:
     def update_service_type(self):
         try:
             user = self.functions.token_decript()
+            request.json['empresa_id'] = request.company_id
             request.json['responsavel_cadastro_id'] = user.get('login_id')
             update_type = self.operations.update(self.service_type_model, request.json['servico_tipo_id'], **request.json)
             if update_type:
@@ -91,7 +93,7 @@ class ServiceTypeUseCase:
 
     def virtual_delete_service_type(self):
         try:
-            delete_type = self.operations.soft_delete(self.service_type_model, request.args.get('servico_tipo_id'), request.args.get('empresa_id'))
+            delete_type = self.operations.soft_delete(self.service_type_model, request.args.get('servico_tipo_id'), request.company_id)
             if delete_type:
                 return {
                     'status': True,

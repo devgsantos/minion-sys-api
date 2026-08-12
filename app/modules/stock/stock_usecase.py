@@ -24,13 +24,14 @@ class StockUseCase:
             page = int(request.args.get('pagina')) if request.args.get('pagina') else 1
             limit = int(request.args.get('limite')) if request.args.get('limite') else 10
             
-            if search_term:
-                # Para pesquisar no estoque, relacionamos com produtos para buscar também pelo nome do produto
-                search_fields = ['produto.nome', 'quantidade_disponivel']
-                stocks, total = self.operations.findManyByTerm(self.stock_model, page, limit, search_term,
-                                                             search_fields)
-            else:
-                stocks, total = self.operations.findMany(self.stock_model, page, limit)
+            stocks, total = self.operations.find_many_by_relation(
+                self.stock_model,
+                self.product_model,
+                self.stock_model.produto_id == self.product_model.produto_id,
+                page,
+                limit,
+                empresa_id=request.company_id,
+            )
             
             stocks_array = [EstoqueBaseModel.from_orm(stock).dict() for stock in stocks]
 
@@ -56,7 +57,7 @@ class StockUseCase:
     def get_stock_by_id(self):
         try:
             stock = self.operations.findOne(self.stock_model, estoque_id=request.args.get('estoque_id'))
-            if stock:
+            if stock and self._find_authorized_product(stock.produto_id):
                 return {
                     'status': True,
                     'message': 'Registro de estoque encontrado com sucesso.',
@@ -78,7 +79,14 @@ class StockUseCase:
 
     def get_stock_by_product(self):
         try:
-            stocks, total = self.operations.findMany(self.stock_model, produto_id=request.args.get('produto_id'))
+            product_id = request.args.get('produto_id')
+            if not self._find_authorized_product(product_id):
+                return {
+                    'status': False,
+                    'message': 'Produto não encontrado.',
+                    'data': None,
+                }, 404
+            stocks, total = self.operations.findMany(self.stock_model, produto_id=product_id)
             
             if stocks:
                 stocks_array = [EstoqueBaseModel.from_orm(stock).dict() for stock in stocks]
@@ -107,7 +115,7 @@ class StockUseCase:
             data = request.json
             
             # Verificar se o produto existe
-            product = self.operations.findOne(self.product_model, produto_id=data['produto_id'])
+            product = self._find_authorized_product(data['produto_id'])
             if not product:
                 return {
                     'status': False,
@@ -166,7 +174,7 @@ class StockUseCase:
             
             # Verificar se o registro de estoque existe
             stock = self.operations.findOne(self.stock_model, estoque_id=data['estoque_id'])
-            if not stock:
+            if not stock or not self._find_authorized_product(stock.produto_id):
                 return {
                     'status': False,
                     'message': f"Registro de estoque ID {data['estoque_id']} não encontrado.",
@@ -197,9 +205,21 @@ class StockUseCase:
 
     def virtual_delete_stock(self):
         try:
-            delete_stock = self.operations.soft_delete(
-                self.stock_model, 
-                request.args.get('estoque_id')
+            stock = self.operations.findOne(
+                self.stock_model,
+                estoque_id=request.args.get('estoque_id'),
+            )
+            if not stock or not self._find_authorized_product(stock.produto_id):
+                return {
+                    'status': False,
+                    'message': 'Registro de estoque não encontrado.',
+                    'data': None,
+                }, 404
+
+            delete_stock = self.operations.soft_delete_where(
+                self.stock_model,
+                estoque_id=stock.estoque_id,
+                produto_id=stock.produto_id,
             )
             
             if delete_stock:
@@ -220,6 +240,13 @@ class StockUseCase:
                 'message': str(exc),
                 'data': None,
             }, 500
+
+    def _find_authorized_product(self, product_id):
+        return self.operations.findOne(
+            self.product_model,
+            produto_id=product_id,
+            empresa_id=request.company_id,
+        )
             
     def check_budget_stock(self):
         """
@@ -268,8 +295,11 @@ class StockUseCase:
         :return: Dicionário com status, mensagem e dados (se aplicável)
         """
         try:
-            # Buscar o orçamento pelo ID
-            budget = self.budget_model.find_by_id(budget_id)
+            budget = self.operations.findOne(
+                self.budget_model,
+                orcamento_id=budget_id,
+                empresa_id=request.company_id,
+            )
             
             if not budget:
                 return {
@@ -278,8 +308,11 @@ class StockUseCase:
                     'data': None
                 }
             
-            # Verificar se o orçamento tem itens
-            if not budget.items or len(budget.items) == 0:
+            budget_items, _ = self.operations.findManyNoffset(
+                self.budget_item_model,
+                orcamento_id=budget_id,
+            )
+            if not budget_items:
                 return {
                     'status': True,
                     'message': 'O orçamento não possui itens.',
@@ -287,7 +320,10 @@ class StockUseCase:
                 }
                 
             # Extrair todos os IDs de produtos do orçamento
-            produto_ids = [item.produto_id for item in budget.items if item.produto_id is not None]
+            produto_ids = [
+                item.produto_id for item in budget_items
+                if item.produto_id is not None
+            ]
             
             if not produto_ids:
                 return {
@@ -297,36 +333,37 @@ class StockUseCase:
                 }
                 
             # Buscar todos os estoques relacionados a esses produtos em uma única consulta
-            estoques = []
-            for produto_id in produto_ids:
-                estoque_items = self.stock_model.find_by_produto_id(produto_id)
-                estoques.extend(estoque_items)
-            
-            # Criar um dicionário para acesso rápido ao estoque por produto_id
             estoque_por_produto = {}
-            for estoque in estoques:
-                if estoque.produto_id in estoque_por_produto:
-                    # Se já existe um registro para esse produto, somamos a quantidade disponível
-                    estoque_por_produto[estoque.produto_id] += estoque.quantidade_disponivel
-                else:
-                    estoque_por_produto[estoque.produto_id] = estoque.quantidade_disponivel
+            for produto_id in set(produto_ids):
+                if not self._find_authorized_product(produto_id):
+                    estoque_por_produto[produto_id] = 0
+                    continue
+                stocks, _ = self.operations.findManyNoffset(
+                    self.stock_model,
+                    produto_id=produto_id,
+                )
+                estoque_por_produto[produto_id] = sum(
+                    stock.quantidade_disponivel for stock in stocks
+                )
             
             # Verificar se cada produto tem estoque suficiente
             produtos_insuficientes = []
-            for item in budget.items:
+            required_by_product = {}
+            for item in budget_items:
                 if not item.produto_id:
                     continue
-                    
-                quantidade_necessaria = item.quantidade or 0
-                quantidade_disponivel = estoque_por_produto.get(item.produto_id, 0)
+                required_by_product[item.produto_id] = (
+                    required_by_product.get(item.produto_id, 0)
+                    + (item.quantidade_orcamento or 0)
+                )
+
+            for produto_id, quantidade_necessaria in required_by_product.items():
+                quantidade_disponivel = estoque_por_produto.get(produto_id, 0)
                 
                 if quantidade_disponivel < quantidade_necessaria:
                     # O produto já está relacionado no objeto do item
-                    nome_produto = item.produto.nome if hasattr(item, 'produto') and item.produto else f"Produto #{item.produto_id}"
-                    
                     produtos_insuficientes.append({
-                        "produto_id": item.produto_id,
-                        "nome_produto": nome_produto,
+                        "produto_id": produto_id,
                         "quantidade_necessaria": quantidade_necessaria,
                         "quantidade_disponivel": quantidade_disponivel
                     })

@@ -27,9 +27,9 @@ class ServiceUseCase:
             if search_term:
                 search_fields = ['titulo', 'descricao', 'sku', 'detalhes_opcionais']
                 services, total = self.operations.findManyByTerm(self.service_model, page, limit, search_term,
-                                                                 search_fields, empresa_id=request.args.get('empresa_id'))
+                                                                 search_fields, empresa_id=request.company_id)
             else:
-                services, total = self.operations.findMany(self.service_model, page, limit, empresa_id=request.args.get('empresa_id'))
+                services, total = self.operations.findMany(self.service_model, page, limit, empresa_id=request.company_id)
             services_array = [ServicoBaseModel.from_orm(service).dict() for service in services]
 
             return {
@@ -54,6 +54,7 @@ class ServiceUseCase:
         try:
             user = self.functions.token_decript()
             data = request.json
+            data['empresa_id'] = request.company_id
             data['responsavel_cadastro_id'] = user.get('login_id')
             service_insert = {key: value for key, value in data.items() if key != 'produtos_relacionados'}
             result = self.operations.insert(self.service_model, **service_insert)
@@ -76,6 +77,7 @@ class ServiceUseCase:
         try:
             user = self.functions.token_decript()
             data = request.json
+            data['empresa_id'] = request.company_id
             data['responsavel_cadastro_id'] = user.get('login_id')
             service_update = {key: value for key, value in data.items() if key != 'produtos_relacionados' and key !='servico_id'}
             self.operations.update(self.service_model, data['servico_id'], **service_update)
@@ -93,7 +95,7 @@ class ServiceUseCase:
 
     def virtual_delete_service(self):
         try:
-            excluir_servico = self.operations.soft_delete(self.service_model, request.args.get('servico_id'), request.args.get('empresa_id'))
+            excluir_servico = self.operations.soft_delete(self.service_model, request.args.get('servico_id'), request.company_id)
             if excluir_servico:
                 return {
                     'status': True,

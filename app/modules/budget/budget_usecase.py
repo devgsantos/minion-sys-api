@@ -8,7 +8,7 @@ from sqlalchemy import func
 from app.shared.helpers.functions import Functions
 from app.shared.helpers.model_operations import ModelOperations
 from app.shared.singletons.logger import Logger
-from models import OrcamentoModel, OrcamentoItemModel, OrcamentoBaseModel, ProdutoModel, ServicoModel, OrcamentoStatusModel, OrcamentoStatusBaseModel
+from models import ClienteModel, OrcamentoModel, OrcamentoItemModel, OrcamentoBaseModel, ProdutoModel, ServicoModel, OrcamentoStatusModel, OrcamentoStatusBaseModel
 
 
 class BudgetUseCase:
@@ -21,6 +21,7 @@ class BudgetUseCase:
         self.budget_item_model = OrcamentoItemModel
         self.product_model = ProdutoModel
         self.service_model = ServicoModel
+        self.customer_model = ClienteModel
 
 
     # USAR A SERIALIZAÇÃO DESTA FUNÇÃO COMO BASE PARA AS OUTRAS
@@ -31,7 +32,7 @@ class BudgetUseCase:
             has_sale = request.args.get('venda')
             
             # Criar um dicionário de filtros base
-            filters = {'empresa_id': request.args.get('empresa_id')}
+            filters = {'empresa_id': request.company_id}
             
             # Adicionar filtro por cliente se existir
             if request.args.get('cliente_id'):
@@ -69,16 +70,65 @@ class BudgetUseCase:
                 'data': None,
             }, 500
 
+    def get_by_id(self):
+        try:
+            budget = self.operations.findOne(
+                self.budget_model,
+                orcamento_id=request.args.get('orcamento_id'),
+                empresa_id=request.company_id,
+            )
+            if budget is None:
+                return {
+                    'status': False,
+                    'message': 'Orçamento não encontrado.',
+                    'data': None,
+                }, 404
+            return {
+                'status': True,
+                'message': 'Orçamento carregado com sucesso.',
+                'data': OrcamentoBaseModel.from_orm(budget).dict(),
+            }, 200
+        except Exception as exc:
+            self.logger.log(message=str(exc), level='error')
+            return {
+                'status': False,
+                'message': str(exc),
+                'data': None,
+            }, 500
+
     def save_budget(self, orcamento_id: Optional[int] = None):
         try:
             # Decodifica o token e define o responsável pela ação
             user = self.functions.token_decript()
+            request.json['empresa_id'] = request.company_id
             request.json['responsavel_cadastro_id'] = user.get('login_id')
+
+            customer = self.operations.findOne(
+                self.customer_model,
+                cliente_id=request.json.get('cliente_id'),
+                empresa_id=request.company_id,
+            )
+            if customer is None:
+                return {
+                    'status': False,
+                    'message': 'Cliente não encontrado.',
+                    'data': None,
+                }, 404
 
             # Verificar se é uma atualização e se o orçamento já está aprovado
             if orcamento_id or request.json.get('orcamento_id'):
                 existing_budget_id = orcamento_id or request.json.get('orcamento_id')
-                existing_budget = self.operations.findOne(self.budget_model, orcamento_id=existing_budget_id)
+                existing_budget = self.operations.findOne(
+                    self.budget_model,
+                    orcamento_id=existing_budget_id,
+                    empresa_id=request.company_id,
+                )
+                if existing_budget is None:
+                    return {
+                        'status': False,
+                        'message': 'Orçamento não encontrado.',
+                        'data': None,
+                    }, 404
                 
                 # Importar enum para verificar status
                 from app.shared.enums.budget_status_enum import BudgetStatusEnum
@@ -103,7 +153,13 @@ class BudgetUseCase:
             budget_data = {key: value for key, value in request.json.items() if key != 'orcamento_itens'}
 
             # Atualiza ou cria o orçamento
-            unique_fields = {'orcamento_id': request.json['orcamento_id']} if request.json['orcamento_id'] else {}
+            unique_fields = (
+                {
+                    'orcamento_id': request.json['orcamento_id'],
+                    'empresa_id': request.company_id,
+                }
+                if request.json['orcamento_id'] else {}
+            )
             result = self.operations.merge_insert_if_not_exists(self.budget_model, unique_fields, **budget_data)
 
             # Define o ID do orçamento criado ou atualizado
@@ -170,7 +226,11 @@ class BudgetUseCase:
             if request.json.get('orcamento_status_id') == BudgetStatusEnum.APROVADO.value:
                 # Verificar se já existe uma venda para este orçamento
                 from models import VendaModel
-                existing_sale = self.operations.findOne(VendaModel, orcamento_id=orcamento_id)
+                existing_sale = self.operations.findOne(
+                    VendaModel,
+                    orcamento_id=orcamento_id,
+                    empresa_id=request.company_id,
+                )
                 
                 if not existing_sale:
                     # Criar venda automaticamente
@@ -203,6 +263,7 @@ class BudgetUseCase:
                             self.operations.update(
                                 self.budget_model,
                                 result.orcamento_id,
+                                empresa_id=request.company_id,
                                 venda_id=venda_id,
                                 data_aprovacao_reprovacao=func.now()
                             )
@@ -238,34 +299,6 @@ class BudgetUseCase:
                 'message': str(exc),
                 'data': None,
             }, 500
-
-    def calculate_items_value(self, products_items, services_items):
-        try:
-            total_value = 0
-
-            # Calcula o valor total dos produtos
-            for item in products_items:
-                produto = self.operations.findOne(self.product_model, produto_id=item['produto_id'])
-                if not produto:
-                    raise ValueError(f"Produto ID {item['produto_id']} não encontrado.")
-                preco_venda = produto.preco_venda
-                quantidade = item['quantidade_orcamento']
-                total_value += preco_venda * quantidade
-
-            # Calcula o valor total dos serviços
-            for item in services_items:
-                servico = self.operations.findOne(self.service_model, servico_id=item['servico_id'])
-                if not servico:
-                    raise ValueError(f"Serviço ID {item['servico_id']} não encontrado.")
-                preco_mao_de_obra = servico.preco_mao_de_obra
-                quantidade = item['quantidade_orcamento']
-                total_value += preco_mao_de_obra * quantidade
-
-            return total_value
-
-        except Exception as exc:
-            self.logger.log(message=f"Erro ao calcular o valor do orçamento: {str(exc)}", level='error')
-            raise
 
     # LEGADO
     def create_budget(self):
@@ -405,7 +438,7 @@ class BudgetUseCase:
 
     def virtual_delete_budget(self):
         try:
-            delete_budget = self.operations.soft_delete(self.budget_model, request.args.get('orcamento_id'), request.args.get('empresa_id'))
+            delete_budget = self.operations.soft_delete(self.budget_model, request.args.get('orcamento_id'), request.company_id)
             if delete_budget:
                 return {
                     'status': True,
@@ -427,17 +460,36 @@ class BudgetUseCase:
             }, 500
 
     def calculate_items_value(self, products_items, services_items):
-        products_value = 0
-        services_value = 0
+        total_value = 0
         if len(products_items) > 0:
             products_ids = [item['produto_id'] for item in products_items if 'produto_id' in item]
-            products, products_count = self.operations.findManyNoffset(self.product_model, produto_id=products_ids)
-            products_value = sum(product.preco_venda for product in products)
+            products, products_count = self.operations.findManyNoffset(
+                self.product_model,
+                produto_id=products_ids,
+                empresa_id=request.company_id,
+            )
+            products_by_id = {product.produto_id: product for product in products}
+            if len(products_by_id) != len(set(products_ids)):
+                raise ValueError('Um ou mais produtos não foram encontrados.')
+            total_value += sum(
+                products_by_id[item['produto_id']].preco_venda * item['quantidade_orcamento']
+                for item in products_items
+            )
         if len(services_items) > 0:
             services_ids = [item['servico_id'] for item in services_items if 'servico_id' in item]
-            services, services_count = self.operations.findManyNoffset(self.service_model, servico_id=services_ids)
-            services_value = sum(service.preco_mao_de_obra for service in services)
-        return products_value + services_value
+            services, services_count = self.operations.findManyNoffset(
+                self.service_model,
+                servico_id=services_ids,
+                empresa_id=request.company_id,
+            )
+            services_by_id = {service.servico_id: service for service in services}
+            if len(services_by_id) != len(set(services_ids)):
+                raise ValueError('Um ou mais serviços não foram encontrados.')
+            total_value += sum(
+                services_by_id[item['servico_id']].preco_mao_de_obra * item['quantidade_orcamento']
+                for item in services_items
+            )
+        return total_value
     
     def normalize_orcamento_itens(self, orcamento_itens):
         result = []
@@ -459,7 +511,10 @@ class BudgetUseCase:
     
     def get_all_budget_status(self):
         try:
-            status_list = self.operations.findAll(self.budget_status_model)
+            status_list, _ = self.operations.findManyNoffset(
+                self.budget_status_model,
+                empresa_id=request.company_id,
+            )
             return {
                 'status': True,
                 'message': 'Status de orçamentos carregados com sucesso.',

@@ -26,9 +26,11 @@ class ProductCategoryUseCase:
                 search_fields = ['titulo', 'descricao', 'sku', 'detalhes_opcionais']
                 categories, total = self.operations.findManyByTerm(self.product_category_model, page, limit, search_term,
                                                                  search_fields,
-                                                                 empresa_id=request.args.get('empresa_id'))
+                                                                 empresa_id=request.company_id)
             else:
-                categories, total = self.operations.findMany(self.product_category_model, page, limit)
+                categories, total = self.operations.findMany(
+                    self.product_category_model, page, limit, empresa_id=request.company_id
+                )
             categories_array = self.functions.instance_list_to_array(categories)
 
             return {
@@ -56,6 +58,7 @@ class ProductCategoryUseCase:
         try:
             user = self.functions.token_decript()
             data = request.json.copy() if request.json else {}
+            data['empresa_id'] = request.company_id
             
             # Separar dados da imagem para processar após inserção
             image_data = None
@@ -131,6 +134,7 @@ class ProductCategoryUseCase:
         try:
             user = self.functions.token_decript()
             data = request.json.copy() if request.json else {}
+            data['empresa_id'] = request.company_id
             
             # Separar dados da imagem para processar após atualização
             image_data = None
@@ -216,7 +220,7 @@ class ProductCategoryUseCase:
 
     def virtual_delete_product_category(self):
         try:
-            delete_product_category = self.operations.soft_delete(self.product_category_model, request.args.get('produto_categoria_id'), request.args.get('empresa_id'))
+            delete_product_category = self.operations.soft_delete(self.product_category_model, request.args.get('produto_categoria_id'), request.company_id)
             if delete_product_category:
                 return {
                     'status': True,

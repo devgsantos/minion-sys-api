@@ -10,6 +10,7 @@ from models import  ProdutoSubcategoriaRequestModel
 class ProductSubcategoryResource(Resource):
 
     @auth_decorator
+    @user_company_validator
     def get(self, action=None):
         if action == 'por_id':
             return ProductSubcategoryUseCase().get_product_subcategory_by_id()
@@ -19,6 +20,7 @@ class ProductSubcategoryResource(Resource):
             return ProductSubcategoryUseCase().get_product_subcategory_by_category()
 
     @auth_decorator
+    @user_company_validator
     @dto_decorator(ProdutoSubcategoriaRequestModel)
     def post(self):
         return ProductSubcategoryUseCase().create_product_subcategory()
