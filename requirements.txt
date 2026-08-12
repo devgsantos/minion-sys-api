@@ -11,5 +11,6 @@ PyJWT==2.9.0
 pyodbc==5.1.0
 python-dotenv==1.0.1
 pytz==2024.1
+requests==2.32.3
 SQLAlchemy==2.0.31
 waitress==3.0.0

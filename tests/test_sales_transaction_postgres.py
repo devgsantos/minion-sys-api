@@ -88,12 +88,17 @@ class SalesTransactionPostgresTestCase(unittest.TestCase):
         cls.engine.dispose()
 
     def setUp(self):
+        self.Session.remove()
         session = self.Session()
+        session.rollback()
         for model in (Sale, Stock, BudgetItem, Budget, Product):
             session.query(model).delete()
         session.add_all([
             Product(produto_id=1, empresa_id=10),
             Budget(orcamento_id=1, empresa_id=10, orcamento_status_id=1),
+        ])
+        session.commit()
+        session.add_all([
             BudgetItem(
                 orcamento_item_id=1,
                 orcamento_id=1,
