@@ -2,6 +2,17 @@ class InvalidPaginationError(ValueError):
     pass
 
 
+INTERNAL_ERROR_MESSAGE = 'Erro interno do servidor.'
+
+
+def error_payload(message, data=None):
+    return {
+        'status': False,
+        'message': message,
+        'data': data,
+    }
+
+
 def parse_pagination(args, default_limit=10, max_limit=100):
     try:
         page = int(args.get('pagina', 1))

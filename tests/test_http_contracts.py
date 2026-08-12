@@ -1,6 +1,7 @@
 import unittest
 from datetime import datetime
 from unittest.mock import MagicMock
+from unittest.mock import patch
 
 from flask import Flask, request
 from sqlalchemy import Column, DateTime, Integer, create_engine
@@ -8,7 +9,9 @@ from sqlalchemy.orm import declarative_base, scoped_session, sessionmaker
 
 from app.modules.budget.budget_usecase import BudgetUseCase
 from app.modules.sales.sales_usecase import SalesUseCase
+from app import register_error_handlers
 from app.shared.helpers.http import InvalidPaginationError, parse_pagination
+from app.shared.helpers.http import INTERNAL_ERROR_MESSAGE, error_payload
 from app.shared.helpers.model_operations import ModelOperations
 
 
@@ -77,6 +80,34 @@ class HttpContractTestCase(unittest.TestCase):
         self.assertEqual([record.venda_id for record in records], [1])
         Session.remove()
         engine.dispose()
+
+    def test_error_payload_does_not_require_exception_details(self):
+        payload = error_payload(INTERNAL_ERROR_MESSAGE)
+        self.assertEqual(payload['message'], 'Erro interno do servidor.')
+        self.assertIsNone(payload['data'])
+
+    def test_unexpected_error_hides_exception_details(self):
+        app = Flask(__name__)
+        app.config['TESTING'] = False
+        register_error_handlers(app)
+
+        @app.get('/failure')
+        def failure():
+            raise RuntimeError('database password leaked')
+
+        with patch('app.Logger'):
+            response = app.test_client().get('/failure')
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.get_json()['message'], INTERNAL_ERROR_MESSAGE)
+        self.assertNotIn('password', response.get_data(as_text=True))
+
+    def test_http_error_preserves_status_in_standard_envelope(self):
+        app = Flask(__name__)
+        register_error_handlers(app)
+        response = app.test_client().get('/missing')
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(response.get_json()['status'])
 
 
 if __name__ == '__main__':

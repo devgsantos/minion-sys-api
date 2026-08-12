@@ -55,7 +55,7 @@ credenciais.
 ## Linha de base em 2026-08-12
 
 - `python3 -m compileall -q app models main.py alembic` passou;
-- 33 testes unitarios e 3 testes PostgreSQL de commit, rollback e concorrencia
+- 36 testes unitarios e 3 testes PostgreSQL de commit, rollback e concorrencia
   passam no CI; localmente os 3 testes sao ignorados sem `TEST_DATABASE_URL`;
 - o grafo Alembic possui um unico head (`b46052c344b0`) e nenhuma branch;
 - banco real e integracao HTTP completa com o portal nao foram executados;

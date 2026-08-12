@@ -8,9 +8,11 @@ from flask import request
 from flask_cors import CORS
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
+from werkzeug.exceptions import HTTPException
 
 from app.routes.api_routes import api_blueprint
 from app.shared.helpers.model_operations import ModelOperations
+from app.shared.helpers.http import INTERNAL_ERROR_MESSAGE, error_payload
 from app.shared.singletons.logger import Logger
 
 load_dotenv(dotenv_path=os.path.join(os.getcwd(), '.env'))
@@ -27,6 +29,20 @@ engine = create_engine(
     pool_recycle=1800
 )
 Session = scoped_session(sessionmaker(bind=engine, autoflush=False, expire_on_commit=False))
+
+
+def register_error_handlers(flask_app):
+    @flask_app.errorhandler(HTTPException)
+    def handle_http_error(exc):
+        return flask.jsonify(error_payload(exc.description)), exc.code
+
+    @flask_app.errorhandler(Exception)
+    def handle_unexpected_error(exc):
+        Logger().log(message=str(exc), level='error')
+        return flask.jsonify(error_payload(INTERNAL_ERROR_MESSAGE)), 500
+
+
+register_error_handlers(app)
 
 @app.before_request
 def before_request():
@@ -45,18 +61,21 @@ def teardown_request(exception=None):
             db_session.remove()
 
 @app.after_request
-def after_request(request):
-    if isinstance(request, flask.wrappers.Response):
-        if request.mimetype == 'application/json':
+def after_request(response):
+    if isinstance(response, flask.wrappers.Response):
+        if response.mimetype == 'application/json':
             # Usa o corpo da resposta original
-            raw_data = request.get_data()
+            raw_data = response.get_data()
             content = gzip.compress(raw_data)
-            response = flask.make_response(content, request.status_code)
-            response.headers = dict(request.headers)
-            response.headers["Content-Type"] = 'application/json'
-            response.headers["Content-Encoding"] = 'gzip'
+            compressed_response = flask.make_response(content, response.status_code)
+            compressed_response.headers = dict(response.headers)
+            compressed_response.headers["Content-Type"] = 'application/json'
+            compressed_response.headers["Content-Encoding"] = 'gzip'
             # Remove Content-Length antigo, se existir, para evitar duplicidade
-            response.headers.pop("Content-Length", None)
-            Logger().log(message=raw_data, level='info' if response.status_code < 300 else 'error')
-            return response
-    return request
+            compressed_response.headers.pop("Content-Length", None)
+            Logger().log(
+                message=f'status={response.status_code}',
+                level='info' if response.status_code < 400 else 'error',
+            )
+            return compressed_response
+    return response

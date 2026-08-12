@@ -181,6 +181,12 @@ exclusoes bem-sucedidas retornam 200, criacoes retornam 201, recursos ausentes
 retornam 404 e conflitos de dominio retornam 409. O filtro de orcamentos com ou
 sem venda e aplicado no SQL antes da contagem e paginacao.
 
+Excecoes HTTP e falhas inesperadas nao capturadas usam o mesmo envelope. Falhas
+internas retornam uma mensagem publica generica; o detalhe permanece no log. O
+middleware de resposta registra metodo, rota e status, sem registrar o corpo
+JSON, token ou dados retornados. Use cases com `except Exception` proprio ainda
+devem migrar gradualmente para essa politica.
+
 Inconsistencias:
 
 - erros alternam `data` e `result`;
@@ -287,7 +293,7 @@ risco.
 python3 -m compileall -q app models main.py alembic
 ```
 
-Resultado: sucesso. A suite possui 33 testes unitarios e 3 testes de integracao
+Resultado: sucesso. A suite possui 36 testes unitarios e 3 testes de integracao
 PostgreSQL aprovados no CI. Estes validam commit conjunto, rollback por saldo
 insuficiente e duas conversoes concorrentes. Localmente eles permanecem opt-in
 por meio de `TEST_DATABASE_URL`.
