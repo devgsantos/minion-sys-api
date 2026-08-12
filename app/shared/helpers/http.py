@@ -13,6 +13,11 @@ def error_payload(message, data=None):
     }
 
 
+def internal_error(logger, exc):
+    logger.log(message=str(exc), level='error')
+    return error_payload(INTERNAL_ERROR_MESSAGE), 500
+
+
 def parse_pagination(args, default_limit=10, max_limit=100):
     try:
         page = int(args.get('pagina', 1))

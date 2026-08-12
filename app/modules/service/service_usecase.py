@@ -3,6 +3,7 @@ import math
 from flask import request, jsonify, make_response
 
 from app.shared.helpers.functions import Functions
+from app.shared.helpers.http import InvalidPaginationError, internal_error, parse_pagination
 from app.shared.helpers.model_operations import ModelOperations
 from app.shared.singletons.logger import Logger
 from models import ServicoModel, RelServicoProdutoModel, ServicoBaseModel
@@ -17,13 +18,26 @@ class ServiceUseCase:
         # self.rel_service_product_model = RelServicoProdutoModel
 
     def get_service_by_id(self):
-        print('a')
+        try:
+            service = self.operations.findOne(
+                self.service_model,
+                servico_id=request.args.get('servico_id'),
+                empresa_id=request.company_id,
+            )
+            if service is None:
+                return {'status': False, 'message': 'Serviço não encontrado.', 'data': None}, 404
+            return {
+                'status': True,
+                'message': 'Serviço carregado com sucesso.',
+                'data': ServicoBaseModel.from_orm(service).dict(),
+            }, 200
+        except Exception as exc:
+            return internal_error(self.logger, exc)
 
     def get_service_all(self):
         try:
             search_term = request.args.get('termo_pesquisa') if request.args.get('termo_pesquisa') else None
-            page = int(request.args.get('pagina')) if request.args.get('pagina') else 1
-            limit = int(request.args.get('limite')) if request.args.get('limite') else 10
+            page, limit = parse_pagination(request.args)
             if search_term:
                 search_fields = ['titulo', 'descricao', 'sku', 'detalhes_opcionais']
                 services, total = self.operations.findManyByTerm(self.service_model, page, limit, search_term,
@@ -42,13 +56,11 @@ class ServiceUseCase:
                     'total': total,
                     'total_pages': math.ceil(total / limit)
                 }
-            }, 201
+            }, 200
+        except InvalidPaginationError as exc:
+            return {'status': False, 'message': str(exc), 'data': None}, 400
         except Exception as exc:
-            return {
-                'status': False,
-                'message': str(exc),
-                'data': None,
-            }, 500
+            return internal_error(self.logger, exc)
 
     def create_service(self):
         try:

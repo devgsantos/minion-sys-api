@@ -293,7 +293,7 @@ risco.
 python3 -m compileall -q app models main.py alembic
 ```
 
-Resultado: sucesso. A suite possui 36 testes unitarios e 3 testes de integracao
+Resultado: sucesso. A suite possui 40 testes unitarios e 3 testes de integracao
 PostgreSQL aprovados no CI. Estes validam commit conjunto, rollback por saldo
 insuficiente e duas conversoes concorrentes. Localmente eles permanecem opt-in
 por meio de `TEST_DATABASE_URL`.

@@ -4,7 +4,7 @@ from typing import Optional
 from flask import request, jsonify, make_response
 
 from app.shared.helpers.functions import Functions
-from app.shared.helpers.http import InvalidPaginationError, parse_pagination
+from app.shared.helpers.http import InvalidPaginationError, internal_error, parse_pagination
 from app.shared.helpers.model_operations import (
     InsufficientStockError,
     ModelOperations,
@@ -52,11 +52,7 @@ class SalesUseCase:
                 'data': None,
             }, 400
         except Exception as exc:
-            return {
-                'status': False,
-                'message': str(exc),
-                'data': None,
-            }, 500
+            return internal_error(self.logger, exc)
 
     def get_by_id(self):
         try:
@@ -77,12 +73,7 @@ class SalesUseCase:
                 'data': VendaBaseModel.from_orm(sale).dict(),
             }, 200
         except Exception as exc:
-            self.logger.log(message=str(exc), level='error')
-            return {
-                'status': False,
-                'message': str(exc),
-                'data': None,
-            }, 500
+            return internal_error(self.logger, exc)
 
     def save_sale(self, venda_id: Optional[int] = None):
         try:
@@ -120,7 +111,7 @@ class SalesUseCase:
 
             # Verifica o status do orçamento usando os enums
             from app.shared.enums.budget_status_enum import BudgetStatusEnum
-            
+
             if budget.orcamento_status_id == BudgetStatusEnum.REPROVADO.value:
                 return {
                     'status': False,
@@ -180,12 +171,7 @@ class SalesUseCase:
                 'data': None,
             }, 409
         except Exception as exc:
-            self.logger.log(message=str(exc), level='error')
-            return {
-                'status': False,
-                'message': str(exc),
-                'data': None,
-            }, 500
+            return internal_error(self.logger, exc)
 
     def virtual_delete_sale(self):
         try:
@@ -202,12 +188,7 @@ class SalesUseCase:
                     'data': None,
                 }, 404
         except Exception as exc:
-            self.logger.log(message=str(exc), level='error')
-            return {
-                'status': False,
-                'message': str(exc),
-                'data': None,
-            }, 500
+            return internal_error(self.logger, exc)
 
     def get_all_sales_status(self):
         try:
@@ -218,12 +199,7 @@ class SalesUseCase:
                 'data': [VendaStatusBaseModel.from_orm(status).dict() for status in status_list]
             }, 200
         except Exception as exc:
-            self.logger.log(message=str(exc), level='error')
-            return {
-                'status': False,
-                'message': str(exc),
-                'data': None,
-            }, 500
+            return internal_error(self.logger, exc)
 
     def convert_budget_to_sale(self, budget):
         # Converte os dados do orçamento para os dados da venda

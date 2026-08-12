@@ -44,6 +44,21 @@ class HttpContractTestCase(unittest.TestCase):
         self.assertEqual(status, 400)
         self.assertFalse(response['status'])
 
+    def test_sales_internal_error_does_not_leak_details(self):
+        usecase = SalesUseCase.__new__(SalesUseCase)
+        usecase.sales_model = object()
+        usecase.operations = MagicMock()
+        usecase.operations.findOne.side_effect = RuntimeError('database secret')
+        usecase.logger = MagicMock()
+
+        with self.app.test_request_context('/venda/por_id?venda_id=1'):
+            request.company_id = 10
+            response, status = usecase.get_by_id()
+
+        self.assertEqual(status, 500)
+        self.assertEqual(response['message'], INTERNAL_ERROR_MESSAGE)
+        self.assertNotIn('secret', response['message'])
+
     def test_budget_list_applies_sale_filter_in_query(self):
         usecase = BudgetUseCase.__new__(BudgetUseCase)
         usecase.budget_model = object()

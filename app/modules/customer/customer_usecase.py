@@ -3,7 +3,7 @@ import math
 from flask import request
 
 from app.shared.helpers.functions import Functions
-from app.shared.helpers.http import InvalidPaginationError, parse_pagination
+from app.shared.helpers.http import InvalidPaginationError, internal_error, parse_pagination
 from app.shared.helpers.model_operations import ModelOperations
 from app.shared.singletons.logger import Logger
 from models import ClienteModel, ClienteBaseModel
@@ -37,12 +37,7 @@ class CustomerUseCase:
                     'data': None
                 }, 404
         except Exception as exc:
-            self.logger.log(message=str(exc), level='error')
-            return {
-                'status': False,
-                'message': str(exc),
-                'data': None,
-            }, 500
+            return internal_error(self.logger, exc)
 
     def get_customer_all(self):
         try:
@@ -74,12 +69,7 @@ class CustomerUseCase:
                 'data': None,
             }, 400
         except Exception as exc:
-            self.logger.log(message=str(exc), level='error')
-            return {
-                'status': False,
-                'message': str(exc),
-                'data': None,
-            }, 500
+            return internal_error(self.logger, exc)
 
     def create_customer(self):
         try:
@@ -96,12 +86,7 @@ class CustomerUseCase:
                 'data': {'cliente_id': result.cliente_id}
             }, 201
         except Exception as exc:
-            self.logger.log(message=str(exc), level='error')
-            return {
-                'status': False,
-                'message': str(exc),
-                'data': None,
-            }, 500
+            return internal_error(self.logger, exc)
 
     def update_customer(self):
         try:
@@ -112,7 +97,7 @@ class CustomerUseCase:
             # Convert nacionalidade to pais_id field name
             if 'nacionalidade' in data:
                 data['pais_id'] = data.pop('nacionalidade')
-            
+
             update_data = {key: value for key, value in data.items() if key != 'cliente_id'}
             customer = self.operations.update_where(
                 self.customer_model,
@@ -133,12 +118,7 @@ class CustomerUseCase:
                 'message': 'Cliente alterado com sucesso.'
             }, 200
         except Exception as exc:
-            self.logger.log(message=str(exc), level='error')
-            return {
-                'status': False,
-                'message': str(exc),
-                'data': None,
-            }, 500
+            return internal_error(self.logger, exc)
 
     def virtual_delete_customer(self):
         try:
@@ -158,9 +138,4 @@ class CustomerUseCase:
                     'message': 'Cliente não encontrado.'
                 }, 404
         except Exception as exc:
-            self.logger.log(message=str(exc), level='error')
-            return {
-                'status': False,
-                'message': str(exc),
-                'data': None,
-            }, 500
+            return internal_error(self.logger, exc)

@@ -6,7 +6,7 @@ from flask import request, jsonify, make_response
 from sqlalchemy import func
 
 from app.shared.helpers.functions import Functions
-from app.shared.helpers.http import InvalidPaginationError, parse_pagination
+from app.shared.helpers.http import InvalidPaginationError, internal_error, parse_pagination
 from app.shared.helpers.model_operations import ModelOperations
 from app.shared.singletons.logger import Logger
 from models import ClienteModel, OrcamentoModel, OrcamentoItemModel, OrcamentoBaseModel, ProdutoModel, ServicoModel, OrcamentoStatusModel, OrcamentoStatusBaseModel
@@ -30,10 +30,10 @@ class BudgetUseCase:
         try:
             page, limit = parse_pagination(request.args)
             has_sale = request.args.get('venda')
-            
+
             # Criar um dicionário de filtros base
             filters = {'empresa_id': request.company_id}
-            
+
             # Adicionar filtro por cliente se existir
             if request.args.get('cliente_id'):
                 filters['cliente_id'] = request.args.get('cliente_id')
@@ -47,7 +47,7 @@ class BudgetUseCase:
 
             # Executar a consulta com os filtros dinâmicos
             budgets, total = self.operations.findMany(self.budget_model, page, limit, **filters)
-            
+
             budgets_array = [OrcamentoBaseModel.from_orm(budget).dict() for budget in budgets]
 
             return {
@@ -68,11 +68,7 @@ class BudgetUseCase:
                 'data': None,
             }, 400
         except Exception as exc:
-            return {
-                'status': False,
-                'message': str(exc),
-                'data': None,
-            }, 500
+            return internal_error(self.logger, exc)
 
     def get_by_id(self):
         try:
@@ -93,12 +89,7 @@ class BudgetUseCase:
                 'data': OrcamentoBaseModel.from_orm(budget).dict(),
             }, 200
         except Exception as exc:
-            self.logger.log(message=str(exc), level='error')
-            return {
-                'status': False,
-                'message': str(exc),
-                'data': None,
-            }, 500
+            return internal_error(self.logger, exc)
 
     def save_budget(self, orcamento_id: Optional[int] = None):
         try:
@@ -133,10 +124,10 @@ class BudgetUseCase:
                         'message': 'Orçamento não encontrado.',
                         'data': None,
                     }, 404
-                
+
                 # Importar enum para verificar status
                 from app.shared.enums.budget_status_enum import BudgetStatusEnum
-                
+
                 if existing_budget and existing_budget.orcamento_status_id == BudgetStatusEnum.APROVADO.value:
                     return {
                         'status': False,
@@ -235,12 +226,12 @@ class BudgetUseCase:
                     orcamento_id=orcamento_id,
                     empresa_id=request.company_id,
                 )
-                
+
                 if not existing_sale:
                     # Criar venda automaticamente
                     from app.modules.sales.sales_usecase import SalesUseCase
                     sales_usecase = SalesUseCase()
-                    
+
                     # Preparar dados para criação da venda
                     sale_data = {
                         'orcamento_id': orcamento_id,
@@ -249,18 +240,18 @@ class BudgetUseCase:
                         'gera_ordem_servico': False,  # Valor padrão
                         'venda_status_id': 1  # Status padrão da venda
                     }
-                    
+
                     # Temporariamente substituir request.json para a criação da venda
                     original_json = request.json
                     request.json = sale_data
-                    
+
                     try:
                         # Criar a venda
                         sale_result, sale_status = sales_usecase.save_sale()
-                        
+
                         # Restaurar request.json original
                         request.json = original_json
-                        
+
                         if sale_result['status']:
                             # Atualizar o orçamento com o ID da venda criada
                             venda_id = sale_result['data']['venda_id']
@@ -271,7 +262,7 @@ class BudgetUseCase:
                                 venda_id=venda_id,
                                 data_aprovacao_reprovacao=func.now()
                             )
-                            
+
                             return {
                                 'status': True,
                                 'message': 'Orçamento salvo com sucesso e venda criada automaticamente.',
@@ -297,12 +288,7 @@ class BudgetUseCase:
 
         except Exception as exc:
             # Loga e retorna uma resposta de erro
-            self.logger.log(message=str(exc), level='error')
-            return {
-                'status': False,
-                'message': str(exc),
-                'data': None,
-            }, 500
+            return internal_error(self.logger, exc)
 
     # LEGADO
     def create_budget(self):
@@ -339,12 +325,7 @@ class BudgetUseCase:
                 'message': 'Orçamento criado com sucesso.'
             }, 201
         except Exception as exc:
-            self.logger.log(message=str(exc), level='error')
-            return {
-                'status': False,
-                'message': str(exc),
-                'data': None,
-            }, 500
+            return internal_error(self.logger, exc)
 
     # LEGADO
     def update_budget(self, orcamento_id: int):
@@ -420,25 +401,8 @@ class BudgetUseCase:
 
         except Exception as exc:
             # Loga e retorna uma resposta de erro
-            self.logger.log(message=str(exc), level='error')
-            return {
-                'status': False,
-                'message': str(exc),
-                'data': None,
-            }, 500
+            return internal_error(self.logger, exc)
 
-
-        except Exception as exc:
-            # Loga e retorna uma resposta de erro
-            self.logger.log(message=str(exc), level='error')
-
-            return make_response(jsonify(
-                {
-                    'status': False,
-                    'message': str(exc),
-                    'data': None,
-                }
-            ), 500)
 
     def virtual_delete_budget(self):
         try:
@@ -455,12 +419,7 @@ class BudgetUseCase:
                     'data': None,
                 }, 404
         except Exception as exc:
-            self.logger.log(message=str(exc), level='error')
-            return {
-                'status': False,
-                'message': str(exc),
-                'data': None,
-            }, 500
+            return internal_error(self.logger, exc)
 
     def calculate_items_value(self, products_items, services_items):
         total_value = 0
@@ -493,7 +452,7 @@ class BudgetUseCase:
                 for item in services_items
             )
         return total_value
-    
+
     def normalize_orcamento_itens(self, orcamento_itens):
         result = []
         for item in orcamento_itens:
@@ -511,7 +470,7 @@ class BudgetUseCase:
             else:
                 result.append(item)
         return result
-    
+
     def get_all_budget_status(self):
         try:
             status_list, _ = self.operations.findManyNoffset(
@@ -524,10 +483,5 @@ class BudgetUseCase:
                 'data': [OrcamentoStatusBaseModel.from_orm(status).dict() for status in status_list]
             }, 200
         except Exception as exc:
-            self.logger.log(message=str(exc), level='error')
-            return {
-                'status': False,
-                'message': str(exc),
-                'data': None,
-            }, 500
+            return internal_error(self.logger, exc)
 
