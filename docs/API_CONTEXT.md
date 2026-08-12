@@ -281,10 +281,10 @@ risco.
 python3 -m compileall -q app models main.py alembic
 ```
 
-Resultado: sucesso. A suite possui 29 testes unitarios aprovados e 3 testes de
-integracao PostgreSQL opt-in. Estes validam commit conjunto, rollback por saldo
-insuficiente e duas conversoes concorrentes, mas ainda nao foram executados
-localmente porque `TEST_DATABASE_URL` nao esta configurada.
+Resultado: sucesso. A suite possui 29 testes unitarios e 3 testes de integracao
+PostgreSQL aprovados no CI. Estes validam commit conjunto, rollback por saldo
+insuficiente e duas conversoes concorrentes. Localmente eles permanecem opt-in
+por meio de `TEST_DATABASE_URL`.
 
 ```bash
 .venv/bin/alembic heads
