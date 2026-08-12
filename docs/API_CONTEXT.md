@@ -281,8 +281,10 @@ risco.
 python3 -m compileall -q app models main.py alembic
 ```
 
-Resultado: sucesso. A suite unitaria possui 29 testes. Isso nao substitui banco
-real, endpoints integrados ou validacao de concorrencia.
+Resultado: sucesso. A suite possui 29 testes unitarios aprovados e 3 testes de
+integracao PostgreSQL opt-in. Estes validam commit conjunto, rollback por saldo
+insuficiente e duas conversoes concorrentes, mas ainda nao foram executados
+localmente porque `TEST_DATABASE_URL` nao esta configurada.
 
 ```bash
 .venv/bin/alembic heads
