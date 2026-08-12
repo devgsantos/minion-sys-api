@@ -38,6 +38,8 @@ Testes que nao dependem de banco podem ser executados com:
 
 O Waitress usa `APP_PORT` e a conexao SQLAlchemy usa `DB_URL`. O catalogo de
 variaveis e os passos ainda pendentes de bootstrap estao no contexto tecnico.
+O Alembic tambem usa `DB_URL`; `alembic.ini` contem apenas um fallback local sem
+credenciais.
 
 ## Linha de base em 2026-08-12
 

@@ -270,6 +270,11 @@ Revisar sem remocao precipitada:
 
 Antes de remover, verificar se deploy atual depende desses arquivos.
 
+O `alembic.ini` deixou de conter credenciais e agora recebe a URL por `DB_URL`.
+Como a credencial anterior permanece no historico Git, ela deve ser revogada e
+substituida no provedor do banco; alterar somente o arquivo nao elimina esse
+risco.
+
 ## 14. Validacao realizada
 
 ```bash
