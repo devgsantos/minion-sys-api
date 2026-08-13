@@ -22,6 +22,20 @@ class Logger(metaclass=Singleton):
         return month_names[month_index - 1]
 
     def update_log_handler(self):
+        if os.environ.get('VERCEL'):
+            if any(
+                isinstance(handler, logging.StreamHandler)
+                and not isinstance(handler, logging.FileHandler)
+                for handler in self.logger.handlers
+            ):
+                return
+
+            log_handler = logging.StreamHandler()
+            log_handler.setLevel(logging.DEBUG)
+            log_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
+            self._replace_handlers(log_handler)
+            return
+
         current_date = datetime.now()
         log_directory = os.path.join('app', 'logs', str(current_date.year),
                                      self.get_log_month_directory_name(month_index=current_date.month), str(current_date.day))
@@ -38,6 +52,10 @@ class Logger(metaclass=Singleton):
         log_handler = TimedRotatingFileHandler(log_path, when='S', interval=999999, backupCount=5)
         log_handler.setLevel(logging.DEBUG)
         log_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
+
+        self._replace_handlers(log_handler)
+
+    def _replace_handlers(self, log_handler):
 
         for handler in self.logger.handlers[:]:
             self.logger.removeHandler(handler)
