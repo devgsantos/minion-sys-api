@@ -25,9 +25,11 @@ class ProductTypeUseCase:
                 search_fields = ['titulo', 'descricao', 'sku', 'detalhes_opcionais']
                 types, total = self.operations.findManyByTerm(self.product_type_model, page, limit, search_term,
                                                                  search_fields,
-                                                                 empresa_id=request.args.get('empresa_id'))
+                                                                 empresa_id=request.company_id)
             else:
-                types, total = self.operations.findMany(self.product_type_model, page, limit)
+                types, total = self.operations.findMany(
+                    self.product_type_model, page, limit, empresa_id=request.company_id
+                )
             types_array = [ProdutoTipoBaseModel.from_orm(product_type).dict() for product_type in types]
 
             return make_response(jsonify(
@@ -60,6 +62,7 @@ class ProductTypeUseCase:
         try:
             user = self.functions.token_decript()
             data = request.json.copy() if request.json else {}
+            data['empresa_id'] = request.company_id
             
             # Separar dados da imagem para processar após inserção
             image_data = None
@@ -133,6 +136,7 @@ class ProductTypeUseCase:
         try:
             user = self.functions.token_decript()
             data = request.json.copy() if request.json else {}
+            data['empresa_id'] = request.company_id
             
             # Separar dados da imagem para processar após atualização
             image_data = None
@@ -229,7 +233,7 @@ class ProductTypeUseCase:
 
     def virtual_delete_product_type(self):
         try:
-            delete_type = self.operations.soft_delete(self.product_type_model, request.args.get('produto_tipo_id'), request.args.get('empresa_id'))
+            delete_type = self.operations.soft_delete(self.product_type_model, request.args.get('produto_tipo_id'), request.company_id)
             if delete_type:
                 return make_response(jsonify(
                     {

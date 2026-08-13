@@ -19,7 +19,7 @@ def auth_decorator(func):
                     'message': 'Requisição sem token de autenticação',
                     'result': None,
                     'code': 401
-                }
+                }, 401
 
             token = request.headers.get('x-auth-token')
 
@@ -31,7 +31,7 @@ def auth_decorator(func):
                     'message': 'Requisição sem token de autenticação',
                     'result': None,
                     'code': 401
-                }
+                }, 401
 
             try:
                 decoded_token_info = jwt.decode(token, os.environ.get('JWT_SECRET'), algorithms=['HS256'])
@@ -43,10 +43,11 @@ def auth_decorator(func):
                     'message': 'Token inválido',
                     'result': None,
                     'code': 401
-                }
+                }, 401
 
             logger.log(message='Usuario autenticado com sucesso!', level='info')
 
+            request.auth_context = decoded_token_info
             request.username = decoded_token_info.get('username')
 
             return func(*args, **kwargs)
@@ -60,4 +61,4 @@ def auth_decorator(func):
             'message': str(exc),
             'result': None,
             'code': 500
-        }
+        }, 500

@@ -19,14 +19,21 @@ class Logger(metaclass=Singleton):
         month_names = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto',
                        'setembro', 'outubro', 'novembro', 'dezembro']
 
-        return month_names[month_index + 1]
+        return month_names[month_index - 1]
 
     def update_log_handler(self):
         current_date = datetime.now()
         log_directory = os.path.join('app', 'logs', str(current_date.year),
                                      self.get_log_month_directory_name(month_index=current_date.month), str(current_date.day))
         os.makedirs(log_directory, exist_ok=True)
-        log_path = os.path.join(log_directory, 'info.log')
+        log_path = os.path.abspath(os.path.join(log_directory, 'info.log'))
+
+        if any(
+            isinstance(handler, logging.FileHandler)
+            and handler.baseFilename == log_path
+            for handler in self.logger.handlers
+        ):
+            return
 
         log_handler = TimedRotatingFileHandler(log_path, when='S', interval=999999, backupCount=5)
         log_handler.setLevel(logging.DEBUG)
@@ -34,6 +41,7 @@ class Logger(metaclass=Singleton):
 
         for handler in self.logger.handlers[:]:
             self.logger.removeHandler(handler)
+            handler.close()
 
         self.logger.addHandler(log_handler)
 

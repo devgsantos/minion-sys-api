@@ -10,6 +10,7 @@ from models import EstoqueProdutoBaseModel
 class StockResource(Resource):
     
     @auth_decorator
+    @user_company_validator
     def get(self, action=None):
         if action == 'por_id':
             return StockUseCase().get_stock_by_id()
@@ -21,11 +22,13 @@ class StockResource(Resource):
             return StockUseCase().check_budget_stock()
 
     @auth_decorator
+    @user_company_validator
     @dto_decorator(EstoqueProdutoBaseModel)
     def post(self):
         return StockUseCase().create_stock()
 
     @auth_decorator
+    @user_company_validator
     @dto_decorator(EstoqueProdutoBaseModel)
     def put(self):
         return StockUseCase().update_stock()

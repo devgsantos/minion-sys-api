@@ -3,6 +3,7 @@ import math
 from flask import request, jsonify, make_response
 
 from app.shared.helpers.functions import Functions
+from app.shared.helpers.http import InvalidPaginationError, internal_error, parse_pagination
 from app.shared.helpers.model_operations import ModelOperations
 from app.shared.singletons.logger import Logger
 from models import ServicoTipoModel, ServicoTipoBaseModel
@@ -18,15 +19,14 @@ class ServiceTypeUseCase:
     def get_service_type_all(self):
         try:
             search_term = request.args.get('termo_pesquisa') if request.args.get('termo_pesquisa') else None
-            page = int(request.args.get('pagina'))
-            limit = int(request.args.get('limite'))
+            page, limit = parse_pagination(request.args)
             if search_term:
                 search_fields = ['titulo', 'descricao']
                 types, total = self.operations.findManyByTerm(self.service_type_model, page, limit, search_term,
                                                                  search_fields,
-                                                                 empresa_id=request.args.get('empresa_id'))
+                                                                 empresa_id=request.company_id)
             else:
-                types, total = self.operations.findMany(self.service_type_model, page, limit, empresa_id=request.args.get('empresa_id'))
+                types, total = self.operations.findMany(self.service_type_model, page, limit, empresa_id=request.company_id)
             types_array = [ServicoTipoBaseModel.from_orm(type).dict() for type in types]
 
             return {
@@ -39,20 +39,33 @@ class ServiceTypeUseCase:
                     'total': total,
                     'total_pages': math.ceil(total / limit)
                 }
-            }, 201
+            }, 200
+        except InvalidPaginationError as exc:
+            return {'status': False, 'message': str(exc), 'data': None}, 400
         except Exception as exc:
-            return {
-                'status': False,
-                'message': str(exc),
-                'data': None,
-            }, 500
+            return internal_error(self.logger, exc)
 
     def get_service_type_by_id(self):
-        print('by id')
+        try:
+            service_type = self.operations.findOne(
+                self.service_type_model,
+                servico_tipo_id=request.args.get('servico_tipo_id'),
+                empresa_id=request.company_id,
+            )
+            if service_type is None:
+                return {'status': False, 'message': 'Tipo de serviço não encontrado.', 'data': None}, 404
+            return {
+                'status': True,
+                'message': 'Tipo de serviço carregado com sucesso.',
+                'data': ServicoTipoBaseModel.from_orm(service_type).dict(),
+            }, 200
+        except Exception as exc:
+            return internal_error(self.logger, exc)
 
     def create_service_type(self):
         try:
             user = self.functions.token_decript()
+            request.json['empresa_id'] = request.company_id
             request.json['responsavel_cadastro_id'] = user.get('login_id')
             self.operations.insert(self.service_type_model, **request.json)
             return {
@@ -69,6 +82,7 @@ class ServiceTypeUseCase:
     def update_service_type(self):
         try:
             user = self.functions.token_decript()
+            request.json['empresa_id'] = request.company_id
             request.json['responsavel_cadastro_id'] = user.get('login_id')
             update_type = self.operations.update(self.service_type_model, request.json['servico_tipo_id'], **request.json)
             if update_type:
@@ -91,7 +105,7 @@ class ServiceTypeUseCase:
 
     def virtual_delete_service_type(self):
         try:
-            delete_type = self.operations.soft_delete(self.service_type_model, request.args.get('servico_tipo_id'), request.args.get('empresa_id'))
+            delete_type = self.operations.soft_delete(self.service_type_model, request.args.get('servico_tipo_id'), request.company_id)
             if delete_type:
                 return {
                     'status': True,

@@ -10,6 +10,7 @@ from models import ProdutoTipoRequestModel
 class ProductTypeResource(Resource):
 
     @auth_decorator
+    @user_company_validator
     def get(self, action=None):
         if action == 'por_id':
             return ProductTypeUseCase().get_product_type_by_id()
@@ -17,6 +18,7 @@ class ProductTypeResource(Resource):
             return ProductTypeUseCase().get_product_type_all()
 
     @auth_decorator
+    @user_company_validator
     @dto_decorator(ProdutoTipoRequestModel)
     def post(self):
         return ProductTypeUseCase().create_product_type()

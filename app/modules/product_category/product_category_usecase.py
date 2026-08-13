@@ -3,10 +3,12 @@ import math
 from flask import request, jsonify, make_response
 
 from app.shared.helpers.functions import Functions
+from app.shared.helpers.http import InvalidPaginationError, internal_error, parse_pagination
 from app.shared.helpers.model_operations import ModelOperations
 from app.shared.singletons.logger import Logger
 from app.modules.file_repository.file_repository_usecase import FileRepositoryUseCase
 from models import ProdutoCategoriaModel
+from models.produto_categorias_model import ProdutoCategoriaBaseModel
 
 
 class ProductCategoryUseCase:
@@ -20,15 +22,16 @@ class ProductCategoryUseCase:
     def get_product_category_all(self):
         try:
             search_term = request.args.get('termo_pesquisa') if request.args.get('termo_pesquisa') else None
-            page = int(request.args.get('pagina'))
-            limit = int(request.args.get('limite'))
+            page, limit = parse_pagination(request.args)
             if search_term:
                 search_fields = ['titulo', 'descricao', 'sku', 'detalhes_opcionais']
                 categories, total = self.operations.findManyByTerm(self.product_category_model, page, limit, search_term,
                                                                  search_fields,
-                                                                 empresa_id=request.args.get('empresa_id'))
+                                                                 empresa_id=request.company_id)
             else:
-                categories, total = self.operations.findMany(self.product_category_model, page, limit)
+                categories, total = self.operations.findMany(
+                    self.product_category_model, page, limit, empresa_id=request.company_id
+                )
             categories_array = self.functions.instance_list_to_array(categories)
 
             return {
@@ -41,21 +44,34 @@ class ProductCategoryUseCase:
                     'total': total,
                     'total_pages': math.ceil(total / limit)
                 }
-            }, 201
+            }, 200
+        except InvalidPaginationError as exc:
+            return {'status': False, 'message': str(exc), 'data': None}, 400
         except Exception as exc:
-            return {
-                'status': False,
-                'message': str(exc),
-                'data': None,
-            }, 500
+            return internal_error(self.logger, exc)
 
     def get_product_category_by_id(self):
-        print('by id')
+        try:
+            category = self.operations.findOne(
+                self.product_category_model,
+                produto_categoria_id=request.args.get('produto_categoria_id'),
+                empresa_id=request.company_id,
+            )
+            if category is None:
+                return {'status': False, 'message': 'Categoria não encontrada.', 'data': None}, 404
+            return {
+                'status': True,
+                'message': 'Categoria carregada com sucesso.',
+                'data': ProdutoCategoriaBaseModel.from_orm(category).dict(),
+            }, 200
+        except Exception as exc:
+            return internal_error(self.logger, exc)
 
     def create_product_category(self):
         try:
             user = self.functions.token_decript()
             data = request.json.copy() if request.json else {}
+            data['empresa_id'] = request.company_id
             
             # Separar dados da imagem para processar após inserção
             image_data = None
@@ -131,6 +147,7 @@ class ProductCategoryUseCase:
         try:
             user = self.functions.token_decript()
             data = request.json.copy() if request.json else {}
+            data['empresa_id'] = request.company_id
             
             # Separar dados da imagem para processar após atualização
             image_data = None
@@ -216,7 +233,7 @@ class ProductCategoryUseCase:
 
     def virtual_delete_product_category(self):
         try:
-            delete_product_category = self.operations.soft_delete(self.product_category_model, request.args.get('produto_categoria_id'), request.args.get('empresa_id'))
+            delete_product_category = self.operations.soft_delete(self.product_category_model, request.args.get('produto_categoria_id'), request.company_id)
             if delete_product_category:
                 return {
                     'status': True,

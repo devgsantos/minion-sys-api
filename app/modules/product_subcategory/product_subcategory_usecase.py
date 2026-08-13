@@ -27,15 +27,17 @@ class ProductSubcategoryUseCase:
                 search_fields = ['titulo', 'descricao', 'sku', 'detalhes_opcionais']
                 subcategories, total = self.operations.findManyByTerm(self.product_subcategory_model, page, limit, search_term,
                                                                  search_fields,
-                                                                 empresa_id=request.args.get('empresa_id'))
+                                                                 empresa_id=request.company_id)
             elif category_id:
                 search_fields = ['produto_categoria_id']
                 subcategories, total = self.operations.findManyByTerm(self.product_subcategory_model, page, limit,
                                                                       category_id,
                                                                       search_fields,
-                                                                      empresa_id=request.args.get('empresa_id'))
+                                                                      empresa_id=request.company_id)
             else:
-                subcategories, total = self.operations.findMany(self.product_subcategory_model, page, limit)
+                subcategories, total = self.operations.findMany(
+                    self.product_subcategory_model, page, limit, empresa_id=request.company_id
+                )
             subcategories_array = self.functions.instance_list_to_array(subcategories)
 
             return {
@@ -66,7 +68,7 @@ class ProductSubcategoryUseCase:
                 subcategories, total = self.operations.findManyByFields(self.product_subcategory_model, page, limit,
                                                                       category_id,
                                                                       search_fields,
-                                                                      empresa_id=request.args.get('empresa_id'))
+                                                                      empresa_id=request.company_id)
             else:
                 return {
                     'status': False,
@@ -102,6 +104,7 @@ class ProductSubcategoryUseCase:
         try:
             user = self.functions.token_decript()
             data = request.json.copy() if request.json else {}
+            data['empresa_id'] = request.company_id
             
             # Separar dados da imagem para processar após inserção
             image_data = None
@@ -177,6 +180,7 @@ class ProductSubcategoryUseCase:
         try:
             user = self.functions.token_decript()
             data = request.json.copy() if request.json else {}
+            data['empresa_id'] = request.company_id
             
             # Separar dados da imagem para processar após atualização
             image_data = None
@@ -262,7 +266,7 @@ class ProductSubcategoryUseCase:
 
     def virtual_delete_product_subcategory(self):
         try:
-            delete_product_subcategory = self.operations.soft_delete(self.product_subcategory_model, request.args.get('produto_subcategoria_id'), request.args.get('empresa_id'))
+            delete_product_subcategory = self.operations.soft_delete(self.product_subcategory_model, request.args.get('produto_subcategoria_id'), request.company_id)
             if delete_product_subcategory:
                 return {
                     'status': True,

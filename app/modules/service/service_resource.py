@@ -10,6 +10,7 @@ from models import ServicoRequestModel
 class ServiceResource(Resource):
 
     @auth_decorator
+    @user_company_validator
     def get(self, action=None):
         if action == 'por_id':
             return ServiceUseCase().get_service_by_id()
@@ -17,11 +18,13 @@ class ServiceResource(Resource):
             return ServiceUseCase().get_service_all()
 
     @auth_decorator
+    @user_company_validator
     @dto_decorator(ServicoRequestModel)
     def post(self):
         return ServiceUseCase().create_service()
 
     @auth_decorator
+    @user_company_validator
     @dto_decorator(ServicoRequestModel)
     def put(self):
         return ServiceUseCase().update_service()

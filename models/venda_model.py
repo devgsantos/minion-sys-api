@@ -34,6 +34,8 @@ class VendaBaseModel(BaseModel):
     venda_id: int
     orcamento_id: int
     empresa_id: int
+    valor: float
+    gera_ordem_servico: bool
     data_cadastro: datetime
     data_atualizacao: Optional[datetime]
 
@@ -48,9 +50,10 @@ class VendaBaseModel(BaseModel):
         from_attributes = True
 
 class VendaRequestBaseModel(BaseModel):
+    venda_id: Optional[int] = None
     orcamento_id: int
     empresa_id: int
-    venda_status_id: Optional[int]
+    venda_status_id: Optional[int] = None
     gera_ordem_servico: bool = False
 
     class Config:

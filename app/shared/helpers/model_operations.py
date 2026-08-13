@@ -14,6 +14,16 @@ from app.shared.singletons.logger import Logger
 from models.base import Base
 
 
+class InsufficientStockError(Exception):
+    def __init__(self, products: List[Dict[str, int]]):
+        super().__init__('Estoque insuficiente para concluir a venda.')
+        self.products = products
+
+
+class SaleAlreadyExistsError(Exception):
+    pass
+
+
 # Classe que abstrai operações com modelos SQLAlchemy
 class ModelOperations:
     def __init__(self):
@@ -38,15 +48,22 @@ class ModelOperations:
         #     session.close()
 
     # Buscar todos os registros de um modelo
-    def findAll(self, model: Type[Base]) -> List[Any]:
+    def findAll(self, model: Type[Base], order_by: str = 'data_criacao') -> List[Any]:
         with self.session_scope() as session:
 
             # Retorno o total de registros
             total_count = session.query(func.count(f'{getattr(model, "__tablename__", None)}_id')) \
                 .filter(model.data_exclusao.is_(None)).scalar()
 
-            # Consulta para obter os resultados paginados
-            results = session.query(model).options(joinedload('*')).filter(model.data_exclusao.is_(None)).all()
+            # Consulta para obter os resultados ordenados
+            query = session.query(model).options(joinedload('*')).filter(model.data_exclusao.is_(None))
+            
+            # Aplicar ordenação - padrão: mais recente primeiro
+            if hasattr(model, order_by):
+                order_column = getattr(model, order_by)
+                query = query.order_by(order_column.desc())
+            
+            results = query.all()
 
             return results, total_count
 
@@ -65,7 +82,7 @@ class ModelOperations:
             except NoResultFound:
                 return None
 
-    def findMany(self, model: Type[Base], page: int = 1, limit: int = 10, **kwargs) -> Tuple[Optional[List[Any]], int]:
+    def findMany(self, model: Type[Base], page: int = 1, limit: int = 10, order_by: str = 'data_criacao', **kwargs) -> Tuple[Optional[List[Any]], int]:
         with self.session_scope() as session:
             offset = (page - 1) * limit
 
@@ -79,6 +96,8 @@ class ModelOperations:
                     if column is not None:
                         if isinstance(value, list):
                             query_count = query_count.filter(column.in_(value))
+                        elif isinstance(value, tuple) and value == ('is_not', None):
+                            query_count = query_count.filter(column.is_not(None))
                         else:
                             query_count = query_count.filter(column == value)
                     else:
@@ -86,7 +105,7 @@ class ModelOperations:
 
                 total_count = query_count.scalar()  # Total de registros com base nos filtros aplicados
 
-                # Consulta para obter os resultados paginados
+                # Consulta para obter os resultados paginados e ordenados
                 query_results = session.query(model)
                 query_results = query_results.filter(model.data_exclusao.is_(None))
 
@@ -95,10 +114,18 @@ class ModelOperations:
                     if column is not None:
                         if isinstance(value, list):
                             query_results = query_results.filter(column.in_(value))
+                        elif isinstance(value, tuple) and value == ('is_not', None):
+                            query_results = query_results.filter(column.is_not(None))
                         else:
                             query_results = query_results.filter(column == value)
 
+                # Aplicar ordenação - padrão: mais recente primeiro
+                if hasattr(model, order_by):
+                    order_column = getattr(model, order_by)
+                    query_results = query_results.order_by(order_column.desc())
+
                 results = query_results.offset(offset).limit(limit).all()
+                return results, total_count
                 return results, total_count
             except NoResultFound:
                 return None, 0
@@ -106,7 +133,38 @@ class ModelOperations:
                 print(f"Erro ao executar a consulta: {e}")
                 raise
 
-    def findManyNoffset(self, model: Type[Base], **kwargs) -> Tuple[Optional[List[Any]], int]:
+    def find_many_by_relation(
+            self,
+            model: Type[Base],
+            related_model: Type[Base],
+            join_condition,
+            page: int = 1,
+            limit: int = 10,
+            order_by: str = 'data_cadastro',
+            **related_filters
+    ) -> Tuple[List[Any], int]:
+        with self.session_scope() as session:
+            offset = (page - 1) * limit
+            query = session.query(model).join(related_model, join_condition)
+
+            if hasattr(model, 'data_exclusao'):
+                query = query.filter(model.data_exclusao.is_(None))
+            if hasattr(related_model, 'data_exclusao'):
+                query = query.filter(related_model.data_exclusao.is_(None))
+
+            for key, value in related_filters.items():
+                column = getattr(related_model, key, None)
+                if column is None:
+                    raise ValueError(f"Campo '{key}' não encontrado no modelo relacionado.")
+                query = query.filter(column == value)
+
+            total_count = query.count()
+            if hasattr(model, order_by):
+                query = query.order_by(getattr(model, order_by).desc())
+
+            return query.offset(offset).limit(limit).all(), total_count
+
+    def findManyNoffset(self, model: Type[Base], order_by: str = 'data_criacao', **kwargs) -> Tuple[Optional[List[Any]], int]:
         with self.session_scope() as session:
             try:
                 # Aplica o filtro de soft delete (data_exclusao IS NULL) automaticamente
@@ -123,10 +181,15 @@ class ModelOperations:
                     else:
                         raise ValueError(f"Campo '{key}' não encontrado no modelo.")
 
+                # Aplicar ordenação - padrão: mais recente primeiro
+                if hasattr(model, order_by):
+                    order_column = getattr(model, order_by)
+                    query = query.order_by(order_column.desc())
+
                 # Executa a contagem total de registros com base nos filtros
                 total_count = query.count()
 
-                # Obter todos os resultados filtrados
+                # Obter todos os resultados filtrados e ordenados
                 results = query.all()
 
                 return results, total_count
@@ -144,6 +207,7 @@ class ModelOperations:
             limit: int = 10,
             search_term: Optional[str] = None,
             search_fields: Optional[List[str]] = None,
+            order_by: str = 'data_criacao',
             **kwargs
     ) -> Tuple[Optional[List[Any]], int]:
         with self.session_scope() as session:
@@ -179,7 +243,7 @@ class ModelOperations:
 
                 total_count = query_count.scalar()
 
-                # Consulta para resultados paginados
+                # Consulta para resultados paginados e ordenados
                 query_results = session.query(model)
                 query_results = query_results.filter(model.data_exclusao.is_(None))
 
@@ -201,7 +265,13 @@ class ModelOperations:
                     if like_filters:
                         query_results = query_results.filter(or_(*like_filters))
 
+                # Aplicar ordenação - padrão: mais recente primeiro
+                if hasattr(model, order_by):
+                    order_column = getattr(model, order_by)
+                    query_results = query_results.order_by(order_column.desc())
+
                 results = query_results.offset(offset).limit(limit).all()
+                return results, total_count
                 return results, total_count
             except NoResultFound:
                 return None, 0
@@ -216,6 +286,7 @@ class ModelOperations:
             limit: int = 10,
             search_term: Optional[str] = None,
             search_fields: Optional[List[str]] = None,
+            order_by: str = 'data_criacao',
             **kwargs
     ) -> Tuple[Optional[List[Any]], int]:
         with self.session_scope() as session:
@@ -260,7 +331,7 @@ class ModelOperations:
 
                 total_count = query_count.scalar()
 
-                # Consulta para resultados paginados
+                # Consulta para resultados paginados e ordenados
                 query_results = session.query(model)
                 query_results = query_results.filter(model.data_exclusao.is_(None))
 
@@ -290,7 +361,13 @@ class ModelOperations:
                     if equality_filters:
                         query_results = query_results.filter(or_(*equality_filters))
 
+                # Aplicar ordenação - padrão: mais recente primeiro
+                if hasattr(model, order_by):
+                    order_column = getattr(model, order_by)
+                    query_results = query_results.order_by(order_column.desc())
+
                 results = query_results.offset(offset).limit(limit).all()
+                return results, total_count
                 return results, total_count
             except NoResultFound:
                 return None, 0
@@ -406,7 +483,14 @@ class ModelOperations:
     # Atualizar um registro existente
     def update(self, model: Type[Base], instance_id: int, **kwargs) -> Optional[Any]:
         with self.session_scope() as session:
-            instance = session.query(model).get(instance_id)
+            query = session.query(model)
+            primary_key = list(model.__mapper__.primary_key)[0]
+            query = query.filter(primary_key == instance_id)
+            if hasattr(model, 'data_exclusao'):
+                query = query.filter(model.data_exclusao.is_(None))
+            if hasattr(model, 'empresa_id') and 'empresa_id' in kwargs:
+                query = query.filter(model.empresa_id == kwargs['empresa_id'])
+            instance = query.one_or_none()
             if instance:
                 for key, value in kwargs.items():
                     setattr(instance, key, value)
@@ -420,6 +504,25 @@ class ModelOperations:
 
                 return instance
             return None
+
+    def update_where(self, model: Type[Base], filters: Dict[str, Any], **kwargs) -> Optional[Any]:
+        with self.session_scope() as session:
+            query = session.query(model).filter_by(**filters)
+            if hasattr(model, 'data_exclusao'):
+                query = query.filter(model.data_exclusao.is_(None))
+
+            instance = query.one_or_none()
+            if instance is None:
+                return None
+
+            for key, value in kwargs.items():
+                setattr(instance, key, value)
+
+            if hasattr(instance, 'data_atualizacao'):
+                instance.data_atualizacao = datetime.now()
+
+            session.commit()
+            return instance
 
     def merge(self, model: Type[Base], instance_id: Optional[int] = None, **kwargs) -> Optional[Any]:
         with self.session_scope() as session:
@@ -489,6 +592,162 @@ class ModelOperations:
                 print(f"Erro ao inserir ou atualizar registro: {e}")
                 raise
 
+    def merge_and_update_atomic(
+            self,
+            primary_model: Type[Base],
+            primary_unique_fields: Dict[str, Any],
+            primary_values: Dict[str, Any],
+            related_model: Type[Base],
+            related_filters: Dict[str, Any],
+            related_values: Dict[str, Any],
+    ) -> Optional[Any]:
+        with self.session_scope() as session:
+            try:
+                primary_query = session.query(primary_model).filter_by(
+                    **primary_unique_fields
+                )
+                if hasattr(primary_model, 'data_exclusao'):
+                    primary_query = primary_query.filter(
+                        primary_model.data_exclusao.is_(None)
+                    )
+
+                instance = primary_query.one_or_none()
+                if instance is None:
+                    instance = primary_model(
+                        **{**primary_unique_fields, **primary_values}
+                    )
+                    session.add(instance)
+                else:
+                    for key, value in primary_values.items():
+                        setattr(instance, key, value)
+
+                session.flush()
+
+                related_query = session.query(related_model).filter_by(
+                    **related_filters
+                )
+                if hasattr(related_model, 'data_exclusao'):
+                    related_query = related_query.filter(
+                        related_model.data_exclusao.is_(None)
+                    )
+                related_instance = related_query.one_or_none()
+                if related_instance is None:
+                    raise ValueError('Registro relacionado não encontrado.')
+
+                for key, value in related_values.items():
+                    if value == '$primary_id':
+                        value = getattr(
+                            instance,
+                            list(primary_model.__mapper__.primary_key)[0].key,
+                        )
+                    setattr(related_instance, key, value)
+
+                session.commit()
+                return instance
+            except Exception:
+                session.rollback()
+                raise
+
+    def create_sale_from_budget_atomic(
+            self,
+            sale_model: Type[Base],
+            sale_unique_fields: Dict[str, Any],
+            sale_values: Dict[str, Any],
+            budget_model: Type[Base],
+            budget_filters: Dict[str, Any],
+            budget_values: Dict[str, Any],
+            budget_item_model: Type[Base],
+            stock_model: Type[Base],
+            product_model: Type[Base],
+            company_id: int,
+            decrement_stock: bool = True,
+    ) -> Any:
+        with self.session_scope() as session:
+            budget = session.query(budget_model).filter_by(
+                **budget_filters
+            ).with_for_update().one_or_none()
+            if budget is None:
+                raise ValueError('Orçamento não encontrado.')
+
+            sale_query = session.query(sale_model).filter_by(
+                **sale_unique_fields
+            )
+            if hasattr(sale_model, 'data_exclusao'):
+                sale_query = sale_query.filter(sale_model.data_exclusao.is_(None))
+            sale = sale_query.one_or_none()
+            if sale is not None and decrement_stock:
+                raise SaleAlreadyExistsError(
+                    f'Já existe uma venda (ID: {sale.venda_id}) associada a este orçamento.'
+                )
+
+            requirements = dict(
+                session.query(
+                    budget_item_model.produto_id,
+                    func.sum(budget_item_model.quantidade_orcamento),
+                )
+                .filter(
+                    budget_item_model.orcamento_id == budget.orcamento_id,
+                    budget_item_model.produto_id.is_not(None),
+                    budget_item_model.data_exclusao.is_(None),
+                )
+                .group_by(budget_item_model.produto_id)
+                .all()
+            ) if decrement_stock else {}
+
+            insufficient = []
+            stock_rows = {}
+            for product_id, required in requirements.items():
+                rows = (
+                    session.query(stock_model)
+                    .join(
+                        product_model,
+                        stock_model.produto_id == product_model.produto_id,
+                    )
+                    .filter(
+                        stock_model.produto_id == product_id,
+                        stock_model.data_exclusao.is_(None),
+                        product_model.empresa_id == company_id,
+                        product_model.data_exclusao.is_(None),
+                    )
+                    .order_by(stock_model.estoque_id)
+                    .with_for_update()
+                    .all()
+                )
+                available = sum(row.quantidade_disponivel for row in rows)
+                if available < required:
+                    insufficient.append({
+                        'produto_id': product_id,
+                        'quantidade_necessaria': required,
+                        'quantidade_disponivel': available,
+                    })
+                stock_rows[product_id] = rows
+
+            if insufficient:
+                raise InsufficientStockError(insufficient)
+
+            for product_id, required in requirements.items():
+                remaining = required
+                for row in stock_rows[product_id]:
+                    deducted = min(row.quantidade_disponivel, remaining)
+                    row.quantidade_disponivel -= deducted
+                    remaining -= deducted
+                    if remaining == 0:
+                        break
+
+            if sale is None:
+                sale = sale_model(**{**sale_unique_fields, **sale_values})
+                session.add(sale)
+            else:
+                for key, value in sale_values.items():
+                    setattr(sale, key, value)
+
+            session.flush()
+            sale_id = getattr(sale, list(sale_model.__mapper__.primary_key)[0].key)
+            for key, value in budget_values.items():
+                setattr(budget, key, sale_id if value == '$primary_id' else value)
+
+            return sale
+
     # Deletar fisicamente um registro
     def delete(self, model: Type[Base], primary_key_value: Any) -> bool:
         with self.session_scope() as session:
@@ -551,6 +810,20 @@ class ModelOperations:
                 return instance  # Retorna a instância alterada
 
             return None  # Retorna None se não encontrar a instância
+
+    def soft_delete_where(self, model: Type[Base], **filters) -> Optional[Any]:
+        with self.session_scope() as session:
+            query = session.query(model).filter_by(**filters)
+            if hasattr(model, 'data_exclusao'):
+                query = query.filter(model.data_exclusao.is_(None))
+
+            instance = query.one_or_none()
+            if instance is None:
+                return None
+
+            instance.data_exclusao = datetime.utcnow()
+            session.commit()
+            return instance
 
     def model_to_dict(self, model_instance):
         return {c.name: getattr(model_instance, c.name) for c in model_instance.__table__.columns}
