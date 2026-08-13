@@ -11,6 +11,7 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from werkzeug.exceptions import HTTPException
 
 from app.routes.api_routes import api_blueprint
+from app.shared.config.database_url import normalize_database_url
 from app.shared.helpers.model_operations import ModelOperations
 from app.shared.helpers.http import INTERNAL_ERROR_MESSAGE, error_payload
 from app.shared.singletons.logger import Logger
@@ -22,7 +23,7 @@ app = flask.Flask(__name__)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
 app.register_blueprint(api_blueprint, url_prefix='/api/v1')
 engine = create_engine(
-    os.environ.get("DB_URL"),
+    normalize_database_url(os.environ["DB_URL"]),
     pool_size=5,  # Número de conexões que o pool vai manter abertas (ajuste conforme necessário)
     max_overflow=12,  # Número máximo de conexões além do `pool_size`
     pool_timeout=30,  # Tempo máximo de espera por uma conexão antes de lançar um erro

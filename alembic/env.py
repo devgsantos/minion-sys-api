@@ -12,6 +12,7 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from app.shared.helpers.model_operations import ModelOperations
+from app.shared.config.database_url import normalize_database_url
 from models.base import Base
 
 from models.produto_model import ProdutoModel
@@ -45,7 +46,9 @@ context.config.set_main_option('render_as_batch', 'True')
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-url = os.environ.get('DB_URL') or config.get_main_option('sqlalchemy.url')
+url = normalize_database_url(
+    os.environ.get('DB_URL') or config.get_main_option('sqlalchemy.url')
+).render_as_string(hide_password=False)
 config.set_main_option('sqlalchemy.url', url.replace('%', '%%'))
 fileConfig(config.config_file_name)
 
